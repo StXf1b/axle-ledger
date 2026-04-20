@@ -1,0 +1,217 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String   @id @default(cuid())
+  clerkUserId String   @unique
+  email       String   @unique
+  fullName    String?
+  firstName   String?
+  lastName    String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships     WorkspaceMember[]
+  ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
+  sentInvites     WorkspaceInvite[] @relation("InviteSender")
+
+  @@index([clerkUserId])
+}
+
+model Workspace {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  ownerId String
+  owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  businessEmail String?
+  businessPhone String?
+  website       String?
+  addressLine1  String?
+  addressLine2  String?
+  city          String?
+  county        String?
+  country       String? @default("Ireland")
+
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  customers   Customer[]
+  vehicles    Vehicle[]
+  memberships WorkspaceMember[]
+  invites     WorkspaceInvite[]
+  settings    WorkspaceSettings?
+
+  @@index([ownerId])
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        Role     @default(STAFF)
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model WorkspaceInvite {
+  id              String       @id @default(cuid())
+  workspaceId     String
+  email           String
+  role            Role         @default(STAFF)
+  token           String       @unique
+  status          InviteStatus @default(PENDING)
+  invitedByUserId String
+  expiresAt       DateTime
+  createdAt       DateTime     @default(now())
+  acceptedAt      DateTime?
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedByUser User      @relation("InviteSender", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([email])
+  @@index([status])
+}
+
+model WorkspaceSettings {
+  id          String @id @default(cuid())
+  workspaceId String @unique
+
+  compactLayout   Boolean @default(true)
+  showWelcomeTips Boolean @default(true)
+
+  showQuickAddVehicle  Boolean @default(true)
+  showQuickAddCustomer Boolean @default(true)
+  showQuickAddReminder Boolean @default(true)
+  showQuickUploadDoc   Boolean @default(false)
+
+  showWidgetOverdue Boolean @default(true)
+  showWidgetDueSoon Boolean @default(true)
+  showWidgetRecent  Boolean @default(true)
+  showWidgetStatus  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+model Customer {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  firstName        String
+  lastName         String
+  companyName      String?
+  phone            String?
+  email            String?
+  preferredContact PreferredContact @default(PHONE)
+  status           CustomerStatus   @default(ACTIVE)
+
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  county       String?
+  country      String? @default("Ireland")
+
+  notes String?
+  tags  String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  vehicles  Vehicle[]
+
+  @@index([workspaceId])
+  @@index([lastName, firstName])
+  @@index([email])
+}
+
+model Vehicle {
+  id          String  @id @default(cuid())
+  workspaceId String
+  customerId  String?
+
+  registration   String
+  vin            String?
+  make           String
+  model          String
+  year           Int?
+  odometerValue  Int?
+  fuelType       String?
+  colour         String?
+  status         VehicleStatus @default(ACTIVE)
+  odometerUnit   OdometerUnit  @default(KM)
+  taxDueAt       DateTime?
+  insuranceDueAt DateTime?
+  nctDueAt       DateTime?
+  serviceDueAt   DateTime?
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer  Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([customerId])
+  @@index([registration])
+  @@index([status])
+}
+
+enum VehicleStatus {
+  ACTIVE
+  SOLD
+  ARCHIVED
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PreferredContact {
+  PHONE
+  EMAIL
+  WHATSAPP
+}
+
+enum OdometerUnit {
+  KM
+  MI
+}

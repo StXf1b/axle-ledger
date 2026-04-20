@@ -1,0 +1,47 @@
+.shell {
+	display: grid;
+	grid-template-columns: 280px minmax(0, 1fr);
+	min-height: 100vh;
+	background: var(--bg);
+	transition: grid-template-columns 0.22s ease;
+}
+
+.collapsed {
+	grid-template-columns: 92px minmax(0, 1fr);
+}
+
+.main {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.page {
+	flex: 1;
+	min-width: 0;
+	padding: 24px;
+}
+
+.backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 45;
+	background: rgba(3, 7, 18, 0.68);
+	border: none;
+	display: none;
+}
+
+@media (max-width: 1024px) {
+	.shell,
+	.collapsed {
+		grid-template-columns: 1fr;
+	}
+
+	.page {
+		padding: 16px;
+	}
+
+	.backdrop {
+		display: block;
+	}
+}

@@ -1,0 +1,104 @@
+.table-pagination {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	padding-top: 18px;
+	margin-top: 18px;
+	border-top: 1px solid var(--border);
+}
+
+.table-pagination__info {
+	font-size: 0.9rem;
+	color: var(--text-muted);
+}
+
+.table-pagination__info strong {
+	color: var(--text);
+	font-weight: 600;
+}
+
+.table-pagination__controls {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.table-pagination__pages {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.table-pagination__button,
+.table-pagination__page {
+	min-height: 38px;
+	min-width: 38px;
+	padding: 0 12px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 12px;
+	border: 1px solid var(--border);
+	background: var(--surface-2);
+	color: var(--text-soft);
+	font-size: 0.9rem;
+	font-weight: 600;
+	transition:
+		background var(--transition-fast),
+		border-color var(--transition-fast),
+		color var(--transition-fast),
+		transform var(--transition-fast);
+}
+
+.table-pagination__button:hover,
+.table-pagination__page:hover {
+	background: var(--surface-3);
+	border-color: var(--border-strong);
+	color: var(--text);
+}
+
+.table-pagination__button:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.table-pagination__button:disabled:hover {
+	background: var(--surface-2);
+	border-color: var(--border);
+	color: var(--text-soft);
+	transform: none;
+}
+
+.table-pagination__page--active {
+	background: linear-gradient(180deg, #4b8df7 0%, var(--primary) 100%);
+	border-color: rgba(59, 130, 246, 0.35);
+	color: white;
+	box-shadow: var(--shadow-glow);
+}
+
+.table-pagination__ellipsis {
+	min-width: 24px;
+	text-align: center;
+	color: var(--text-faint);
+	font-weight: 700;
+}
+
+@media (max-width: 768px) {
+	.table-pagination {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.table-pagination__controls {
+		justify-content: space-between;
+	}
+
+	.table-pagination__pages {
+		justify-content: center;
+		width: 100%;
+	}
+}

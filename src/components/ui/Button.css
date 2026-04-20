@@ -1,0 +1,138 @@
+.ax-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	border: 1px solid transparent;
+	border-radius: 14px;
+	font-family: var(--font-body);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	cursor: pointer;
+	transition:
+		background 0.18s ease,
+		border-color 0.18s ease,
+		color 0.18s ease,
+		transform 0.14s ease,
+		box-shadow 0.18s ease,
+		opacity 0.18s ease;
+	white-space: nowrap;
+	user-select: none;
+}
+
+.ax-button:hover {
+	transform: translateY(-1px);
+}
+
+.ax-button:active {
+	transform: translateY(0);
+}
+
+.ax-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.ax-button--full {
+	width: 100%;
+}
+
+/* Sizes */
+.ax-button--sm {
+	min-height: 38px;
+	padding: 0 14px;
+	font-size: 0.88rem;
+	border-radius: 12px;
+}
+
+.ax-button--md {
+	min-height: 44px;
+	padding: 0 16px;
+	font-size: 0.94rem;
+}
+
+.ax-button--lg {
+	min-height: 50px;
+	padding: 0 20px;
+	font-size: 1rem;
+	border-radius: 16px;
+}
+
+/* Variants */
+.ax-button--primary {
+	background: linear-gradient(180deg, #4b8df7 0%, var(--primary) 100%);
+	color: #ffffff;
+	box-shadow:
+		0 0 0 1px rgba(59, 130, 246, 0.08),
+		0 10px 24px rgba(37, 99, 235, 0.2);
+}
+
+.ax-button--primary:hover {
+	background: linear-gradient(180deg, #5a97f8 0%, var(--primary-hover) 100%);
+	color: #ffffff;
+	box-shadow:
+		0 0 0 1px rgba(59, 130, 246, 0.1),
+		0 14px 28px rgba(37, 99, 235, 0.24);
+}
+
+.ax-button--secondary {
+	background: var(--surface-2);
+	color: var(--text);
+	border-color: var(--border);
+}
+
+.ax-button--secondary:hover {
+	background: var(--surface-3);
+	border-color: var(--border-strong);
+}
+
+.ax-button--ghost {
+	background: transparent;
+	color: var(--text-soft);
+	border-color: transparent;
+}
+
+.ax-button--ghost:hover {
+	background: rgba(255, 255, 255, 0.04);
+	color: var(--text);
+}
+
+.ax-button--danger {
+	background: rgba(239, 68, 68, 0.12);
+	color: #fecaca;
+	border-color: rgba(239, 68, 68, 0.18);
+}
+
+.ax-button--danger:hover {
+	background: rgba(239, 68, 68, 0.18);
+	border-color: rgba(239, 68, 68, 0.24);
+}
+
+/* Content */
+.ax-button__text {
+	display: inline-flex;
+	align-items: center;
+}
+
+.ax-button__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+}
+
+.ax-button__spinner {
+	width: 16px;
+	height: 16px;
+	border-radius: 999px;
+	border: 2px solid rgba(255, 255, 255, 0.35);
+	border-top-color: #ffffff;
+	animation: ax-button-spin 0.7s linear infinite;
+}
+
+@keyframes ax-button-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}

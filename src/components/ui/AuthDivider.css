@@ -1,0 +1,20 @@
+.ax-auth-divider {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+}
+
+.ax-auth-divider__line {
+	flex: 1;
+	height: 1px;
+	background: rgba(255, 255, 255, 0.06);
+}
+
+.ax-auth-divider__text {
+	font-size: 0.82rem;
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
