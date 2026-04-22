@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useClerk, useSignIn, useSignUp } from "@clerk/nextjs";
+
+function sanitizeRedirect(value) {
+	if (!value || typeof value !== "string") return "/dashboard";
+	if (!value.startsWith("/")) return "/dashboard";
+	if (value.startsWith("//")) return "/dashboard";
+	return value;
+}
 
 export default function SSOCallbackPage() {
 	const clerk = useClerk();
@@ -11,95 +18,140 @@ export default function SSOCallbackPage() {
 	const router = useRouter();
 	const hasRun = useRef(false);
 	const searchParams = useSearchParams();
-	const targetRedirect = searchParams.get("redirect") || "/dashboard";
+
+	const targetRedirect = useMemo(
+		() => sanitizeRedirect(searchParams.get("redirect")),
+		[searchParams],
+	);
+
 	useEffect(() => {
-		(async () => {
+		async function run() {
 			if (!clerk.loaded || hasRun.current || !signIn || !signUp) return;
 			hasRun.current = true;
 
-			const goDashboard = async () => {
-				const url = "/dashboard";
-				router.push(url);
+			const goTo = (path) => {
+				router.push(path);
 			};
 
-			const finalizeSignIn = async () => {
-				await signIn.finalize({
-					navigate: ({ session, decorateUrl }) => {
-						if (session?.currentTask) return;
-						const url = decorateUrl(targetRedirect);
-						if (url.startsWith("http")) {
-							window.location.href = url;
-						} else {
-							router.push(url);
-						}
-					},
-				});
+			const goToSignIn = () => {
+				router.push(`/sign-in?redirect=${encodeURIComponent(targetRedirect)}`);
 			};
 
-			const finalizeSignUp = async () => {
-				await signUp.finalize({
-					navigate: ({ session, decorateUrl }) => {
-						if (session?.currentTask) return;
-						const url = decorateUrl(targetRedirect);
-						if (url.startsWith("http")) {
-							window.location.href = url;
-						} else {
-							router.push(url);
-						}
-					},
-				});
+			const goToSignUp = () => {
+				router.push(`/sign-up?redirect=${encodeURIComponent(targetRedirect)}`);
 			};
 
-			if (signIn.status === "complete") {
-				await finalizeSignIn();
-				return;
-			}
-
-			if (signUp.isTransferable) {
-				await signIn.create({ transfer: true });
-				if (signIn.status === "complete") {
-					await finalizeSignIn();
+			const handleNavigate = async ({ session, decorateUrl }) => {
+				// Best if ClerkProvider taskUrls is configured.
+				if (session?.currentTask) {
 					return;
 				}
-				router.push("/sign-in");
+
+				const url = decorateUrl(targetRedirect);
+
+				if (url.startsWith("http")) {
+					window.location.href = url;
+				} else {
+					router.push(url);
+				}
+			};
+
+			// 1. OAuth completed as sign-in
+			if (signIn.status === "complete") {
+				const { error } = await signIn.finalize({
+					navigate: handleNavigate,
+				});
+
+				if (error) {
+					console.error("signIn.finalize error:", error);
+					goToSignIn();
+				}
 				return;
 			}
 
+			// 2. OAuth came back as sign-up but can transfer into sign-in
+			if (signUp.isTransferable) {
+				const { error } = await signIn.create({ transfer: true });
+
+				if (error) {
+					console.error("signIn.create transfer error:", error);
+					goToSignIn();
+					return;
+				}
+
+				if (signIn.status === "complete") {
+					const { error: finalizeError } = await signIn.finalize({
+						navigate: handleNavigate,
+					});
+
+					if (finalizeError) {
+						console.error(
+							"signIn.finalize after transfer error:",
+							finalizeError,
+						);
+						goToSignIn();
+					}
+					return;
+				}
+
+				goToSignIn();
+				return;
+			}
+
+			// 3. Sign-in needs non-SSO first factor, return to custom sign-in
 			if (
 				signIn.status === "needs_first_factor" &&
 				!signIn.supportedFirstFactors?.every(
-					(f) => f.strategy === "enterprise_sso",
+					(factor) => factor.strategy === "enterprise_sso",
 				)
 			) {
-				router.push("/sign-in");
+				goToSignIn();
 				return;
 			}
 
+			// 4. OAuth came back as sign-in but can transfer into sign-up
 			if (signIn.isTransferable) {
-				await signUp.create({ transfer: true });
+				const { error } = await signUp.create({ transfer: true });
 
-				if (signUp.status === "complete") {
-					await finalizeSignUp();
+				if (error) {
+					console.error("signUp.create transfer error:", error);
+					goToSignUp();
 					return;
 				}
 
-				router.push("/sign-up");
+				if (signUp.status === "complete") {
+					const { error: finalizeError } = await signUp.finalize({
+						navigate: handleNavigate,
+					});
+
+					if (finalizeError) {
+						console.error(
+							"signUp.finalize after transfer error:",
+							finalizeError,
+						);
+						goToSignUp();
+					}
+					return;
+				}
+
+				goToSignUp();
 				return;
 			}
 
+			// 5. OAuth completed as sign-up
 			if (signUp.status === "complete") {
-				await finalizeSignUp();
+				const { error } = await signUp.finalize({
+					navigate: handleNavigate,
+				});
+
+				if (error) {
+					console.error("signUp.finalize error:", error);
+					goToSignUp();
+				}
 				return;
 			}
 
-			if (
-				signIn.status === "needs_second_factor" ||
-				signIn.status === "needs_new_password"
-			) {
-				router.push("/sign-in");
-				return;
-			}
-
+			// 6. Existing session returned from Clerk
 			if (signIn.existingSession || signUp.existingSession) {
 				const sessionId =
 					signIn.existingSession?.sessionId ||
@@ -108,23 +160,27 @@ export default function SSOCallbackPage() {
 				if (sessionId) {
 					await clerk.setActive({
 						session: sessionId,
-						navigate: ({ session, decorateUrl }) => {
-							if (session?.currentTask) return;
-							const url = decorateUrl(targetRedirect);
-							if (url.startsWith("http")) {
-								window.location.href = url;
-							} else {
-								router.push(url);
-							}
-						},
+						navigate: handleNavigate,
 					});
 					return;
 				}
 			}
 
-			await goDashboard();
-		})();
-	}, [clerk, signIn, signUp, router]);
+			// 7. Additional auth steps not handled here
+			if (
+				signIn.status === "needs_second_factor" ||
+				signIn.status === "needs_new_password"
+			) {
+				goToSignIn();
+				return;
+			}
+
+			// 8. Safe fallback
+			goTo(targetRedirect);
+		}
+
+		run();
+	}, [clerk, signIn, signUp, router, targetRedirect]);
 
 	return (
 		<div className="auth-page">

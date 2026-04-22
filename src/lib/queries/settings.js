@@ -83,6 +83,8 @@ export async function getSettingsPageData() {
 			showWidgetDueSoon: workspace.settings?.showWidgetDueSoon ?? true,
 			showWidgetRecent: workspace.settings?.showWidgetRecent ?? true,
 			showWidgetStatus: workspace.settings?.showWidgetStatus ?? false,
+			showQuickAddWorkLog: workspace.settings?.showQuickAddWorkLog ?? true,
+			showWidgetWorkLogs: workspace.settings?.showWidgetWorkLogs ?? true,
 		},
 		members: workspace.memberships.map((item) => ({
 			id: item.id,

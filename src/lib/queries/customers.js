@@ -56,6 +56,41 @@ export async function getCustomerById(customerId) {
 					createdAt: "desc",
 				},
 			},
+			reminders: {
+				include: {
+					vehicle: {
+						select: {
+							id: true,
+							registration: true,
+							make: true,
+							model: true,
+						},
+					},
+					customer: {
+						select: {
+							id: true,
+							firstName: true,
+							lastName: true,
+							companyName: true,
+						},
+					},
+				},
+				orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }],
+			},
+			documents: {
+				orderBy: [{ createdAt: "desc" }],
+				take: 6,
+				select: {
+					id: true,
+					title: true,
+					fileName: true,
+					fileExtension: true,
+					mimeType: true,
+					sizeBytes: true,
+					category: true,
+					createdAt: true,
+				},
+			},
 		},
 	});
 

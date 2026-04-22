@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Settings, LayoutDashboard, Users, UserPlus } from "lucide-react";
+import {
+	Settings,
+	LayoutDashboard,
+	Users,
+	UserPlus,
+	CreditCard,
+} from "lucide-react";
 
 import "./SettingsPageClient.css";
 import GeneralSettingsPanel from "./GeneralSettingsPanel";
@@ -33,6 +39,12 @@ const tabs = [
 		label: "Invite People",
 		icon: UserPlus,
 		description: "Create and manage workspace invite links",
+	},
+	{
+		id: "Billing",
+		label: "Billing",
+		icon: CreditCard,
+		description: "Manage your billing information and payment methods",
 	},
 ];
 

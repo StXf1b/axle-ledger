@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSignIn } from "@clerk/nextjs";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+
 import AuthCard from "@/components/ui/AuthCard";
 import AuthDivider from "@/components/ui/AuthDivider";
 import GoogleButton from "@/components/ui/GoogleButton";
@@ -12,8 +13,37 @@ import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";
 
+function sanitizeRedirect(value) {
+	if (!value || typeof value !== "string") return "/dashboard";
+
+	// Only allow internal absolute-path redirects.
+	if (!value.startsWith("/")) return "/dashboard";
+
+	// Block protocol-relative and malformed external-style redirects.
+	if (value.startsWith("//")) return "/dashboard";
+
+	return value;
+}
+
+function getFieldError(fieldValue) {
+	if (!fieldValue) return "";
+
+	if (typeof fieldValue === "string") return fieldValue;
+
+	if (Array.isArray(fieldValue)) {
+		return fieldValue[0]?.message || fieldValue[0]?.longMessage || "";
+	}
+
+	if (typeof fieldValue === "object") {
+		return fieldValue.message || fieldValue.longMessage || "";
+	}
+
+	return "";
+}
+
 export default function SignInPage() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const { signIn, errors, fetchStatus } = useSignIn();
 
 	const [step, setStep] = useState("form");
@@ -24,6 +54,12 @@ export default function SignInPage() {
 	});
 	const [localErrors, setLocalErrors] = useState({});
 	const [googleLoading, setGoogleLoading] = useState(false);
+
+	const isSubmitting = fetchStatus === "fetching";
+	const targetRedirect = useMemo(
+		() => sanitizeRedirect(searchParams.get("redirect")),
+		[searchParams],
+	);
 
 	function handleChange(e) {
 		const { name, value } = e.target;
@@ -37,10 +73,9 @@ export default function SignInPage() {
 			...prev,
 			[name]: "",
 			form: "",
+			code: "",
 		}));
 	}
-	const searchParams = useSearchParams();
-	const targetRedirect = searchParams.get("redirect") || "/dashboard";
 
 	function validateForm() {
 		const nextErrors = {};
@@ -63,7 +98,11 @@ export default function SignInPage() {
 
 		await signIn.finalize({
 			navigate: ({ session, decorateUrl }) => {
-				if (session?.currentTask) return;
+				// If you configure ClerkProvider taskUrls, Clerk can route these.
+				// Avoid pretending sign-in succeeded while doing nothing.
+				if (session?.currentTask) {
+					return;
+				}
 
 				const url = decorateUrl(targetRedirect);
 
@@ -79,7 +118,7 @@ export default function SignInPage() {
 	async function handleSubmit(e) {
 		e.preventDefault();
 
-		if (!signIn) return;
+		if (!signIn || isSubmitting || googleLoading) return;
 
 		const validationErrors = validateForm();
 		if (Object.keys(validationErrors).length > 0) {
@@ -87,12 +126,20 @@ export default function SignInPage() {
 			return;
 		}
 
+		setLocalErrors({});
+
 		const { error } = await signIn.password({
-			emailAddress: form.email,
+			emailAddress: form.email.trim(),
 			password: form.password,
 		});
 
-		if (error) return;
+		if (error) {
+			setLocalErrors((prev) => ({
+				...prev,
+				form: error.message || error.longMessage || "Sign-in failed.",
+			}));
+			return;
+		}
 
 		if (signIn.status === "complete") {
 			await finalizeToTarget();
@@ -105,15 +152,38 @@ export default function SignInPage() {
 			);
 
 			if (emailCodeFactor) {
-				await signIn.mfa.sendEmailCode();
+				const result = await signIn.mfa.sendEmailCode();
+
+				if (result?.error) {
+					setLocalErrors({
+						form:
+							result.error.message ||
+							result.error.longMessage ||
+							"Could not send verification code.",
+					});
+					return;
+				}
+
 				setStep("verify");
 				return;
 			}
+
+			setLocalErrors({
+				form: "Client trust verification is required, but no email code factor is available.",
+			});
+			return;
 		}
 
 		if (signIn.status === "needs_second_factor") {
 			setLocalErrors({
-				form: "This account needs an additional second factor flow. Add MFA handling next.",
+				form: "This account requires another MFA step that is not handled on this page yet.",
+			});
+			return;
+		}
+
+		if (signIn.status === "needs_new_password") {
+			setLocalErrors({
+				form: "This account must reset its password before sign-in can complete.",
 			});
 			return;
 		}
@@ -126,17 +196,42 @@ export default function SignInPage() {
 	async function handleVerify(e) {
 		e.preventDefault();
 
-		if (!signIn || !code.trim()) return;
+		if (!signIn || !code.trim() || isSubmitting) return;
 
-		await signIn.mfa.verifyEmailCode({ code });
+		setLocalErrors((prev) => ({
+			...prev,
+			code: "",
+			form: "",
+		}));
+
+		const { error } = await signIn.mfa.verifyEmailCode({
+			code: code.trim(),
+		});
+
+		if (error) {
+			setLocalErrors((prev) => ({
+				...prev,
+				code:
+					error.message ||
+					error.longMessage ||
+					"Verification failed. Please check the code and try again.",
+			}));
+			return;
+		}
 
 		if (signIn.status === "complete") {
 			await finalizeToTarget();
+			return;
 		}
+
+		setLocalErrors((prev) => ({
+			...prev,
+			code: "Verification was not completed.",
+		}));
 	}
 
 	async function handleGoogleSignIn() {
-		if (!signIn) return;
+		if (!signIn || isSubmitting || googleLoading) return;
 
 		try {
 			setGoogleLoading(true);
@@ -148,7 +243,9 @@ export default function SignInPage() {
 			});
 
 			if (error) {
-				console.error(error);
+				setLocalErrors({
+					form: error.message || error.longMessage || "Google sign-in failed.",
+				});
 			}
 		} finally {
 			setGoogleLoading(false);
@@ -163,12 +260,35 @@ export default function SignInPage() {
 				footer={
 					<div className="stack-sm">
 						<p>
-							<button type="button" onClick={() => signIn?.mfa.sendEmailCode()}>
+							<button
+								type="button"
+								onClick={async () => {
+									if (!signIn) return;
+									const result = await signIn.mfa.sendEmailCode();
+									if (result?.error) {
+										setLocalErrors((prev) => ({
+											...prev,
+											code:
+												result.error.message ||
+												result.error.longMessage ||
+												"Could not send a new code.",
+										}));
+									}
+								}}
+							>
 								Send a new code
 							</button>
 						</p>
 						<p>
-							<button type="button" onClick={() => signIn?.reset()}>
+							<button
+								type="button"
+								onClick={async () => {
+									await signIn?.reset();
+									setStep("form");
+									setCode("");
+									setLocalErrors({});
+								}}
+							>
 								Start over
 							</button>
 						</p>
@@ -180,21 +300,28 @@ export default function SignInPage() {
 						label="Verification code"
 						name="code"
 						value={code}
-						onChange={(e) => setCode(e.target.value)}
+						onChange={(e) => {
+							setCode(e.target.value);
+							setLocalErrors((prev) => ({ ...prev, code: "" }));
+						}}
 						placeholder="Enter the code"
-						error={errors?.fields?.code?.message}
+						error={localErrors.code || getFieldError(errors?.fields?.code)}
 						required
 					/>
+
+					{localErrors.form ? (
+						<p className="text-danger" style={{ fontSize: "0.9rem" }}>
+							{localErrors.form}
+						</p>
+					) : null}
 
 					<Button
 						type="submit"
 						variant="primary"
 						size="lg"
 						fullWidth
-						loading={fetchStatus === "fetching"}
-						rightIcon={
-							fetchStatus !== "fetching" ? <ArrowRight size={18} /> : null
-						}
+						loading={isSubmitting}
+						rightIcon={!isSubmitting ? <ArrowRight size={18} /> : null}
 					>
 						Verify and sign in
 					</Button>
@@ -236,7 +363,11 @@ export default function SignInPage() {
 						onChange={handleChange}
 						placeholder="you@example.com"
 						icon={<Mail size={18} />}
-						error={localErrors.email || errors?.fields?.identifier?.message}
+						error={
+							localErrors.email ||
+							getFieldError(errors?.fields?.identifier) ||
+							getFieldError(errors?.fields?.emailAddress)
+						}
 						required
 					/>
 
@@ -247,7 +378,9 @@ export default function SignInPage() {
 						onChange={handleChange}
 						placeholder="Enter your password"
 						icon={<Lock size={18} />}
-						error={localErrors.password || errors?.fields?.password?.message}
+						error={
+							localErrors.password || getFieldError(errors?.fields?.password)
+						}
 						required
 					/>
 
@@ -262,10 +395,8 @@ export default function SignInPage() {
 						variant="primary"
 						size="lg"
 						fullWidth
-						loading={fetchStatus === "fetching"}
-						rightIcon={
-							fetchStatus !== "fetching" ? <ArrowRight size={18} /> : null
-						}
+						loading={isSubmitting}
+						rightIcon={!isSubmitting ? <ArrowRight size={18} /> : null}
 					>
 						Sign in
 					</Button>

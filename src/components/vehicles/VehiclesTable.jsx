@@ -1,12 +1,8 @@
+import { formatDateShort } from "@/lib/date-formatters";
 function formatCustomer(customer) {
 	if (!customer) return "—";
 	if (customer.companyName) return customer.companyName;
 	return `${customer.firstName || ""} ${customer.lastName || ""}`.trim() || "—";
-}
-
-function formatDate(value) {
-	if (!value) return "—";
-	return new Date(value).toLocaleDateString();
 }
 
 export default function VehiclesTable({ vehicles, onRowClick }) {
@@ -62,7 +58,7 @@ export default function VehiclesTable({ vehicles, onRowClick }) {
 										? `${vehicle.odometerValue.toLocaleString()} ${vehicle.odometerUnit}`
 										: "—"}
 								</td>
-								<td>{formatDate(vehicle.serviceDueAt)}</td>
+								<td>{formatDateShort(vehicle.serviceDueAt)}</td>
 								<td>
 									<span
 										className={`badge ${

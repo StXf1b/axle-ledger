@@ -67,6 +67,7 @@ export async function updateGeneralSettings(payload) {
 	});
 
 	revalidatePath("/settings");
+	revalidatePath("/dashboard");
 
 	return { ok: true };
 }
@@ -93,6 +94,8 @@ export async function updateDashboardSettings(payload) {
 			showWidgetDueSoon: !!payload.showWidgetDueSoon,
 			showWidgetRecent: !!payload.showWidgetRecent,
 			showWidgetStatus: !!payload.showWidgetStatus,
+			showQuickAddWorkLog: !!payload.showQuickAddWorkLog,
+			showWidgetWorkLogs: !!payload.showWidgetWorkLogs,
 		},
 		create: {
 			workspaceId: workspace.id,
@@ -106,10 +109,13 @@ export async function updateDashboardSettings(payload) {
 			showWidgetDueSoon: !!payload.showWidgetDueSoon,
 			showWidgetRecent: !!payload.showWidgetRecent,
 			showWidgetStatus: !!payload.showWidgetStatus,
+			showQuickAddWorkLog: !!payload.showQuickAddWorkLog,
+			showWidgetWorkLogs: !!payload.showWidgetWorkLogs,
 		},
 	});
 
 	revalidatePath("/settings");
+	revalidatePath("/dashboard");
 
 	return { ok: true };
 }
@@ -156,6 +162,7 @@ export async function updateMemberRole({ memberId, role }) {
 	});
 
 	revalidatePath("/settings");
+	revalidatePath("/dashboard");
 
 	return { ok: true };
 }
@@ -195,6 +202,7 @@ export async function removeMemberFromWorkspace(memberId) {
 	});
 
 	revalidatePath("/settings");
+	revalidatePath("/dashboard");
 
 	return { ok: true };
 }

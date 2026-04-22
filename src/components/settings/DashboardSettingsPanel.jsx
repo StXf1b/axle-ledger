@@ -21,6 +21,8 @@ export default function DashboardSettingsPanel({ settings, currentRole }) {
 		showWidgetDueSoon: settings.showWidgetDueSoon,
 		showWidgetRecent: settings.showWidgetRecent,
 		showWidgetStatus: settings.showWidgetStatus,
+		showQuickAddWorkLog: settings.showQuickAddWorkLog,
+		showWidgetWorkLogs: settings.showWidgetWorkLogs,
 	});
 
 	const canEdit = ["OWNER", "ADMIN"].includes(currentRole);
@@ -120,6 +122,7 @@ export default function DashboardSettingsPanel({ settings, currentRole }) {
 							["showQuickAddCustomer", "Add Customer"],
 							["showQuickAddReminder", "Add Reminder"],
 							["showQuickUploadDoc", "Upload Document"],
+							["showQuickAddWorkLog", "Add Work Log"],
 						].map(([key, label]) => (
 							<div className="dashboard-row" key={key}>
 								<div>
@@ -159,6 +162,7 @@ export default function DashboardSettingsPanel({ settings, currentRole }) {
 							["showWidgetDueSoon", "Due soon"],
 							["showWidgetRecent", "Recent activity"],
 							["showWidgetStatus", "Vehicle status summary"],
+							["showWidgetWorkLogs", "Work logs"],
 						].map(([key, label]) => (
 							<div className="dashboard-row" key={key}>
 								<div>

@@ -11,6 +11,8 @@ import {
 	BadgeCheck,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import LinkedRemindersCard from "@/components/reminders/LinkedRemindersCard";
+import LinkedDocumentsCard from "@/components/documents/LinkedDocumentsCard";
 
 function getInitials(firstName, lastName, companyName) {
 	if (firstName || lastName) {
@@ -181,6 +183,19 @@ export default function CustomerDetailView({ customer }) {
 					</table>
 				</div>
 			</div>
+			<LinkedDocumentsCard
+				title="Customer documents"
+				subtitle="Recent files linked to this customer record."
+				documents={customer.documents || []}
+				customerId={customer.id}
+			/>
+			<LinkedRemindersCard
+				title="Customer reminders"
+				subtitle="Follow-up, service, and compliance reminders linked to this customer."
+				reminders={customer.reminders || []}
+				customerId={customer.id}
+				showVehicle
+			/>
 		</section>
 	);
 }

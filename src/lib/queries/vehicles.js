@@ -46,6 +46,77 @@ export async function getVehicleById(vehicleId) {
 		},
 		include: {
 			customer: true,
+			reminders: {
+				include: {
+					vehicle: {
+						select: {
+							id: true,
+							registration: true,
+							make: true,
+							model: true,
+						},
+					},
+					customer: {
+						select: {
+							id: true,
+							firstName: true,
+							lastName: true,
+							companyName: true,
+						},
+					},
+				},
+				orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }],
+			},
+			documents: {
+				orderBy: [{ createdAt: "desc" }],
+				take: 6,
+				select: {
+					id: true,
+					title: true,
+					fileName: true,
+					fileExtension: true,
+					mimeType: true,
+					sizeBytes: true,
+					category: true,
+					createdAt: true,
+				},
+			},
+			workLogs: {
+				orderBy: [{ completedAt: "desc" }, { createdAt: "desc" }],
+				take: 6,
+				include: {
+					performedByUser: {
+						select: {
+							id: true,
+							fullName: true,
+							email: true,
+						},
+					},
+					createdByUser: {
+						select: {
+							id: true,
+							fullName: true,
+							email: true,
+						},
+					},
+					customer: {
+						select: {
+							id: true,
+							firstName: true,
+							lastName: true,
+							companyName: true,
+						},
+					},
+					vehicle: {
+						select: {
+							id: true,
+							registration: true,
+							make: true,
+							model: true,
+						},
+					},
+				},
+			},
 		},
 	});
 }

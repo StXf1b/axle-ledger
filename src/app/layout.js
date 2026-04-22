@@ -38,7 +38,13 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
 	return (
-		<ClerkProvider>
+		<ClerkProvider
+			taskUrls={{
+				"choose-organization": "/session-tasks/choose-organization",
+				"reset-password": "/session-tasks/reset-password",
+				"setup-mfa": "/session-tasks/setup-mfa",
+			}}
+		>
 			<html lang="en" suppressHydrationWarning>
 				<body className={`${inter.variable} ${jakarta.variable} antialiased`}>
 					{children}

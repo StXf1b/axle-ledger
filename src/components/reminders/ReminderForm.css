@@ -1,0 +1,150 @@
+.reminder-form-ui {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.reminder-form-ui__section {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.reminder-form-ui__section-header {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.reminder-form-ui__section-header h3 {
+	font-size: 1.02rem;
+}
+
+.reminder-form-ui__section-header p {
+	color: var(--text-muted);
+	font-size: 0.94rem;
+}
+
+.reminder-form-ui__grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+}
+
+.reminder-form-ui__select-wrap {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.reminder-form-ui__select-icon {
+	position: absolute;
+	left: 14px;
+	color: var(--text-faint);
+	pointer-events: none;
+}
+
+.reminder-form-ui__select {
+	width: 100%;
+	min-height: 48px;
+	padding: 0 14px;
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.02);
+	color: var(--text);
+	transition:
+		border-color var(--transition-fast),
+		background-color var(--transition-fast),
+		box-shadow var(--transition-fast);
+}
+
+.reminder-form-ui__select:hover {
+	border-color: var(--border-strong);
+}
+
+.reminder-form-ui__select:focus {
+	outline: none;
+	border-color: var(--primary);
+	box-shadow: 0 0 0 4px var(--primary-soft);
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.reminder-form-ui__select--icon {
+	padding-left: 42px;
+}
+
+.reminder-form-ui__textarea-wrap {
+	position: relative;
+}
+
+.reminder-form-ui__textarea-icon {
+	position: absolute;
+	top: 14px;
+	left: 14px;
+	color: var(--text-faint);
+	pointer-events: none;
+}
+
+.reminder-form-ui__textarea {
+	width: 100%;
+	min-height: 132px;
+	padding: 14px 14px 14px 44px;
+	border: 1px solid var(--border);
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.02);
+	color: var(--text);
+	resize: vertical;
+	transition:
+		border-color var(--transition-fast),
+		background-color var(--transition-fast),
+		box-shadow var(--transition-fast);
+}
+
+.reminder-form-ui__textarea::placeholder {
+	color: var(--text-faint);
+}
+
+.reminder-form-ui__textarea:hover {
+	border-color: var(--border-strong);
+}
+
+.reminder-form-ui__textarea:focus {
+	outline: none;
+	border-color: var(--primary);
+	box-shadow: 0 0 0 4px var(--primary-soft);
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.reminder-form-ui__actions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.reminder-form-ui__actions-left,
+.reminder-form-ui__actions-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+	.reminder-form-ui__grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 768px) {
+	.reminder-form-ui__actions,
+	.reminder-form-ui__actions-left,
+	.reminder-form-ui__actions-right {
+		width: 100%;
+	}
+
+	.reminder-form-ui__actions-right .btn {
+		width: 100%;
+	}
+}

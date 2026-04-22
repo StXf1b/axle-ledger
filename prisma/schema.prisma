@@ -23,9 +23,13 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  memberships     WorkspaceMember[]
-  ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
-  sentInvites     WorkspaceInvite[] @relation("InviteSender")
+  performedWorkLogs WorkLog[]         @relation("WorkLogPerformer")
+  createdWorkLogs   WorkLog[]         @relation("WorkLogCreator")
+  memberships       WorkspaceMember[]
+  ownedWorkspaces   Workspace[]       @relation("WorkspaceOwner")
+  sentInvites       WorkspaceInvite[] @relation("InviteSender")
+  uploadedDocuments Document[]        @relation("DocumentUploader")
+  createdReminders  Reminder[]        @relation("ReminderCreator")
 
   @@index([clerkUserId])
 }
@@ -49,8 +53,11 @@ model Workspace {
 
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+  workLogs    WorkLog[]
+  reminders   Reminder[]
   customers   Customer[]
   vehicles    Vehicle[]
+  documents   Document[]
   memberships WorkspaceMember[]
   invites     WorkspaceInvite[]
   settings    WorkspaceSettings?
@@ -104,11 +111,13 @@ model WorkspaceSettings {
   showQuickAddCustomer Boolean @default(true)
   showQuickAddReminder Boolean @default(true)
   showQuickUploadDoc   Boolean @default(false)
+  showQuickAddWorkLog  Boolean @default(true)
 
-  showWidgetOverdue Boolean @default(true)
-  showWidgetDueSoon Boolean @default(true)
-  showWidgetRecent  Boolean @default(true)
-  showWidgetStatus  Boolean @default(false)
+  showWidgetOverdue  Boolean @default(true)
+  showWidgetDueSoon  Boolean @default(true)
+  showWidgetRecent   Boolean @default(true)
+  showWidgetStatus   Boolean @default(false)
+  showWidgetWorkLogs Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -153,7 +162,10 @@ model Customer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workLogs  WorkLog[]
+  reminders Reminder[]
+  documents Document[]
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   vehicles  Vehicle[]
 
   @@index([workspaceId])
@@ -180,11 +192,13 @@ model Vehicle {
   insuranceDueAt DateTime?
   nctDueAt       DateTime?
   serviceDueAt   DateTime?
+  reminders      Reminder[]
+  documents      Document[]
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  workLogs  WorkLog[]
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   customer  Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
@@ -214,4 +228,144 @@ enum PreferredContact {
 enum OdometerUnit {
   KM
   MI
+}
+
+model Document {
+  id String @id @default(cuid())
+
+  workspaceId      String
+  customerId       String?
+  vehicleId        String?
+  uploadedByUserId String?
+
+  title         String
+  fileName      String
+  fileKey       String
+  mimeType      String?
+  fileExtension String?
+  sizeBytes     Int?
+  category      DocumentCategory @default(GENERAL)
+  notes         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer       Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  vehicle        Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  uploadedByUser User?     @relation("DocumentUploader", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([uploadedByUserId])
+  @@index([category])
+  @@index([createdAt])
+}
+
+enum DocumentCategory {
+  GENERAL
+  INVOICE
+  RECEIPT
+  SERVICE_RECORD
+  INSURANCE
+  TAX
+  NCT
+  WARRANTY
+  PHOTO
+  OTHER
+}
+
+model Reminder {
+  id String @id @default(cuid())
+
+  workspaceId     String
+  customerId      String?
+  vehicleId       String?
+  createdByUserId String?
+
+  title       String
+  type        ReminderType   @default(CUSTOM)
+  status      ReminderStatus @default(OPEN)
+  dueAt       DateTime
+  completedAt DateTime?
+  notes       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  vehicle       Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  createdByUser User?     @relation("ReminderCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([createdByUserId])
+  @@index([status])
+  @@index([type])
+  @@index([dueAt])
+  @@index([createdAt])
+}
+
+enum ReminderType {
+  TAX
+  INSURANCE
+  NCT
+  SERVICE
+  FOLLOW_UP
+  CUSTOM
+}
+
+enum ReminderStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+model WorkLog {
+  id String @id @default(cuid())
+
+  workspaceId String
+  customerId  String?
+  vehicleId   String?
+
+  performedByUserId String?
+  createdByUserId   String?
+
+  title       String
+  description String?
+  completedAt DateTime @default(now())
+
+  odometerValue Int?
+  odometerUnit  OdometerUnit?
+
+  labourCharge Decimal @default(0) @db.Decimal(10, 2)
+  partsCharge  Decimal @default(0) @db.Decimal(10, 2)
+  totalCharge  Decimal @default(0) @db.Decimal(10, 2)
+
+  notes String?
+
+  nextServiceDueAt        DateTime?
+  nextServiceOdometer     Int?
+  nextServiceOdometerUnit OdometerUnit?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer  Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  vehicle   Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  performedByUser User? @relation("WorkLogPerformer", fields: [performedByUserId], references: [id], onDelete: SetNull)
+  createdByUser   User? @relation("WorkLogCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([performedByUserId])
+  @@index([createdByUserId])
+  @@index([completedAt])
+  @@index([createdAt])
 }
