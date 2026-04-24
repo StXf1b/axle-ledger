@@ -3,7 +3,15 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSignIn } from "@clerk/nextjs";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import {
+	Mail,
+	Lock,
+	ArrowRight,
+	ShieldCheck,
+	Smartphone,
+	KeyRound,
+	RefreshCw,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import AuthCard from "@/components/ui/AuthCard";
@@ -15,13 +23,8 @@ import Button from "@/components/ui/Button";
 
 function sanitizeRedirect(value) {
 	if (!value || typeof value !== "string") return "/dashboard";
-
-	// Only allow internal absolute-path redirects.
 	if (!value.startsWith("/")) return "/dashboard";
-
-	// Block protocol-relative and malformed external-style redirects.
 	if (value.startsWith("//")) return "/dashboard";
-
 	return value;
 }
 
@@ -41,12 +44,58 @@ function getFieldError(fieldValue) {
 	return "";
 }
 
+const SECOND_FACTOR_META = {
+	email_code: {
+		label: "Email code",
+		icon: Mail,
+		description: "Enter the verification code sent to your email.",
+		codeLabel: "Email verification code",
+		codePlaceholder: "Enter the email code",
+	},
+	phone_code: {
+		label: "SMS code",
+		icon: Smartphone,
+		description: "Enter the verification code sent to your phone.",
+		codeLabel: "SMS verification code",
+		codePlaceholder: "Enter the SMS code",
+	},
+	totp: {
+		label: "Authenticator app",
+		icon: ShieldCheck,
+		description: "Enter the code from your authenticator app.",
+		codeLabel: "Authenticator code",
+		codePlaceholder: "Enter the 6-digit code",
+	},
+	backup_code: {
+		label: "Backup code",
+		icon: KeyRound,
+		description: "Enter one of your backup codes.",
+		codeLabel: "Backup code",
+		codePlaceholder: "Enter your backup code",
+	},
+};
+
+function normalizeSupportedStrategies(signIn) {
+	const rawFactors = signIn?.supportedSecondFactors || [];
+
+	const supported = rawFactors
+		.map((factor) => factor?.strategy)
+		.filter((strategy) =>
+			["email_code", "phone_code", "totp", "backup_code"].includes(strategy),
+		);
+
+	return [...new Set(supported)];
+}
+
 export default function SignInPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const { signIn, errors, fetchStatus } = useSignIn();
 
 	const [step, setStep] = useState("form");
+	const [verificationMode, setVerificationMode] = useState(null); // "client_trust" | "second_factor"
+	const [verificationStrategy, setVerificationStrategy] = useState("");
+	const [availableStrategies, setAvailableStrategies] = useState([]);
 	const [code, setCode] = useState("");
 	const [form, setForm] = useState({
 		email: "",
@@ -60,6 +109,13 @@ export default function SignInPage() {
 		() => sanitizeRedirect(searchParams.get("redirect")),
 		[searchParams],
 	);
+
+	const activeStrategyMeta =
+		SECOND_FACTOR_META[verificationStrategy] || SECOND_FACTOR_META.email_code;
+
+	function clearErrors() {
+		setLocalErrors({});
+	}
 
 	function handleChange(e) {
 		const { name, value } = e.target;
@@ -98,9 +154,9 @@ export default function SignInPage() {
 
 		await signIn.finalize({
 			navigate: ({ session, decorateUrl }) => {
-				// If you configure ClerkProvider taskUrls, Clerk can route these.
-				// Avoid pretending sign-in succeeded while doing nothing.
 				if (session?.currentTask) {
+					// Add a dedicated task route later if you enable required MFA setup.
+					router.push("/dashboard");
 					return;
 				}
 
@@ -115,6 +171,101 @@ export default function SignInPage() {
 		});
 	}
 
+	function pickDefaultStrategy(mode, supported) {
+		if (mode === "client_trust") {
+			if (supported.includes("email_code")) return "email_code";
+			if (supported.includes("phone_code")) return "phone_code";
+			return "";
+		}
+
+		if (supported.includes("phone_code")) return "phone_code";
+		if (supported.includes("email_code")) return "email_code";
+		if (supported.includes("totp")) return "totp";
+		if (supported.includes("backup_code")) return "backup_code";
+		return "";
+	}
+
+	async function sendCodeIfNeeded(strategy) {
+		if (!signIn) return { ok: false, message: "Sign-in is not ready yet." };
+
+		if (strategy === "email_code") {
+			const { error } = await signIn.mfa.sendEmailCode();
+			if (error) {
+				return {
+					ok: false,
+					message:
+						error.message || error.longMessage || "Could not send email code.",
+				};
+			}
+		}
+
+		if (strategy === "phone_code") {
+			const { error } = await signIn.mfa.sendPhoneCode();
+			if (error) {
+				return {
+					ok: false,
+					message:
+						error.message || error.longMessage || "Could not send SMS code.",
+				};
+			}
+		}
+
+		return { ok: true };
+	}
+
+	async function beginVerification(mode, preferredStrategy) {
+		if (!signIn) return;
+
+		const supported = normalizeSupportedStrategies(signIn);
+		const chosen =
+			preferredStrategy && supported.includes(preferredStrategy)
+				? preferredStrategy
+				: pickDefaultStrategy(mode, supported);
+
+		if (!chosen) {
+			setLocalErrors({
+				form: "This account requires a second factor that is not supported by this page.",
+			});
+			return;
+		}
+
+		const sendResult = await sendCodeIfNeeded(chosen);
+		if (!sendResult.ok) {
+			setLocalErrors({
+				form: sendResult.message,
+			});
+			return;
+		}
+
+		setAvailableStrategies(supported);
+		setVerificationMode(mode);
+		setVerificationStrategy(chosen);
+		setCode("");
+		setLocalErrors({});
+		setStep("verify");
+	}
+
+	async function switchStrategy(nextStrategy) {
+		if (!signIn || nextStrategy === verificationStrategy) return;
+
+		setLocalErrors((prev) => ({
+			...prev,
+			code: "",
+			form: "",
+		}));
+
+		const sendResult = await sendCodeIfNeeded(nextStrategy);
+		if (!sendResult.ok) {
+			setLocalErrors({
+				form: sendResult.message,
+			});
+			return;
+		}
+
+		setVerificationStrategy(nextStrategy);
+		setCode("");
+	}
+
 	async function handleSubmit(e) {
 		e.preventDefault();
 
@@ -126,7 +277,7 @@ export default function SignInPage() {
 			return;
 		}
 
-		setLocalErrors({});
+		clearErrors();
 
 		const { error } = await signIn.password({
 			emailAddress: form.email.trim(),
@@ -134,10 +285,9 @@ export default function SignInPage() {
 		});
 
 		if (error) {
-			setLocalErrors((prev) => ({
-				...prev,
+			setLocalErrors({
 				form: error.message || error.longMessage || "Sign-in failed.",
-			}));
+			});
 			return;
 		}
 
@@ -147,37 +297,12 @@ export default function SignInPage() {
 		}
 
 		if (signIn.status === "needs_client_trust") {
-			const emailCodeFactor = signIn.supportedSecondFactors?.find(
-				(factor) => factor.strategy === "email_code",
-			);
-
-			if (emailCodeFactor) {
-				const result = await signIn.mfa.sendEmailCode();
-
-				if (result?.error) {
-					setLocalErrors({
-						form:
-							result.error.message ||
-							result.error.longMessage ||
-							"Could not send verification code.",
-					});
-					return;
-				}
-
-				setStep("verify");
-				return;
-			}
-
-			setLocalErrors({
-				form: "Client trust verification is required, but no email code factor is available.",
-			});
+			await beginVerification("client_trust");
 			return;
 		}
 
 		if (signIn.status === "needs_second_factor") {
-			setLocalErrors({
-				form: "This account requires another MFA step that is not handled on this page yet.",
-			});
+			await beginVerification("second_factor");
 			return;
 		}
 
@@ -204,17 +329,30 @@ export default function SignInPage() {
 			form: "",
 		}));
 
-		const { error } = await signIn.mfa.verifyEmailCode({
-			code: code.trim(),
-		});
+		let result;
 
-		if (error) {
+		if (verificationStrategy === "email_code") {
+			result = await signIn.mfa.verifyEmailCode({ code: code.trim() });
+		} else if (verificationStrategy === "phone_code") {
+			result = await signIn.mfa.verifyPhoneCode({ code: code.trim() });
+		} else if (verificationStrategy === "totp") {
+			result = await signIn.mfa.verifyTOTP({ code: code.trim() });
+		} else if (verificationStrategy === "backup_code") {
+			result = await signIn.mfa.verifyBackupCode({ code: code.trim() });
+		} else {
+			setLocalErrors({
+				form: "Unsupported verification method.",
+			});
+			return;
+		}
+
+		if (result?.error) {
 			setLocalErrors((prev) => ({
 				...prev,
 				code:
-					error.message ||
-					error.longMessage ||
-					"Verification failed. Please check the code and try again.",
+					result.error.message ||
+					result.error.longMessage ||
+					"Verification failed. Please try again.",
 			}));
 			return;
 		}
@@ -226,8 +364,38 @@ export default function SignInPage() {
 
 		setLocalErrors((prev) => ({
 			...prev,
-			code: "Verification was not completed.",
+			form: "Verification was not completed.",
 		}));
+	}
+
+	async function handleResendCode() {
+		if (!signIn) return;
+
+		const sendResult = await sendCodeIfNeeded(verificationStrategy);
+
+		if (!sendResult.ok) {
+			setLocalErrors((prev) => ({
+				...prev,
+				code: sendResult.message,
+			}));
+			return;
+		}
+
+		setLocalErrors((prev) => ({
+			...prev,
+			code: "",
+			form: "",
+		}));
+	}
+
+	async function handleStartOver() {
+		await signIn?.reset();
+		setStep("form");
+		setVerificationMode(null);
+		setVerificationStrategy("");
+		setAvailableStrategies([]);
+		setCode("");
+		setLocalErrors({});
 	}
 
 	async function handleGoogleSignIn() {
@@ -255,77 +423,98 @@ export default function SignInPage() {
 	if (step === "verify") {
 		return (
 			<AuthCard
-				title="Verify your account"
-				subtitle={`We sent a code to ${form.email}.`}
+				title={
+					verificationMode === "client_trust"
+						? "Verify this device"
+						: "Verify your account"
+				}
+				subtitle={activeStrategyMeta.description}
 				footer={
 					<div className="stack-sm">
+						{(verificationStrategy === "email_code" ||
+							verificationStrategy === "phone_code") && (
+							<p>
+								<button type="button" onClick={handleResendCode}>
+									Send a new code
+								</button>
+							</p>
+						)}
+
 						<p>
-							<button
-								type="button"
-								onClick={async () => {
-									if (!signIn) return;
-									const result = await signIn.mfa.sendEmailCode();
-									if (result?.error) {
-										setLocalErrors((prev) => ({
-											...prev,
-											code:
-												result.error.message ||
-												result.error.longMessage ||
-												"Could not send a new code.",
-										}));
-									}
-								}}
-							>
-								Send a new code
-							</button>
-						</p>
-						<p>
-							<button
-								type="button"
-								onClick={async () => {
-									await signIn?.reset();
-									setStep("form");
-									setCode("");
-									setLocalErrors({});
-								}}
-							>
+							<button type="button" onClick={handleStartOver}>
 								Start over
 							</button>
 						</p>
 					</div>
 				}
 			>
-				<form onSubmit={handleVerify} className="stack-md">
-					<Input
-						label="Verification code"
-						name="code"
-						value={code}
-						onChange={(e) => {
-							setCode(e.target.value);
-							setLocalErrors((prev) => ({ ...prev, code: "" }));
-						}}
-						placeholder="Enter the code"
-						error={localErrors.code || getFieldError(errors?.fields?.code)}
-						required
-					/>
+				<div className="stack-md">
+					{availableStrategies.length > 1 ? (
+						<div className="stack-sm">
+							<p className="field-label">Choose a verification method</p>
 
-					{localErrors.form ? (
-						<p className="text-danger" style={{ fontSize: "0.9rem" }}>
-							{localErrors.form}
-						</p>
+							<div
+								style={{
+									display: "flex",
+									flexWrap: "wrap",
+									gap: "10px",
+								}}
+							>
+								{availableStrategies.map((strategy) => {
+									const meta = SECOND_FACTOR_META[strategy];
+									if (!meta) return null;
+
+									const Icon = meta.icon;
+									const isActive = verificationStrategy === strategy;
+
+									return (
+										<button
+											key={strategy}
+											type="button"
+											className={`tab ${isActive ? "active" : ""}`}
+											onClick={() => switchStrategy(strategy)}
+										>
+											<Icon size={16} />
+											{meta.label}
+										</button>
+									);
+								})}
+							</div>
+						</div>
 					) : null}
 
-					<Button
-						type="submit"
-						variant="primary"
-						size="lg"
-						fullWidth
-						loading={isSubmitting}
-						rightIcon={!isSubmitting ? <ArrowRight size={18} /> : null}
-					>
-						Verify and sign in
-					</Button>
-				</form>
+					<form onSubmit={handleVerify} className="stack-md">
+						<Input
+							label={activeStrategyMeta.codeLabel}
+							name="code"
+							value={code}
+							onChange={(e) => {
+								setCode(e.target.value);
+								setLocalErrors((prev) => ({ ...prev, code: "", form: "" }));
+							}}
+							placeholder={activeStrategyMeta.codePlaceholder}
+							error={localErrors.code || getFieldError(errors?.fields?.code)}
+							required
+						/>
+
+						{localErrors.form ? (
+							<p className="text-danger" style={{ fontSize: "0.9rem" }}>
+								{localErrors.form}
+							</p>
+						) : null}
+
+						<Button
+							type="submit"
+							variant="primary"
+							size="lg"
+							fullWidth
+							loading={isSubmitting}
+							rightIcon={!isSubmitting ? <ArrowRight size={18} /> : null}
+						>
+							Verify and sign in
+						</Button>
+					</form>
+				</div>
 			</AuthCard>
 		);
 	}

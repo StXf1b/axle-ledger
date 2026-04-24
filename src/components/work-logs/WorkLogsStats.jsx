@@ -16,12 +16,6 @@ export default function WorkLogsStats({ stats }) {
 			icon: Wrench,
 		},
 		{
-			key: "logsThisMonth",
-			label: "This month",
-			value: stats.logsThisMonth,
-			icon: CalendarClock,
-		},
-		{
 			key: "labourTotal",
 			label: "Labour total",
 			value: formatCurrency(stats.labourTotal),

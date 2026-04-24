@@ -43,14 +43,19 @@
 .customer-hero__avatar {
 	width: 68px;
 	height: 68px;
-	border-radius: 18px;
+	border-radius: 20px;
+	font-size: 1.8rem;
+	font-weight: 700;
 	display: grid;
 	place-items: center;
-	font-size: 1.18rem;
-	font-weight: 800;
-	color: white;
-	background: linear-gradient(180deg, #4b8df7 0%, #2563eb 100%);
-	box-shadow: 0 14px 28px rgba(37, 99, 235, 0.2);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+		var(--primary-soft);
+	color: #dbeafe;
+	border: 1px solid rgba(59, 130, 246, 0.22);
+	box-shadow:
+		0 0 0 1px rgba(59, 130, 246, 0.05),
+		0 14px 28px rgba(37, 99, 235, 0.14);
 	flex-shrink: 0;
 }
 

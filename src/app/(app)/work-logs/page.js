@@ -1,67 +1,46 @@
-import { db } from "@/lib/db";
-import { getCurrentWorkspaceContext } from "@/lib/auth";
+import { getWorkLogsListPage } from "@/lib/queries/work-logs";
 import WorkLogsPageClient from "@/components/work-logs/WorkLogsPageClient";
+
+const PAGE_SIZE = 10;
 
 export default async function WorkLogsPage({ searchParams }) {
 	const params = await searchParams;
 
-	const context = await getCurrentWorkspaceContext();
-	const workspaceId =
-		context?.workspace?.id || context?.membership?.workspaceId;
+	const search = typeof params?.search === "string" ? params.search : "";
 
-	const where = {
-		workspaceId,
-		...(params?.vehicleId ? { vehicleId: params.vehicleId } : {}),
-		...(params?.customerId ? { customerId: params.customerId } : {}),
-	};
+	const performedBy =
+		typeof params?.performedBy === "string" ? params.performedBy : "All";
 
-	const workLogs = await db.workLog.findMany({
-		where,
-		include: {
-			customer: {
-				select: {
-					id: true,
-					firstName: true,
-					lastName: true,
-					companyName: true,
-				},
-			},
-			vehicle: {
-				select: {
-					id: true,
-					registration: true,
-					make: true,
-					model: true,
-				},
-			},
-			performedByUser: {
-				select: {
-					id: true,
-					fullName: true,
-					email: true,
-				},
-			},
-			createdByUser: {
-				select: {
-					id: true,
-					fullName: true,
-					email: true,
-				},
-			},
-		},
-		orderBy: [{ completedAt: "desc" }, { createdAt: "desc" }],
-	});
+	const customerId =
+		typeof params?.customerId === "string" ? params.customerId : "";
 
-	const initialWorkLogs = workLogs.map((workLog) => ({
-		...workLog,
-		completedAt: workLog.completedAt?.toISOString() || null,
-		nextServiceDueAt: workLog.nextServiceDueAt?.toISOString() || null,
-		createdAt: workLog.createdAt.toISOString(),
-		updatedAt: workLog.updatedAt.toISOString(),
-		labourCharge: workLog.labourCharge?.toString() || "0",
-		partsCharge: workLog.partsCharge?.toString() || "0",
-		totalCharge: workLog.totalCharge?.toString() || "0",
-	}));
+	const vehicleId =
+		typeof params?.vehicleId === "string" ? params.vehicleId : "";
 
-	return <WorkLogsPageClient initialWorkLogs={initialWorkLogs} />;
+	const page = Math.max(1, Number(params?.page || 1) || 1);
+
+	const { workLogs, totalCount, stats, staffOptions } =
+		await getWorkLogsListPage({
+			search,
+			performedBy,
+			customerId,
+			vehicleId,
+			page,
+			pageSize: PAGE_SIZE,
+		});
+
+	return (
+		<WorkLogsPageClient
+			workLogs={workLogs}
+			totalCount={totalCount}
+			stats={stats}
+			staffOptions={staffOptions}
+			currentPage={page}
+			pageSize={PAGE_SIZE}
+			currentSearch={search}
+			currentPerformedBy={performedBy}
+			currentCustomerId={customerId}
+			currentVehicleId={vehicleId}
+		/>
+	);
 }

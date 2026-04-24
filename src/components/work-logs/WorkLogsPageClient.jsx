@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 
 import Button from "@/components/ui/Button";
@@ -12,121 +12,112 @@ import WorkLogsTableToolbar from "@/components/work-logs/WorkLogsTableToolbar";
 import WorkLogsTable from "@/components/work-logs/WorkLogsTable";
 import "./WorkLogsPageClient.css";
 
-const ITEMS_PER_PAGE = 10;
-
-export default function WorkLogsPageClient({ initialWorkLogs }) {
+export default function WorkLogsPageClient({
+	workLogs,
+	totalCount,
+	stats,
+	staffOptions,
+	currentPage,
+	pageSize,
+	currentSearch,
+	currentPerformedBy,
+	currentCustomerId,
+	currentVehicleId,
+}) {
 	const router = useRouter();
-	const [search, setSearch] = useState("");
-	const [performedBy, setPerformedBy] = useState("All");
-	const [currentPage, setCurrentPage] = useState(1);
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const [isPending, startTransition] = useTransition();
 
-	const staffOptions = useMemo(() => {
-		const map = new Map();
+	const [searchInput, setSearchInput] = useState(currentSearch);
 
-		initialWorkLogs.forEach((log) => {
-			if (log.performedByUser?.id) {
-				map.set(
-					log.performedByUser.id,
-					log.performedByUser.fullName ||
-						log.performedByUser.email ||
-						"Unknown",
-				);
+	useEffect(() => {
+		setSearchInput(currentSearch);
+	}, [currentSearch]);
+
+	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+	const updateUrlParams = useCallback(
+		(updates) => {
+			const params = new URLSearchParams(searchParams.toString());
+
+			Object.entries(updates).forEach(([key, value]) => {
+				if (
+					value === null ||
+					value === undefined ||
+					value === "" ||
+					value === "All"
+				) {
+					params.delete(key);
+				} else {
+					params.set(key, String(value));
+				}
+			});
+
+			if (currentCustomerId && !params.has("customerId")) {
+				params.set("customerId", currentCustomerId);
 			}
-		});
 
-		return Array.from(map.entries()).map(([id, label]) => ({ id, label }));
-	}, [initialWorkLogs]);
+			if (currentVehicleId && !params.has("vehicleId")) {
+				params.set("vehicleId", currentVehicleId);
+			}
 
-	const filteredWorkLogs = useMemo(() => {
-		const value = search.trim().toLowerCase();
+			const queryString = params.toString();
 
-		return initialWorkLogs.filter((log) => {
-			const customerText = log.customer
-				? `${log.customer.firstName || ""} ${log.customer.lastName || ""} ${log.customer.companyName || ""}`.toLowerCase()
-				: "";
-
-			const vehicleText = log.vehicle
-				? `${log.vehicle.registration || ""} ${log.vehicle.make || ""} ${log.vehicle.model || ""}`.toLowerCase()
-				: "";
-
-			const performedByText = (
-				log.performedByUser?.fullName ||
-				log.performedByUser?.email ||
-				""
-			).toLowerCase();
-
-			const matchesSearch =
-				!value ||
-				(log.title || "").toLowerCase().includes(value) ||
-				(log.description || "").toLowerCase().includes(value) ||
-				(log.notes || "").toLowerCase().includes(value) ||
-				customerText.includes(value) ||
-				vehicleText.includes(value) ||
-				performedByText.includes(value);
-
-			const matchesPerformedBy =
-				performedBy === "All" ? true : log.performedByUser?.id === performedBy;
-
-			return matchesSearch && matchesPerformedBy;
-		});
-	}, [initialWorkLogs, search, performedBy]);
-
-	const totalPages = Math.max(
-		1,
-		Math.ceil(filteredWorkLogs.length / ITEMS_PER_PAGE),
+			startTransition(() => {
+				router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+					scroll: false,
+				});
+			});
+		},
+		[currentCustomerId, currentVehicleId, pathname, router, searchParams],
 	);
 
-	const paginatedWorkLogs = useMemo(() => {
-		const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-		return filteredWorkLogs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-	}, [filteredWorkLogs, currentPage]);
+	function handleSearchSubmit(event) {
+		event.preventDefault();
 
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [search, performedBy]);
+		const trimmedValue = searchInput.trim();
 
-	useEffect(() => {
-		if (currentPage > totalPages) {
-			setCurrentPage(totalPages);
-		}
-	}, [currentPage, totalPages]);
+		if (trimmedValue === currentSearch) return;
 
-	const stats = useMemo(() => {
-		const now = new Date();
-		const currentMonth = now.getMonth();
-		const currentYear = now.getFullYear();
+		updateUrlParams({
+			search: trimmedValue || null,
+			page: 1,
+		});
+	}
 
-		const totalLogs = initialWorkLogs.length;
-		const logsThisMonth = initialWorkLogs.filter((log) => {
-			const date = new Date(log.completedAt);
-			return (
-				date.getMonth() === currentMonth && date.getFullYear() === currentYear
-			);
-		}).length;
+	function handleClearSearch() {
+		setSearchInput("");
 
-		const labourTotal = initialWorkLogs.reduce(
-			(total, log) => total + Number(log.labourCharge || 0),
-			0,
-		);
+		if (!currentSearch) return;
 
-		const partsTotal = initialWorkLogs.reduce(
-			(total, log) => total + Number(log.partsCharge || 0),
-			0,
-		);
+		updateUrlParams({
+			search: null,
+			page: 1,
+		});
+	}
 
-		const billedTotal = initialWorkLogs.reduce(
-			(total, log) => total + Number(log.totalCharge || 0),
-			0,
-		);
+	function handlePerformedByChange(nextPerformedBy) {
+		updateUrlParams({
+			performedBy: nextPerformedBy,
+			page: 1,
+		});
+	}
 
-		return {
-			totalLogs,
-			logsThisMonth,
-			labourTotal,
-			partsTotal,
-			billedTotal,
-		};
-	}, [initialWorkLogs]);
+	function handlePageChange(nextPage) {
+		updateUrlParams({
+			page: nextPage <= 1 ? null : nextPage,
+		});
+	}
+
+	const newWorkLogHref = `/work-logs/new${
+		currentCustomerId || currentVehicleId
+			? `?${new URLSearchParams({
+					...(currentCustomerId ? { customerId: currentCustomerId } : {}),
+					...(currentVehicleId ? { vehicleId: currentVehicleId } : {}),
+				}).toString()}`
+			: ""
+	}`;
 
 	return (
 		<section className="work-logs-page">
@@ -140,10 +131,10 @@ export default function WorkLogsPageClient({ initialWorkLogs }) {
 					</p>
 				</div>
 
-				<div className="page-header-right">
+				<div className="customers-page__actions">
 					<Button variant="secondary">Export</Button>
 
-					<Link href="/work-logs/new">
+					<Link href={newWorkLogHref}>
 						<Button variant="primary" leftIcon={<Plus size={18} />}>
 							New work log
 						</Button>
@@ -155,24 +146,27 @@ export default function WorkLogsPageClient({ initialWorkLogs }) {
 
 			<div className="work-logs-table-shell card">
 				<WorkLogsTableToolbar
-					search={search}
-					onSearchChange={setSearch}
-					performedBy={performedBy}
-					onPerformedByChange={setPerformedBy}
+					search={searchInput}
+					onSearchChange={setSearchInput}
+					onSearchSubmit={handleSearchSubmit}
+					onClearSearch={handleClearSearch}
+					performedBy={currentPerformedBy}
+					onPerformedByChange={handlePerformedByChange}
 					staffOptions={staffOptions}
+					isPending={isPending}
 				/>
 
 				<WorkLogsTable
-					workLogs={paginatedWorkLogs}
+					workLogs={workLogs}
 					onRowClick={(workLogId) => router.push(`/work-logs/${workLogId}`)}
 				/>
 
 				<TablePagination
 					currentPage={currentPage}
 					totalPages={totalPages}
-					totalItems={filteredWorkLogs.length}
-					itemsPerPage={ITEMS_PER_PAGE}
-					onPageChange={setCurrentPage}
+					totalItems={totalCount}
+					itemsPerPage={pageSize}
+					onPageChange={handlePageChange}
 					label="work logs"
 				/>
 			</div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import {
 	REMINDER_STATUS_OPTIONS,
 	REMINDER_TYPE_OPTIONS,
@@ -9,25 +9,47 @@ import {
 export default function RemindersTableToolbar({
 	search,
 	onSearchChange,
+	onSearchSubmit,
+	onClearSearch,
 	status,
 	onStatusChange,
 	type,
 	onTypeChange,
 	timing,
 	onTimingChange,
+	isPending = false,
 }) {
 	return (
 		<div className="reminders-toolbar">
 			<div className="reminders-toolbar__left">
-				<div className="reminders-search">
+				<form className="reminders-search" onSubmit={onSearchSubmit}>
 					<Search size={18} className="reminders-search__icon" />
 					<input
 						type="text"
 						value={search}
 						onChange={(e) => onSearchChange(e.target.value)}
-						placeholder="Search plate, customer, title, reminder type..."
+						placeholder="Search..."
 					/>
-				</div>
+
+					{search ? (
+						<button
+							type="button"
+							className="reminders-search__clear"
+							onClick={onClearSearch}
+							aria-label="Clear search"
+						>
+							<X size={16} />
+						</button>
+					) : null}
+
+					<button
+						type="submit"
+						className="reminders-search__submit"
+						disabled={isPending}
+					>
+						Search
+					</button>
+				</form>
 			</div>
 
 			<div className="reminders-toolbar__right">

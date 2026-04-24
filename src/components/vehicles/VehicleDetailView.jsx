@@ -49,7 +49,6 @@ function OverviewPanel({ vehicle }) {
 			<div className="vehicle-detail-grid">
 				<div className="card stack-md">
 					<h3 className="vehicle-detail-card__title">Vehicle information</h3>
-
 					<div className="vehicle-detail-list">
 						<div className="vehicle-detail-list__item">
 							<span>
@@ -195,14 +194,18 @@ export default function VehicleDetailView({ vehicle }) {
 										? "badge-success"
 										: vehicle.status === "SOLD"
 											? "badge-warning"
-											: "badge-neutral"
+											: vehicle.status === "ARCHIVED"
+												? "badge-info"
+												: "badge-danger"
 								}`}
 							>
 								{vehicle.status === "ACTIVE"
 									? "Active"
 									: vehicle.status === "SOLD"
 										? "Sold"
-										: "Archived"}
+										: vehicle.status === "ARCHIVED"
+											? "Archived"
+											: "Deleted"}
 							</span>
 						</div>
 

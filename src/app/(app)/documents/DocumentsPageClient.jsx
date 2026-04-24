@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FileText, Plus, UserRound, CarFront, HardDrive } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Plus } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import TablePagination from "@/components/ui/TablePagination";
@@ -12,96 +12,117 @@ import DocumentsTableToolbar from "@/components/documents/DocumentsTableToolbar"
 import DocumentsTable from "@/components/documents/DocumentsTable";
 import { formatFileSize } from "@/lib/document-utils";
 
-const ITEMS_PER_PAGE = 10;
-
-export default function DocumentsPageClient({ initialDocuments }) {
+export default function DocumentsPageClient({
+	documents,
+	totalCount,
+	stats,
+	currentPage,
+	pageSize,
+	currentSearch,
+	currentCategory,
+	currentLinkedTo,
+	currentCustomerId,
+	currentVehicleId,
+}) {
 	const router = useRouter();
-	const [search, setSearch] = useState("");
-	const [category, setCategory] = useState("All");
-	const [linkedTo, setLinkedTo] = useState("All");
-	const [currentPage, setCurrentPage] = useState(1);
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const [isPending, startTransition] = useTransition();
 
-	const filteredDocuments = useMemo(() => {
-		const value = search.trim().toLowerCase();
+	const [searchInput, setSearchInput] = useState(currentSearch);
 
-		return initialDocuments.filter((document) => {
-			const customerText = document.customer
-				? `${document.customer.firstName || ""} ${document.customer.lastName || ""} ${document.customer.companyName || ""}`.toLowerCase()
-				: "";
+	useEffect(() => {
+		setSearchInput(currentSearch);
+	}, [currentSearch]);
 
-			const vehicleText = document.vehicle
-				? `${document.vehicle.registration || ""} ${document.vehicle.make || ""} ${document.vehicle.model || ""}`.toLowerCase()
-				: "";
+	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-			const matchesSearch =
-				!value ||
-				(document.title || "").toLowerCase().includes(value) ||
-				(document.fileName || "").toLowerCase().includes(value) ||
-				(document.mimeType || "").toLowerCase().includes(value) ||
-				(document.notes || "").toLowerCase().includes(value) ||
-				customerText.includes(value) ||
-				vehicleText.includes(value);
+	const updateUrlParams = useCallback(
+		(updates) => {
+			const params = new URLSearchParams(searchParams.toString());
 
-			const matchesCategory =
-				category === "All" ? true : document.category === category;
+			Object.entries(updates).forEach(([key, value]) => {
+				if (
+					value === null ||
+					value === undefined ||
+					value === "" ||
+					value === "All"
+				) {
+					params.delete(key);
+				} else {
+					params.set(key, String(value));
+				}
+			});
 
-			const matchesLinked =
-				linkedTo === "All"
-					? true
-					: linkedTo === "CUSTOMER"
-						? !!document.customer
-						: linkedTo === "VEHICLE"
-							? !!document.vehicle
-							: linkedTo === "UNLINKED"
-								? !document.customer && !document.vehicle
-								: true;
+			// preserve linked context filters if they already exist
+			if (currentCustomerId && !params.has("customerId")) {
+				params.set("customerId", currentCustomerId);
+			}
 
-			return matchesSearch && matchesCategory && matchesLinked;
-		});
-	}, [initialDocuments, search, category, linkedTo]);
+			if (currentVehicleId && !params.has("vehicleId")) {
+				params.set("vehicleId", currentVehicleId);
+			}
 
-	const totalPages = Math.max(
-		1,
-		Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE),
+			const queryString = params.toString();
+
+			startTransition(() => {
+				router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+					scroll: false,
+				});
+			});
+		},
+		[currentCustomerId, currentVehicleId, pathname, router, searchParams],
 	);
 
-	const paginatedDocuments = useMemo(() => {
-		const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-		return filteredDocuments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-	}, [filteredDocuments, currentPage]);
+	function handleSearchSubmit(event) {
+		event.preventDefault();
 
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [search, category, linkedTo]);
+		const trimmedValue = searchInput.trim();
 
-	useEffect(() => {
-		if (currentPage > totalPages) {
-			setCurrentPage(totalPages);
-		}
-	}, [currentPage, totalPages]);
+		if (trimmedValue === currentSearch) return;
 
-	const stats = useMemo(() => {
-		const totalStorageBytes = initialDocuments.reduce(
-			(total, document) => total + (document.sizeBytes || 0),
-			0,
-		);
+		updateUrlParams({
+			search: trimmedValue || null,
+			page: 1,
+		});
+	}
 
-		return {
-			totalDocuments: initialDocuments.length,
-			customerLinked: initialDocuments.filter((document) => !!document.customer)
-				.length,
-			vehicleLinked: initialDocuments.filter((document) => !!document.vehicle)
-				.length,
-			totalStorageBytes,
-			totalStorageFormatted: formatFileSize(totalStorageBytes),
-		};
-	}, [initialDocuments]);
+	function handleClearSearch() {
+		setSearchInput("");
+
+		if (!currentSearch) return;
+
+		updateUrlParams({
+			search: null,
+			page: 1,
+		});
+	}
+
+	function handleCategoryChange(nextCategory) {
+		updateUrlParams({
+			category: nextCategory,
+			page: 1,
+		});
+	}
+
+	function handleLinkedToChange(nextLinkedTo) {
+		updateUrlParams({
+			linkedTo: nextLinkedTo,
+			page: 1,
+		});
+	}
+
+	function handlePageChange(nextPage) {
+		updateUrlParams({
+			page: nextPage <= 1 ? null : nextPage,
+		});
+	}
 
 	return (
 		<section className="page-section">
 			<div className="page-header">
 				<div className="page-header-left">
-					<p className="text-muted">Document management</p>
+					<p className="vehicles-page__eyebrow">Document management</p>
 					<h2>Documents</h2>
 					<p>
 						Store workshop files, service records, invoices, images, and linked
@@ -109,10 +130,24 @@ export default function DocumentsPageClient({ initialDocuments }) {
 					</p>
 				</div>
 
-				<div className="page-header-right">
-					<Button variant="secondary">Import</Button>
+				{/* Change the class to DocumentsPage__actions */}
+				<div className="vehicles-page__actions">
+					<Button variant="secondary">Export</Button>
 
-					<Link href="/documents/new">
+					<Link
+						href={`/documents/new${
+							currentCustomerId || currentVehicleId
+								? `?${new URLSearchParams({
+										...(currentCustomerId
+											? { customerId: currentCustomerId }
+											: {}),
+										...(currentVehicleId
+											? { vehicleId: currentVehicleId }
+											: {}),
+									}).toString()}`
+								: ""
+						}`}
+					>
 						<Button variant="primary" leftIcon={<Plus size={18} />}>
 							New document
 						</Button>
@@ -120,29 +155,37 @@ export default function DocumentsPageClient({ initialDocuments }) {
 				</div>
 			</div>
 
-			<DocumentsStats stats={stats} />
+			<DocumentsStats
+				stats={{
+					...stats,
+					totalStorageFormatted: formatFileSize(stats.totalStorageBytes || 0),
+				}}
+			/>
 
 			<div className="card stack-md">
 				<DocumentsTableToolbar
-					search={search}
-					onSearchChange={setSearch}
-					category={category}
-					onCategoryChange={setCategory}
-					linkedTo={linkedTo}
-					onLinkedToChange={setLinkedTo}
+					search={searchInput}
+					onSearchChange={setSearchInput}
+					onSearchSubmit={handleSearchSubmit}
+					onClearSearch={handleClearSearch}
+					category={currentCategory}
+					onCategoryChange={handleCategoryChange}
+					linkedTo={currentLinkedTo}
+					onLinkedToChange={handleLinkedToChange}
+					isPending={isPending}
 				/>
 
 				<DocumentsTable
-					documents={paginatedDocuments}
+					documents={documents}
 					onRowClick={(documentId) => router.push(`/documents/${documentId}`)}
 				/>
 
 				<TablePagination
 					currentPage={currentPage}
 					totalPages={totalPages}
-					totalItems={filteredDocuments.length}
-					itemsPerPage={ITEMS_PER_PAGE}
-					onPageChange={setCurrentPage}
+					totalItems={totalCount}
+					itemsPerPage={pageSize}
+					onPageChange={handlePageChange}
 					label="documents"
 				/>
 			</div>

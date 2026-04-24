@@ -6,6 +6,7 @@ import {
 	CarFront,
 	UserRound,
 	ClipboardList,
+	ArrowLeft,
 } from "lucide-react";
 
 import { db } from "@/lib/db";
@@ -108,6 +109,10 @@ export default async function ReminderDetailPage({ params }) {
 		<section className="page-section">
 			<div className="page-header">
 				<div className="page-header-left">
+					<Link href="/reminders" className="vehicle-detail-back">
+						<ArrowLeft size={16} />
+						Back to reminders
+					</Link>
 					<p className="text-muted">Reminders</p>
 					<h2>{reminder.title}</h2>
 					<p>

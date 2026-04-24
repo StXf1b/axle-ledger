@@ -49,19 +49,6 @@ export default async function NewDocumentPage() {
 				</div>
 			</div>
 
-			<div className="alert alert-info">
-				<div className="stack-sm">
-					<strong style={{ color: "var(--text)" }}>
-						R2 upload not wired yet
-					</strong>
-					<p>
-						For now this stores document metadata plus a downloadable file URL.
-						Once Cloudflare R2 is set up, replace the file URL field with a real
-						upload flow and keep the same schema and pages.
-					</p>
-				</div>
-			</div>
-
 			<div className="card">
 				<DocumentForm customers={customers} vehicles={vehicles} />
 			</div>

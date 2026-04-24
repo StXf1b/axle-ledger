@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
 	Plus,
 	Search,
@@ -11,79 +11,99 @@ import {
 	AlertTriangle,
 	Wrench,
 	UserRound,
+	X,
 } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import TablePagination from "@/components/ui/TablePagination";
 import VehiclesTable from "@/components/vehicles/VehiclesTable";
 
-const ITEMS_PER_PAGE = 10;
-
-export default function VehiclesPageClient({ initialVehicles }) {
+export default function VehiclesPageClient({
+	vehicles,
+	totalCount,
+	stats,
+	currentPage,
+	pageSize,
+	currentSearch,
+	currentStatus,
+}) {
 	const router = useRouter();
-	const [search, setSearch] = useState("");
-	const [status, setStatus] = useState("All");
-	const [currentPage, setCurrentPage] = useState(1);
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const [isPending, startTransition] = useTransition();
 
-	const filteredVehicles = useMemo(() => {
-		const value = search.trim().toLowerCase();
+	const [searchInput, setSearchInput] = useState(currentSearch);
 
-		return initialVehicles.filter((vehicle) => {
-			const customerName = vehicle.customer
-				? `${vehicle.customer.firstName || ""} ${vehicle.customer.lastName || ""} ${vehicle.customer.companyName || ""}`.toLowerCase()
-				: "";
+	useEffect(() => {
+		setSearchInput(currentSearch);
+	}, [currentSearch]);
 
-			const matchesSearch =
-				!value ||
-				(vehicle.registration || "").toLowerCase().includes(value) ||
-				(vehicle.make || "").toLowerCase().includes(value) ||
-				(vehicle.model || "").toLowerCase().includes(value) ||
-				(vehicle.vin || "").toLowerCase().includes(value) ||
-				customerName.includes(value);
+	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-			const matchesStatus = status === "All" ? true : vehicle.status === status;
+	const updateUrlParams = useCallback(
+		(updates) => {
+			const params = new URLSearchParams(searchParams.toString());
 
-			return matchesSearch && matchesStatus;
-		});
-	}, [initialVehicles, search, status]);
+			Object.entries(updates).forEach(([key, value]) => {
+				if (
+					value === null ||
+					value === undefined ||
+					value === "" ||
+					value === "All"
+				) {
+					params.delete(key);
+				} else {
+					params.set(key, String(value));
+				}
+			});
 
-	const totalPages = Math.max(
-		1,
-		Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE),
+			const queryString = params.toString();
+
+			startTransition(() => {
+				router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+					scroll: false,
+				});
+			});
+		},
+		[pathname, router, searchParams],
 	);
 
-	const paginatedVehicles = useMemo(() => {
-		const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-		const endIndex = startIndex + ITEMS_PER_PAGE;
+	function handleSearchSubmit(event) {
+		event.preventDefault();
 
-		return filteredVehicles.slice(startIndex, endIndex);
-	}, [filteredVehicles, currentPage]);
+		const trimmedValue = searchInput.trim();
 
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [search, status]);
+		if (trimmedValue === currentSearch) return;
 
-	useEffect(() => {
-		if (currentPage > totalPages) {
-			setCurrentPage(totalPages);
-		}
-	}, [currentPage, totalPages]);
+		updateUrlParams({
+			search: trimmedValue || null,
+			page: 1,
+		});
+	}
 
-	const stats = useMemo(() => {
-		const now = new Date();
+	function handleClearSearch() {
+		setSearchInput("");
 
-		return {
-			total: initialVehicles.length,
-			active: initialVehicles.filter((v) => v.status === "ACTIVE").length,
-			dueSoon: initialVehicles.filter((v) => {
-				if (!v.serviceDueAt) return false;
-				const due = new Date(v.serviceDueAt);
-				const diff = due.getTime() - now.getTime();
-				return diff > 0 && diff <= 1000 * 60 * 60 * 24 * 30;
-			}).length,
-			unassigned: initialVehicles.filter((v) => !v.customer).length,
-		};
-	}, [initialVehicles]);
+		if (!currentSearch) return;
+
+		updateUrlParams({
+			search: null,
+			page: 1,
+		});
+	}
+
+	function handleStatusChange(nextStatus) {
+		updateUrlParams({
+			status: nextStatus,
+			page: 1,
+		});
+	}
+
+	function handlePageChange(nextPage) {
+		updateUrlParams({
+			page: nextPage <= 1 ? null : nextPage,
+		});
+	}
 
 	return (
 		<section className="vehicles-page">
@@ -153,21 +173,40 @@ export default function VehiclesPageClient({ initialVehicles }) {
 			<div className="vehicles-table-shell card">
 				<div className="vehicles-toolbar">
 					<div className="vehicles-toolbar__left">
-						<div className="vehicles-search">
+						<form className="vehicles-search" onSubmit={handleSearchSubmit}>
 							<Search size={18} className="vehicles-search__icon" />
 							<input
 								type="text"
-								value={search}
-								onChange={(e) => setSearch(e.target.value)}
-								placeholder="Search registration, make, model, VIN, customer..."
+								value={searchInput}
+								onChange={(e) => setSearchInput(e.target.value)}
+								placeholder="Search..."
 							/>
-						</div>
+
+							{searchInput ? (
+								<button
+									type="button"
+									className="vehicles-search__clear"
+									onClick={handleClearSearch}
+									aria-label="Clear search"
+								>
+									<X size={16} />
+								</button>
+							) : null}
+
+							<button
+								type="submit"
+								className="vehicles-search__submit"
+								disabled={isPending}
+							>
+								Search
+							</button>
+						</form>
 
 						<div className="vehicles-filter">
 							<SlidersHorizontal size={16} />
 							<select
-								value={status}
-								onChange={(e) => setStatus(e.target.value)}
+								value={currentStatus}
+								onChange={(e) => handleStatusChange(e.target.value)}
 							>
 								<option value="All">All statuses</option>
 								<option value="ACTIVE">Active</option>
@@ -179,16 +218,16 @@ export default function VehiclesPageClient({ initialVehicles }) {
 				</div>
 
 				<VehiclesTable
-					vehicles={paginatedVehicles}
+					vehicles={vehicles}
 					onRowClick={(vehicleId) => router.push(`/vehicles/${vehicleId}`)}
 				/>
 
 				<TablePagination
 					currentPage={currentPage}
 					totalPages={totalPages}
-					totalItems={filteredVehicles.length}
-					itemsPerPage={ITEMS_PER_PAGE}
-					onPageChange={setCurrentPage}
+					totalItems={totalCount}
+					itemsPerPage={pageSize}
+					onPageChange={handlePageChange}
 					label="vehicles"
 				/>
 			</div>

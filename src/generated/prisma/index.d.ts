@@ -90,7 +90,8 @@ export type InviteStatus = (typeof InviteStatus)[keyof typeof InviteStatus]
 export const VehicleStatus: {
   ACTIVE: 'ACTIVE',
   SOLD: 'SOLD',
-  ARCHIVED: 'ARCHIVED'
+  ARCHIVED: 'ARCHIVED',
+  DELETED: 'DELETED'
 };
 
 export type VehicleStatus = (typeof VehicleStatus)[keyof typeof VehicleStatus]

@@ -97,10 +97,6 @@ export default function CustomerDetailView({ customer }) {
 						<p>Preferred contact</p>
 						<h4>{customer.preferredContact}</h4>
 					</div>
-					<div className="customer-mini-stat">
-						<p>Last activity</p>
-						<h4>{new Date(customer.lastActivity).toLocaleDateString()}</h4>
-					</div>
 				</div>
 			</div>
 

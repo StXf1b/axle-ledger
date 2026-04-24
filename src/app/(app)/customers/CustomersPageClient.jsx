@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Plus, Search, X } from "lucide-react";
 import Link from "next/link";
 
 import Button from "@/components/ui/Button";
@@ -11,78 +11,92 @@ import CustomersStats from "@/components/customers/CustomersStats";
 import CustomersTableToolbar from "@/components/customers/CustomersTableToolbar";
 import CustomersTable from "@/components/customers/CustomersTable";
 
-const ITEMS_PER_PAGE = 10;
-
-export default function CustomersPageClient({ initialCustomers }) {
+export default function CustomersPageClient({
+	customers,
+	totalCount,
+	stats,
+	currentPage,
+	pageSize,
+	currentSearch,
+	currentStatus,
+}) {
 	const router = useRouter();
-	const [search, setSearch] = useState("");
-	const [status, setStatus] = useState("All");
-	const [currentPage, setCurrentPage] = useState(1);
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const [isPending, startTransition] = useTransition();
 
-	const filteredCustomers = useMemo(() => {
-		const value = search.trim().toLowerCase();
+	const [searchInput, setSearchInput] = useState(currentSearch);
 
-		return initialCustomers.filter((customer) => {
-			const fullName =
-				`${customer.firstName || ""} ${customer.lastName || ""}`.toLowerCase();
+	useEffect(() => {
+		setSearchInput(currentSearch);
+	}, [currentSearch]);
 
-			const vehicleSearchText = (customer.vehicles || [])
-				.map((v) => `${v.registration || ""} ${v.make || ""} ${v.model || ""}`)
-				.join(" ")
-				.toLowerCase();
+	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-			const tagsText = (customer.tags || []).join(" ").toLowerCase();
+	const updateUrlParams = useCallback(
+		(updates) => {
+			const params = new URLSearchParams(searchParams.toString());
 
-			const matchesSearch =
-				!value ||
-				fullName.includes(value) ||
-				(customer.companyName || "").toLowerCase().includes(value) ||
-				(customer.phone || "").toLowerCase().includes(value) ||
-				(customer.email || "").toLowerCase().includes(value) ||
-				vehicleSearchText.includes(value) ||
-				tagsText.includes(value);
+			Object.entries(updates).forEach(([key, value]) => {
+				if (
+					value === null ||
+					value === undefined ||
+					value === "" ||
+					value === "All"
+				) {
+					params.delete(key);
+				} else {
+					params.set(key, String(value));
+				}
+			});
 
-			const matchesStatus =
-				status === "All" ? true : customer.status === status;
+			const queryString = params.toString();
 
-			return matchesSearch && matchesStatus;
-		});
-	}, [initialCustomers, search, status]);
-
-	const totalPages = Math.max(
-		1,
-		Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE),
+			startTransition(() => {
+				router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+					scroll: false,
+				});
+			});
+		},
+		[pathname, router, searchParams],
 	);
 
-	const paginatedCustomers = useMemo(() => {
-		const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-		const endIndex = startIndex + ITEMS_PER_PAGE;
+	function handleSearchSubmit(event) {
+		event.preventDefault();
 
-		return filteredCustomers.slice(startIndex, endIndex);
-	}, [filteredCustomers, currentPage]);
+		const trimmedValue = searchInput.trim();
 
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [search, status]);
+		if (trimmedValue === currentSearch) return;
 
-	useEffect(() => {
-		if (currentPage > totalPages) {
-			setCurrentPage(totalPages);
-		}
-	}, [currentPage, totalPages]);
+		updateUrlParams({
+			search: trimmedValue || null,
+			page: 1,
+		});
+	}
 
-	const stats = useMemo(() => {
-		return {
-			totalCustomers: initialCustomers.length,
-			activeCustomers: initialCustomers.filter((c) => c.status === "ACTIVE")
-				.length,
-			businessCustomers: initialCustomers.filter((c) => c.companyName).length,
-			linkedVehicles: initialCustomers.reduce(
-				(total, customer) => total + customer.vehicles.length,
-				0,
-			),
-		};
-	}, [initialCustomers]);
+	function handleClearSearch() {
+		setSearchInput("");
+
+		if (!currentSearch) return;
+
+		updateUrlParams({
+			search: null,
+			page: 1,
+		});
+	}
+
+	function handleStatusChange(nextStatus) {
+		updateUrlParams({
+			status: nextStatus,
+			page: 1,
+		});
+	}
+
+	function handlePageChange(nextPage) {
+		updateUrlParams({
+			page: nextPage <= 1 ? null : nextPage,
+		});
+	}
 
 	return (
 		<section className="customers-page">
@@ -92,12 +106,12 @@ export default function CustomersPageClient({ initialCustomers }) {
 					<h2 className="customers-page__title">Customers</h2>
 					<p className="customers-page__subtitle">
 						View and manage all customer records, contact details, linked
-						vehicles, and account notes from one place.
+						vehicles, and account notes.
 					</p>
 				</div>
 
 				<div className="customers-page__actions">
-					<Button variant="secondary">Import</Button>
+					<Button variant="secondary">Export</Button>
 
 					<Link href="/customers/new">
 						<Button variant="primary" leftIcon={<Plus size={18} />}>
@@ -111,23 +125,26 @@ export default function CustomersPageClient({ initialCustomers }) {
 
 			<div className="customers-table-shell card">
 				<CustomersTableToolbar
-					search={search}
-					onSearchChange={setSearch}
-					status={status}
-					onStatusChange={setStatus}
+					search={searchInput}
+					onSearchChange={setSearchInput}
+					onSearchSubmit={handleSearchSubmit}
+					onClearSearch={handleClearSearch}
+					status={currentStatus}
+					onStatusChange={handleStatusChange}
+					isPending={isPending}
 				/>
 
 				<CustomersTable
-					customers={paginatedCustomers}
+					customers={customers}
 					onRowClick={(customerId) => router.push(`/customers/${customerId}`)}
 				/>
 
 				<TablePagination
 					currentPage={currentPage}
 					totalPages={totalPages}
-					totalItems={filteredCustomers.length}
-					itemsPerPage={ITEMS_PER_PAGE}
-					onPageChange={setCurrentPage}
+					totalItems={totalCount}
+					itemsPerPage={pageSize}
+					onPageChange={handlePageChange}
 					label="customers"
 				/>
 			</div>

@@ -183,11 +183,6 @@ export default function DashboardPageView({ data }) {
 				<KpiCard icon={Users} label="Customers" value={kpis.customersCount} />
 				<KpiCard icon={CarFront} label="Vehicles" value={kpis.vehiclesCount} />
 				<KpiCard
-					icon={BellRing}
-					label="Open reminders"
-					value={kpis.openRemindersCount}
-				/>
-				<KpiCard
 					icon={FileText}
 					label="Documents"
 					value={kpis.documentsCount}

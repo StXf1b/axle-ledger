@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSignUp } from "@clerk/nextjs";
+import { useSignIn, useSignUp } from "@clerk/nextjs";
 import { User, Mail, Lock, ArrowRight } from "lucide-react";
 
 import AuthCard from "@/components/ui/AuthCard";
@@ -16,6 +16,7 @@ import Button from "@/components/ui/Button";
 export default function SignUpPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const { signIn } = useSignIn();
 	const { signUp, errors, fetchStatus } = useSignUp();
 
 	const targetRedirect = searchParams.get("redirect") || "/dashboard";
@@ -126,20 +127,28 @@ export default function SignUpPage() {
 	}
 
 	async function handleGoogleSignUp() {
-		if (!signUp) return;
+		if (!signIn || googleLoading) return;
 
 		try {
 			setGoogleLoading(true);
+			setLocalErrors((prev) => ({ ...prev, form: "" }));
 
-			const { error } = await signUp.sso({
+			const { error } = await signIn.sso({
 				strategy: "oauth_google",
 				redirectCallbackUrl: `/sso-callback?redirect=${encodeURIComponent(targetRedirect)}`,
 				redirectUrl: targetRedirect,
 			});
 
 			if (error) {
-				console.error(error);
+				setLocalErrors({
+					form: error.message || error.longMessage || "Google sign-in failed.",
+				});
 			}
+		} catch (err) {
+			console.error("Google OAuth start failed:", err);
+			setLocalErrors({
+				form: "Could not start Google sign-in. Please try again.",
+			});
 		} finally {
 			setGoogleLoading(false);
 		}

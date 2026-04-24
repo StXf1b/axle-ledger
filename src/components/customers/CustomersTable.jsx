@@ -19,14 +19,13 @@ export default function CustomersTable({ customers, onRowClick }) {
 						<th>Vehicles</th>
 						<th>Preferred contact</th>
 						<th>Status</th>
-						<th>Last activity</th>
 					</tr>
 				</thead>
 
 				<tbody>
 					{customers.length === 0 ? (
 						<tr>
-							<td colSpan="8">
+							<td colSpan="7">
 								<div className="customers-empty">
 									<p className="customers-empty__title">No customers found</p>
 									<p className="customers-empty__text">
@@ -75,7 +74,7 @@ export default function CustomersTable({ customers, onRowClick }) {
 								<td>{customer.phone || "—"}</td>
 								<td>{customer.email || "—"}</td>
 								<td>{customer.vehicles.length}</td>
-								<td>{customer.preferredContact}</td>
+								<td>{customer.preferredContact || "—"}</td>
 								<td>
 									<span
 										className={`badge ${
@@ -87,7 +86,6 @@ export default function CustomersTable({ customers, onRowClick }) {
 										{customer.status}
 									</span>
 								</td>
-								<td>{new Date(customer.lastActivity).toLocaleDateString()}</td>
 							</tr>
 						))
 					)}

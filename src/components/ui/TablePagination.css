@@ -94,11 +94,15 @@
 	}
 
 	.table-pagination__controls {
-		justify-content: space-between;
+		justify-content: center;
+		width: 100%;
 	}
 
 	.table-pagination__pages {
 		justify-content: center;
 		width: 100%;
+	}
+	.table-pagination__button {
+		flex: 1;
 	}
 }

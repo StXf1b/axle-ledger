@@ -331,7 +331,8 @@ exports.CustomerStatus = exports.$Enums.CustomerStatus = {
 exports.VehicleStatus = exports.$Enums.VehicleStatus = {
   ACTIVE: 'ACTIVE',
   SOLD: 'SOLD',
-  ARCHIVED: 'ARCHIVED'
+  ARCHIVED: 'ARCHIVED',
+  DELETED: 'DELETED'
 };
 
 exports.OdometerUnit = exports.$Enums.OdometerUnit = {

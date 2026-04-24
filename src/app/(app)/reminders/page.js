@@ -1,51 +1,41 @@
-import { db } from "@/lib/db";
-import { getCurrentWorkspaceContext } from "@/lib/auth";
+import { getRemindersListPage } from "@/lib/queries/reminders";
 import RemindersPageClient from "@/components/reminders/RemindersPageClient";
 
-export default async function RemindersPage() {
-	const context = await getCurrentWorkspaceContext();
-	const workspaceId =
-		context?.workspace?.id || context?.membership?.workspaceId;
+const PAGE_SIZE = 10;
 
-	const reminders = await db.reminder.findMany({
-		where: {
-			workspaceId,
-		},
-		include: {
-			customer: {
-				select: {
-					id: true,
-					firstName: true,
-					lastName: true,
-					companyName: true,
-				},
-			},
-			vehicle: {
-				select: {
-					id: true,
-					registration: true,
-					make: true,
-					model: true,
-				},
-			},
-			createdByUser: {
-				select: {
-					id: true,
-					fullName: true,
-					email: true,
-				},
-			},
-		},
-		orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }],
+export default async function RemindersPage({ searchParams }) {
+	const params = await searchParams;
+
+	const search = typeof params?.search === "string" ? params.search : "";
+
+	const status = typeof params?.status === "string" ? params.status : "All";
+
+	const type = typeof params?.type === "string" ? params.type : "All";
+
+	const timing = typeof params?.timing === "string" ? params.timing : "All";
+
+	const page = Math.max(1, Number(params?.page || 1) || 1);
+
+	const { reminders, totalCount, stats } = await getRemindersListPage({
+		search,
+		status,
+		type,
+		timing,
+		page,
+		pageSize: PAGE_SIZE,
 	});
 
-	const initialReminders = reminders.map((reminder) => ({
-		...reminder,
-		dueAt: reminder.dueAt?.toISOString() || null,
-		completedAt: reminder.completedAt?.toISOString() || null,
-		createdAt: reminder.createdAt.toISOString(),
-		updatedAt: reminder.updatedAt.toISOString(),
-	}));
-
-	return <RemindersPageClient initialReminders={initialReminders} />;
+	return (
+		<RemindersPageClient
+			reminders={reminders}
+			totalCount={totalCount}
+			stats={stats}
+			currentPage={page}
+			pageSize={PAGE_SIZE}
+			currentSearch={search}
+			currentStatus={status}
+			currentType={type}
+			currentTiming={timing}
+		/>
+	);
 }

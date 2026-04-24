@@ -41,9 +41,17 @@ export default function SSOCallbackPage() {
 				router.push(`/sign-up?redirect=${encodeURIComponent(targetRedirect)}`);
 			};
 
+			const goToContinue = () => {
+				router.push(
+					`/sign-in/continue?redirect=${encodeURIComponent(targetRedirect)}`,
+				);
+			};
+
 			const handleNavigate = async ({ session, decorateUrl }) => {
-				// Best if ClerkProvider taskUrls is configured.
 				if (session?.currentTask) {
+					router.push(
+						`/sign-in/tasks?redirect=${encodeURIComponent(targetRedirect)}`,
+					);
 					return;
 				}
 
@@ -56,7 +64,6 @@ export default function SSOCallbackPage() {
 				}
 			};
 
-			// 1. OAuth completed as sign-in
 			if (signIn.status === "complete") {
 				const { error } = await signIn.finalize({
 					navigate: handleNavigate,
@@ -69,7 +76,6 @@ export default function SSOCallbackPage() {
 				return;
 			}
 
-			// 2. OAuth came back as sign-up but can transfer into sign-in
 			if (signUp.isTransferable) {
 				const { error } = await signIn.create({ transfer: true });
 
@@ -98,7 +104,6 @@ export default function SSOCallbackPage() {
 				return;
 			}
 
-			// 3. Sign-in needs non-SSO first factor, return to custom sign-in
 			if (
 				signIn.status === "needs_first_factor" &&
 				!signIn.supportedFirstFactors?.every(
@@ -109,7 +114,6 @@ export default function SSOCallbackPage() {
 				return;
 			}
 
-			// 4. OAuth came back as sign-in but can transfer into sign-up
 			if (signIn.isTransferable) {
 				const { error } = await signUp.create({ transfer: true });
 
@@ -134,11 +138,10 @@ export default function SSOCallbackPage() {
 					return;
 				}
 
-				goToSignUp();
+				goToContinue();
 				return;
 			}
 
-			// 5. OAuth completed as sign-up
 			if (signUp.status === "complete") {
 				const { error } = await signUp.finalize({
 					navigate: handleNavigate,
@@ -151,7 +154,14 @@ export default function SSOCallbackPage() {
 				return;
 			}
 
-			// 6. Existing session returned from Clerk
+			if (
+				signIn.status === "needs_second_factor" ||
+				signIn.status === "needs_new_password"
+			) {
+				goToSignIn();
+				return;
+			}
+
 			if (signIn.existingSession || signUp.existingSession) {
 				const sessionId =
 					signIn.existingSession?.sessionId ||
@@ -166,16 +176,6 @@ export default function SSOCallbackPage() {
 				}
 			}
 
-			// 7. Additional auth steps not handled here
-			if (
-				signIn.status === "needs_second_factor" ||
-				signIn.status === "needs_new_password"
-			) {
-				goToSignIn();
-				return;
-			}
-
-			// 8. Safe fallback
 			goTo(targetRedirect);
 		}
 

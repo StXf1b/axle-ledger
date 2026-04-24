@@ -125,3 +125,20 @@ export async function deleteVehicle(vehicleId) {
 	revalidatePath("/vehicles");
 	return { ok: true };
 }
+
+export async function softDeleteVehicle(vehicleId) {
+	const { workspaceId } = await getWorkspaceContextOrThrow();
+	const existing = await db.vehicle.findFirst({
+		where: {
+			id: vehicleId,
+			workspaceId,
+		},
+	});
+
+	if (!existing) throw new Error("Vehicle not found");
+
+	await db.vehicle.update({
+		where: { id: vehicleId },
+		data: { status: "DELETED" },
+	});
+}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 
 import Button from "@/components/ui/Button";
@@ -10,111 +10,110 @@ import TablePagination from "@/components/ui/TablePagination";
 import RemindersStats from "@/components/reminders/RemindersStats";
 import RemindersTableToolbar from "@/components/reminders/RemindersTableToolbar";
 import RemindersTable from "@/components/reminders/RemindersTable";
-import { getReminderTiming } from "@/lib/reminder-utils";
 import "./RemindersPageClient.css";
 
-const ITEMS_PER_PAGE = 10;
-
-export default function RemindersPageClient({ initialReminders }) {
+export default function RemindersPageClient({
+	reminders,
+	totalCount,
+	stats,
+	currentPage,
+	pageSize,
+	currentSearch,
+	currentStatus,
+	currentType,
+	currentTiming,
+}) {
 	const router = useRouter();
-	const [search, setSearch] = useState("");
-	const [status, setStatus] = useState("All");
-	const [type, setType] = useState("All");
-	const [timing, setTiming] = useState("All");
-	const [currentPage, setCurrentPage] = useState(1);
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const [isPending, startTransition] = useTransition();
 
-	const filteredReminders = useMemo(() => {
-		const value = search.trim().toLowerCase();
+	const [searchInput, setSearchInput] = useState(currentSearch);
 
-		return initialReminders.filter((reminder) => {
-			const customerName = reminder.customer
-				? `${reminder.customer.firstName || ""} ${reminder.customer.lastName || ""} ${reminder.customer.companyName || ""}`.toLowerCase()
-				: "";
+	useEffect(() => {
+		setSearchInput(currentSearch);
+	}, [currentSearch]);
 
-			const vehicleLabel = reminder.vehicle
-				? `${reminder.vehicle.registration || ""} ${reminder.vehicle.make || ""} ${reminder.vehicle.model || ""}`.toLowerCase()
-				: "";
+	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-			const typeText = (reminder.type || "").toLowerCase().replaceAll("_", " ");
-			const timingMeta = getReminderTiming(reminder);
+	const updateUrlParams = useCallback(
+		(updates) => {
+			const params = new URLSearchParams(searchParams.toString());
 
-			const matchesSearch =
-				!value ||
-				(reminder.title || "").toLowerCase().includes(value) ||
-				(reminder.type || "").toLowerCase().includes(value) ||
-				typeText.includes(value) ||
-				customerName.includes(value) ||
-				vehicleLabel.includes(value) ||
-				(reminder.notes || "").toLowerCase().includes(value);
+			Object.entries(updates).forEach(([key, value]) => {
+				if (
+					value === null ||
+					value === undefined ||
+					value === "" ||
+					value === "All"
+				) {
+					params.delete(key);
+				} else {
+					params.set(key, String(value));
+				}
+			});
 
-			const matchesStatus =
-				status === "All" ? true : reminder.status === status;
+			const queryString = params.toString();
 
-			const matchesType = type === "All" ? true : reminder.type === type;
-
-			const matchesTiming =
-				timing === "All"
-					? true
-					: timing === "OVERDUE"
-						? timingMeta.key === "overdue"
-						: timing === "TODAY"
-							? timingMeta.key === "today"
-							: timing === "SOON"
-								? timingMeta.key === "soon"
-								: timing === "UPCOMING"
-									? timingMeta.key === "upcoming"
-									: timing === "COMPLETED"
-										? reminder.status === "COMPLETED"
-										: true;
-
-			return matchesSearch && matchesStatus && matchesType && matchesTiming;
-		});
-	}, [initialReminders, search, status, type, timing]);
-
-	const totalPages = Math.max(
-		1,
-		Math.ceil(filteredReminders.length / ITEMS_PER_PAGE),
+			startTransition(() => {
+				router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+					scroll: false,
+				});
+			});
+		},
+		[pathname, router, searchParams],
 	);
 
-	const paginatedReminders = useMemo(() => {
-		const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-		return filteredReminders.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-	}, [filteredReminders, currentPage]);
+	function handleSearchSubmit(event) {
+		event.preventDefault();
 
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [search, status, type, timing]);
+		const trimmedValue = searchInput.trim();
 
-	useEffect(() => {
-		if (currentPage > totalPages) {
-			setCurrentPage(totalPages);
-		}
-	}, [currentPage, totalPages]);
+		if (trimmedValue === currentSearch) return;
 
-	const stats = useMemo(() => {
-		const total = initialReminders.length;
-		const open = initialReminders.filter(
-			(item) => item.status === "OPEN",
-		).length;
-		const completed = initialReminders.filter(
-			(item) => item.status === "COMPLETED",
-		).length;
-		const overdue = initialReminders.filter(
-			(item) => getReminderTiming(item).key === "overdue",
-		).length;
-		const dueSoon = initialReminders.filter((item) => {
-			const key = getReminderTiming(item).key;
-			return key === "today" || key === "soon";
-		}).length;
+		updateUrlParams({
+			search: trimmedValue || null,
+			page: 1,
+		});
+	}
 
-		return {
-			total,
-			open,
-			completed,
-			overdue,
-			dueSoon,
-		};
-	}, [initialReminders]);
+	function handleClearSearch() {
+		setSearchInput("");
+
+		if (!currentSearch) return;
+
+		updateUrlParams({
+			search: null,
+			page: 1,
+		});
+	}
+
+	function handleStatusChange(nextStatus) {
+		updateUrlParams({
+			status: nextStatus,
+			page: 1,
+		});
+	}
+
+	function handleTypeChange(nextType) {
+		updateUrlParams({
+			type: nextType,
+			page: 1,
+		});
+	}
+
+	function handleTimingChange(nextTiming) {
+		updateUrlParams({
+			timing: nextTiming,
+			page: 1,
+		});
+	}
+
+	function handlePageChange(nextPage) {
+		updateUrlParams({
+			page: nextPage <= 1 ? null : nextPage,
+		});
+	}
 
 	return (
 		<section className="reminders-page">
@@ -128,7 +127,7 @@ export default function RemindersPageClient({ initialReminders }) {
 					</p>
 				</div>
 
-				<div className="page-header-right">
+				<div className="reminders-page__actions">
 					<Button variant="secondary">Export</Button>
 
 					<Link href="/reminders/new">
@@ -143,27 +142,30 @@ export default function RemindersPageClient({ initialReminders }) {
 
 			<div className="reminders-table-shell card">
 				<RemindersTableToolbar
-					search={search}
-					onSearchChange={setSearch}
-					status={status}
-					onStatusChange={setStatus}
-					type={type}
-					onTypeChange={setType}
-					timing={timing}
-					onTimingChange={setTiming}
+					search={searchInput}
+					onSearchChange={setSearchInput}
+					onSearchSubmit={handleSearchSubmit}
+					onClearSearch={handleClearSearch}
+					status={currentStatus}
+					onStatusChange={handleStatusChange}
+					type={currentType}
+					onTypeChange={handleTypeChange}
+					timing={currentTiming}
+					onTimingChange={handleTimingChange}
+					isPending={isPending}
 				/>
 
 				<RemindersTable
-					reminders={paginatedReminders}
+					reminders={reminders}
 					onRowClick={(reminderId) => router.push(`/reminders/${reminderId}`)}
 				/>
 
 				<TablePagination
 					currentPage={currentPage}
 					totalPages={totalPages}
-					totalItems={filteredReminders.length}
-					itemsPerPage={ITEMS_PER_PAGE}
-					onPageChange={setCurrentPage}
+					totalItems={totalCount}
+					itemsPerPage={pageSize}
+					onPageChange={handlePageChange}
 					label="reminders"
 				/>
 			</div>

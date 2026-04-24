@@ -1,4 +1,5 @@
 import { formatDateShort } from "@/lib/date-formatters";
+
 function formatCustomer(customer) {
 	if (!customer) return "—";
 	if (customer.companyName) return customer.companyName;

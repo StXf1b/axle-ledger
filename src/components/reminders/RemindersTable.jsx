@@ -118,7 +118,7 @@ export default function RemindersTable({ reminders, onRowClick }) {
 											{formatReminderDate(reminder.dueAt)}
 										</span>
 
-										<span className={timing.badgeClass}>
+										<span className={timing.badgeClass + " badge-table"}>
 											{completedText || timing.label}
 										</span>
 									</div>

@@ -1,4 +1,5 @@
 import { FileText, UserRound, CarFront, HardDrive } from "lucide-react";
+import "./DocumentsStats.css";
 
 export default function DocumentsStats({ stats }) {
 	const items = [
@@ -29,31 +30,21 @@ export default function DocumentsStats({ stats }) {
 	];
 
 	return (
-		<div className="content-grid four-col">
+		<div className="documents-stats-grid">
 			{items.map((item) => {
 				const Icon = item.icon;
 
 				return (
-					<div key={item.key} className="card">
-						<div className="stack-sm">
-							<div
-								style={{
-									display: "flex",
-									alignItems: "center",
-									gap: "10px",
-								}}
-							>
-								<span
-									className="badge badge-info"
-									style={{ minHeight: 34, padding: "0 10px" }}
-								>
-									<Icon size={16} />
-								</span>
-								<p className="text-muted">{item.label}</p>
-							</div>
+					<div key={item.key} className="documents-stat-card">
+						<div className="documents-stat-card__top">
+							<span className="documents-stat-card__icon">
+								<Icon size={18} />
+							</span>
 
-							<h3>{item.value}</h3>
+							<p className="documents-stat-card__label">{item.label}</p>
 						</div>
+
+						<h3 className="documents-stat-card__value">{item.value}</h3>
 					</div>
 				);
 			})}

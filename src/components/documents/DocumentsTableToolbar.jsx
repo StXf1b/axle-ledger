@@ -1,56 +1,80 @@
 "use client";
-
-import { Search } from "lucide-react";
+import "./DocumentsTableToolbar.css";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { DOCUMENT_CATEGORY_OPTIONS } from "@/lib/document-utils";
 
 export default function DocumentsTableToolbar({
 	search,
 	onSearchChange,
+	onSearchSubmit,
+	onClearSearch,
 	category,
 	onCategoryChange,
 	linkedTo,
 	onLinkedToChange,
+	isPending = false,
 }) {
 	return (
-		<div className="toolbar">
-			<div className="toolbar-group" style={{ flex: 1 }}>
-				<div className="searchbar" style={{ flex: 1, minWidth: "280px" }}>
-					<Search size={18} />
+		<div className="documents-toolbar">
+			<div className="documents-toolbar__left">
+				<form className="documents-search" onSubmit={onSearchSubmit}>
+					<Search size={18} className="documents-search__icon" />
 					<input
 						type="text"
 						value={search}
 						onChange={(e) => onSearchChange(e.target.value)}
-						placeholder="Search title, file name, customer, vehicle, notes..."
+						placeholder="Search..."
 					/>
-				</div>
+
+					{search ? (
+						<button
+							type="button"
+							className="documents-search__clear"
+							onClick={onClearSearch}
+							aria-label="Clear search"
+						>
+							<X size={16} />
+						</button>
+					) : null}
+
+					<button
+						type="submit"
+						className="documents-search__submit"
+						disabled={isPending}
+					>
+						Search
+					</button>
+				</form>
 			</div>
 
-			<div className="toolbar-group">
-				<select
-					className="select"
-					value={category}
-					onChange={(e) => onCategoryChange(e.target.value)}
-					style={{ minWidth: "180px" }}
-				>
-					<option value="All">All categories</option>
-					{DOCUMENT_CATEGORY_OPTIONS.map((option) => (
-						<option key={option.value} value={option.value}>
-							{option.label}
-						</option>
-					))}
-				</select>
+			<div className="documents-toolbar__right">
+				<div className="documents-filter">
+					<SlidersHorizontal size={16} />
+					<select
+						value={category}
+						onChange={(e) => onCategoryChange(e.target.value)}
+					>
+						<option value="All">All categories</option>
+						{DOCUMENT_CATEGORY_OPTIONS.map((option) => (
+							<option key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
+					</select>
+				</div>
 
-				<select
-					className="select"
-					value={linkedTo}
-					onChange={(e) => onLinkedToChange(e.target.value)}
-					style={{ minWidth: "180px" }}
-				>
-					<option value="All">All links</option>
-					<option value="CUSTOMER">Customer linked</option>
-					<option value="VEHICLE">Vehicle linked</option>
-					<option value="UNLINKED">Unlinked</option>
-				</select>
+				<div className="documents-filter">
+					<SlidersHorizontal size={16} />
+					<select
+						value={linkedTo}
+						onChange={(e) => onLinkedToChange(e.target.value)}
+					>
+						<option value="All">All links</option>
+						<option value="CUSTOMER">Linked to customer</option>
+						<option value="VEHICLE">Linked to vehicle</option>
+						<option value="UNLINKED">Unlinked</option>
+					</select>
+				</div>
 			</div>
 		</div>
 	);

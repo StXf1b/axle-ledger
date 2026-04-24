@@ -1,57 +1,49 @@
-import { db } from "@/lib/db";
-import { getCurrentWorkspaceContext } from "@/lib/auth";
+import { getDocumentsListPage } from "@/lib/queries/documents";
 import DocumentsPageClient from "./DocumentsPageClient";
+
+const PAGE_SIZE = 10;
 
 export default async function DocumentsPage({ searchParams }) {
 	const params = await searchParams;
 
-	const context = await getCurrentWorkspaceContext();
-	const workspaceId =
-		context?.workspace?.id || context?.membership?.workspaceId;
+	const search = typeof params?.search === "string" ? params.search : "";
 
-	const where = {
-		workspaceId,
-		...(params?.customerId ? { customerId: params.customerId } : {}),
-		...(params?.vehicleId ? { vehicleId: params.vehicleId } : {}),
-	};
+	const category =
+		typeof params?.category === "string" ? params.category : "All";
 
-	const documents = await db.document.findMany({
-		where,
-		include: {
-			customer: {
-				select: {
-					id: true,
-					firstName: true,
-					lastName: true,
-					companyName: true,
-				},
-			},
-			vehicle: {
-				select: {
-					id: true,
-					registration: true,
-					make: true,
-					model: true,
-				},
-			},
-			uploadedByUser: {
-				select: {
-					id: true,
-					fullName: true,
-					email: true,
-				},
-			},
-		},
-		orderBy: {
-			createdAt: "desc",
-		},
+	const linkedTo =
+		typeof params?.linkedTo === "string" ? params.linkedTo : "All";
+
+	const customerId =
+		typeof params?.customerId === "string" ? params.customerId : "";
+
+	const vehicleId =
+		typeof params?.vehicleId === "string" ? params.vehicleId : "";
+
+	const page = Math.max(1, Number(params?.page || 1) || 1);
+
+	const { documents, totalCount, stats } = await getDocumentsListPage({
+		search,
+		category,
+		linkedTo,
+		customerId,
+		vehicleId,
+		page,
+		pageSize: PAGE_SIZE,
 	});
 
-	const initialDocuments = documents.map((document) => ({
-		...document,
-		createdAt: document.createdAt.toISOString(),
-		updatedAt: document.updatedAt.toISOString(),
-	}));
-
-	return <DocumentsPageClient initialDocuments={initialDocuments} />;
+	return (
+		<DocumentsPageClient
+			documents={documents}
+			totalCount={totalCount}
+			stats={stats}
+			currentPage={page}
+			pageSize={PAGE_SIZE}
+			currentSearch={search}
+			currentCategory={category}
+			currentLinkedTo={linkedTo}
+			currentCustomerId={customerId}
+			currentVehicleId={vehicleId}
+		/>
+	);
 }

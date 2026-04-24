@@ -1,10 +1,4 @@
-import {
-	BellRing,
-	CircleAlert,
-	Clock3,
-	CheckCircle2,
-	ClipboardList,
-} from "lucide-react";
+import { CircleAlert, Clock3, CheckCircle2, ClipboardList } from "lucide-react";
 
 export default function RemindersStats({ stats }) {
 	const items = [
@@ -13,12 +7,6 @@ export default function RemindersStats({ stats }) {
 			label: "Total reminders",
 			value: stats.total,
 			icon: ClipboardList,
-		},
-		{
-			key: "open",
-			label: "Open reminders",
-			value: stats.open,
-			icon: BellRing,
 		},
 		{
 			key: "overdue",
