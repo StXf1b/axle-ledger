@@ -572,6 +572,12 @@ export default function SignInPage() {
 						}
 						required
 					/>
+					<Link
+						href="/forgot-password"
+						className="text-sm flex items-center gap-1 self-end"
+					>
+						Forgot password?
+					</Link>
 
 					{localErrors.form ? (
 						<p className="text-danger" style={{ fontSize: "0.9rem" }}>

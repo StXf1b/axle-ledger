@@ -206,3 +206,38 @@ export async function removeMemberFromWorkspace(memberId) {
 
 	return { ok: true };
 }
+
+export async function deleteWorkspace() {
+	const { appUser, membership, workspace } = await getWorkspaceContextOrThrow();
+
+	if (membership.role !== "OWNER") {
+		throw new Error("Only the workspace owner can delete the workspace");
+	}
+
+	const memberCount = await db.workspaceMember.count({
+		where: {
+			workspaceId: workspace.id,
+		},
+	});
+
+	if (memberCount > 1) {
+		throw new Error(
+			"You cannot delete this workspace while other members still belong to it.",
+		);
+	}
+
+	// ! If you use R2, fetch document file keys here first and delete them from storage
+	// ! before deleting the workspace row.
+
+	await db.workspace.delete({
+		where: {
+			id: workspace.id,
+		},
+	});
+
+	revalidatePath("/settings");
+	revalidatePath("/dashboard");
+	revalidatePath("/onboarding");
+
+	return { ok: true };
+}

@@ -7,6 +7,8 @@ import {
 	updateMemberRole,
 	removeMemberFromWorkspace,
 } from "@/actions/settings";
+import Image from "next/image";
+import ConfirmModal from "../ui/ConfirmModal";
 
 export default function StaffSettingsPanel({
 	members,
@@ -16,6 +18,9 @@ export default function StaffSettingsPanel({
 	const [isPending, startTransition] = useTransition();
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
+	const [open, setOpen] = useState(false);
+	const [selectedMemberId, setSelectedMemberId] = useState(null);
+	const [selectedMemberName, setSelectedMemberName] = useState("");
 
 	const canManageRoles = currentRole === "OWNER";
 
@@ -49,22 +54,9 @@ export default function StaffSettingsPanel({
 	}
 
 	function handleRemoveMember(memberId, memberName) {
-		const confirmed = window.confirm(
-			`Remove ${memberName} from this workspace?`,
-		);
-
-		if (!confirmed) return;
-
-		startTransition(async () => {
-			try {
-				await removeMemberFromWorkspace(memberId);
-				setMessage("Member removed from workspace.");
-				setError("");
-			} catch (err) {
-				setError(err?.message || "Failed to remove member.");
-				setMessage("");
-			}
-		});
+		setSelectedMemberId(memberId);
+		setSelectedMemberName(memberName);
+		setOpen(true);
 	}
 
 	return (
@@ -92,12 +84,14 @@ export default function StaffSettingsPanel({
 						return (
 							<div key={member.id} className="staff-row">
 								<div className="staff-row__left">
-									<div className="staff-avatar">
-										{member.user.fullName
-											.split(" ")
-											.map((part) => part[0])
-											.slice(0, 2)
-											.join("")}
+									<div>
+										<Image
+											className="staff-avatar"
+											src={member.user.imageUrl || "/default-avatar.png"}
+											alt={member.user.fullName}
+											width={40}
+											height={40}
+										/>
 									</div>
 
 									<div className="staff-row__info">
@@ -184,6 +178,24 @@ export default function StaffSettingsPanel({
 					</div>
 				</div>
 			</div>
+			{open && (
+				<ConfirmModal
+					open={open}
+					onClose={() => {
+						if (!isPending) setOpen(false);
+					}}
+					title="Remove member"
+					description="Are you sure you want to remove this member from the workspace? This action cannot be undone."
+					onConfirm={() => {
+						removeMemberFromWorkspace(selectedMemberId, selectedMemberName);
+						setOpen(false);
+					}}
+					confirmText="Remove member"
+					cancelText="Cancel"
+					loading={isPending}
+					danger
+				/>
+			)}
 		</div>
 	);
 }

@@ -24,6 +24,12 @@ export default function OnboardingForm({ user }) {
 		setError("");
 	}
 
+	function handleJoinWorkspace() {
+		startTransition(() => {
+			window.location.href = "/join-workspace";
+		});
+	}
+
 	function handleSubmit(e) {
 		e.preventDefault();
 
@@ -86,6 +92,17 @@ export default function OnboardingForm({ user }) {
 					Create workspace
 				</Button>
 			</form>
+			<Button
+				type="submit"
+				variant="secondary"
+				size="lg"
+				fullWidth
+				loading={isPending}
+				onClick={handleJoinWorkspace}
+				rightIcon={!isPending ? <ArrowRight size={18} /> : null}
+			>
+				Join workspace
+			</Button>
 		</AuthCard>
 	);
 }

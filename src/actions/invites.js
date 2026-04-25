@@ -206,14 +206,15 @@ export async function acceptWorkspaceInvite(token) {
 		throw new Error("You must sign in with the invited email address");
 	}
 
-	const existingMembership = await db.workspaceMember.findFirst({
-		where: {
-			workspaceId: invite.workspaceId,
-			userId: appUser.id,
-		},
-	});
+	const existingMembershipInInvitedWorkspace =
+		await db.workspaceMember.findFirst({
+			where: {
+				workspaceId: invite.workspaceId,
+				userId: appUser.id,
+			},
+		});
 
-	if (existingMembership) {
+	if (existingMembershipInInvitedWorkspace) {
 		await db.workspaceInvite.update({
 			where: { id: invite.id },
 			data: {
@@ -224,6 +225,24 @@ export async function acceptWorkspaceInvite(token) {
 
 		revalidatePath("/settings");
 		return { ok: true, alreadyJoined: true };
+	}
+
+	const existingMembershipElsewhere = await db.workspaceMember.findFirst({
+		where: {
+			userId: appUser.id,
+			workspaceId: {
+				not: invite.workspaceId,
+			},
+		},
+	});
+
+	if (existingMembershipElsewhere) {
+		return {
+			ok: false,
+			error: "MULTIPLE_WORKSPACES",
+			message:
+				"This account already belongs to another workspace. Please delete the existing workspace before accepting this invite.",
+		};
 	}
 
 	await db.$transaction(async (tx) => {

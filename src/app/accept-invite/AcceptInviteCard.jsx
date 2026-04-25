@@ -17,11 +17,19 @@ export default function AcceptInviteCard({
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [error, setError] = useState("");
+	const [multipleWorkspacesError, setMultipleWorkspacesError] = useState(false);
 
 	function handleAccept() {
 		startTransition(async () => {
 			try {
-				await acceptWorkspaceInvite(token);
+				const result = await acceptWorkspaceInvite(token);
+				if (!result.ok) {
+					if (result.error === "MULTIPLE_WORKSPACES") {
+						setMultipleWorkspacesError(true);
+					}
+					setError(result.message || "Failed to accept invite.");
+					return;
+				}
 				router.push("/dashboard");
 				router.refresh();
 			} catch (err) {
@@ -45,6 +53,31 @@ export default function AcceptInviteCard({
 				>
 					Go to dashboard
 				</Button>
+			</AuthCard>
+		);
+	}
+	if (multipleWorkspacesError) {
+		return (
+			<AuthCard
+				title="Workspace conflict"
+				subtitle="This account already belongs to another workspace."
+				footer={<p>Signed in as {currentUserEmail}</p>}
+			>
+				<div className="stack-md">
+					<p className="text-danger">
+						To accept this invite, you must leave or delete your current
+						workspace first.
+					</p>
+
+					<Button
+						variant="primary"
+						size="lg"
+						fullWidth
+						onClick={() => router.push("/settings")}
+					>
+						Go to current workspace settings
+					</Button>
+				</div>
 			</AuthCard>
 		);
 	}

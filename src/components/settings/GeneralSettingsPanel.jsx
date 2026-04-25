@@ -4,12 +4,14 @@ import { useState, useTransition } from "react";
 import "./GeneralSettingsPanel.css";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { updateGeneralSettings } from "@/actions/settings";
+import { deleteWorkspace, updateGeneralSettings } from "@/actions/settings";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function GeneralSettingsPanel({ workspace, currentRole }) {
 	const [isPending, startTransition] = useTransition();
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
+	const [open, setOpen] = useState(false);
 
 	const [form, setForm] = useState({
 		name: workspace.name || "",
@@ -24,12 +26,31 @@ export default function GeneralSettingsPanel({ workspace, currentRole }) {
 	});
 
 	const canEdit = ["OWNER", "ADMIN"].includes(currentRole);
+	const canDelete = currentRole === "OWNER";
 
 	function handleChange(e) {
 		const { name, value } = e.target;
 		setForm((prev) => ({ ...prev, [name]: value }));
 		setMessage("");
 		setError("");
+	}
+
+	function handleDelete() {
+		startTransition(async () => {
+			try {
+				setError("");
+				const result = await deleteWorkspace();
+
+				if (!result?.ok) {
+					setError("Failed to delete workspace.");
+					return;
+				}
+
+				window.location.href = "/onboarding";
+			} catch (err) {
+				setError(err?.message || "Failed to delete workspace.");
+			}
+		});
 	}
 
 	function handleSubmit(e) {
@@ -142,6 +163,14 @@ export default function GeneralSettingsPanel({ workspace, currentRole }) {
 
 					<div className="settings-form-actions">
 						<Button
+							type="button"
+							variant="danger"
+							onClick={() => setOpen(true)}
+							disabled={!canDelete}
+						>
+							Delete workspace
+						</Button>
+						<Button
 							type="submit"
 							variant="primary"
 							loading={isPending}
@@ -152,6 +181,20 @@ export default function GeneralSettingsPanel({ workspace, currentRole }) {
 					</div>
 				</form>
 			</div>
+			<ConfirmModal
+				open={open}
+				onClose={() => {
+					if (!isPending) setOpen(false);
+				}}
+				onConfirm={handleDelete}
+				title="Delete workspace"
+				description="This will permanently remove your current workspace and all related records from the app."
+				confirmText="Delete workspace"
+				cancelText="Keep workspace"
+				loading={isPending}
+				danger
+				note="This action is destructive. Make sure no other team members still belong to this workspace before continuing."
+			/>
 		</div>
 	);
 }

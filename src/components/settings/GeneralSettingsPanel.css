@@ -32,8 +32,7 @@
 .settings-form-actions {
 	display: flex;
 	align-items: center;
-	justify-content: flex-end;
-	gap: 12px;
+	justify-content: space-between;
 	flex-wrap: wrap;
 }
 
