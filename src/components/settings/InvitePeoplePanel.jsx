@@ -8,11 +8,13 @@ import {
 	createWorkspaceInvite,
 	revokeWorkspaceInvite,
 } from "@/actions/invites";
+import ConfirmModal from "../ui/ConfirmModal";
 
 export default function InvitePeoplePanel({ invites, currentRole }) {
 	const [isPending, startTransition] = useTransition();
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
+	const [showErrorModal, setShowErrorModal] = useState(false);
 
 	const [form, setForm] = useState({
 		email: "",
@@ -66,6 +68,7 @@ export default function InvitePeoplePanel({ invites, currentRole }) {
 				});
 			} catch (err) {
 				setError(err?.message || "Failed to create invite.");
+				setShowErrorModal(true);
 				setMessage("");
 			}
 		});
@@ -85,6 +88,7 @@ export default function InvitePeoplePanel({ invites, currentRole }) {
 			.catch(() => {
 				setError("Failed to copy invite link.");
 				setMessage("");
+				setShowErrorModal(true);
 			});
 	}
 
@@ -97,6 +101,7 @@ export default function InvitePeoplePanel({ invites, currentRole }) {
 			} catch (err) {
 				setError(err?.message || "Failed to revoke invite.");
 				setMessage("");
+				setShowErrorModal(true);
 			}
 		});
 	}
@@ -144,7 +149,6 @@ export default function InvitePeoplePanel({ invites, currentRole }) {
 					</div>
 
 					{message ? <p className="text-success">{message}</p> : null}
-					{error ? <p className="text-danger">{error}</p> : null}
 
 					<div className="settings-form-actions">
 						<Button
@@ -213,6 +217,16 @@ export default function InvitePeoplePanel({ invites, currentRole }) {
 					</div>
 				)}
 			</div>
+			<ConfirmModal
+				open={showErrorModal}
+				onClose={() => setShowErrorModal(false)}
+				title="Error"
+				description={error}
+				confirmText="Close"
+				danger
+				onConfirm={() => setShowErrorModal(false)}
+				showCancelButton={false}
+			/>
 		</div>
 	);
 }

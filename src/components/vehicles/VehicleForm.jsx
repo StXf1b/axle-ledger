@@ -18,7 +18,11 @@ import {
 	createVehicle,
 	updateVehicle,
 	softDeleteVehicle,
+	getVehicleByNumberPlate,
 } from "@/actions/vehicles";
+
+import ConfirmModal from "@/components/ui/ConfirmModal";
+
 import "./VehicleForm.css";
 
 export default function VehicleForm({
@@ -30,6 +34,9 @@ export default function VehicleForm({
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [error, setError] = useState("");
+	const [showConfirm, setShowConfirm] = useState(false);
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showErrorModal, setShowErrorModal] = useState(false);
 
 	const [form, setForm] = useState({
 		registration: initialData?.registration || "",
@@ -63,32 +70,49 @@ export default function VehicleForm({
 		setForm((prev) => ({ ...prev, [name]: value }));
 		setError("");
 	}
+	async function submitVehicle() {
+		try {
+			if (mode === "edit" && vehicleId) {
+				const result = await updateVehicle(vehicleId, form);
+				router.push(`/vehicles/${result.vehicleId}`);
+				router.refresh();
+				return;
+			}
+
+			const result = await createVehicle(form);
+			router.push(`/vehicles/${result.vehicleId}`);
+			router.refresh();
+		} catch (err) {
+			setError(err?.message || "Failed to save vehicle.");
+			setShowErrorModal(true);
+		}
+	}
 
 	function handleSubmit(event) {
 		event.preventDefault();
 
 		startTransition(async () => {
-			try {
-				if (mode === "edit" && vehicleId) {
-					const result = await updateVehicle(vehicleId, form);
-					router.push(`/vehicles/${result.vehicleId}`);
-					router.refresh();
+			if (mode === "create") {
+				try {
+					const existing = await getVehicleByNumberPlate(form.registration);
+
+					if (existing) {
+						setShowConfirm(true);
+						return;
+					}
+				} catch (err) {
+					setError(err?.message || "Failed to check registration.");
+					setShowErrorModal(true);
 					return;
 				}
-
-				const result = await createVehicle(form);
-				router.push(`/vehicles/${result.vehicleId}`);
-				router.refresh();
-			} catch (err) {
-				setError(err?.message || "Failed to save vehicle.");
 			}
+
+			await submitVehicle();
 		});
 	}
 
 	function handleDelete() {
 		if (!vehicleId) return;
-		const confirmed = window.confirm("Delete this vehicle?");
-		if (!confirmed) return;
 
 		startTransition(async () => {
 			try {
@@ -97,6 +121,7 @@ export default function VehicleForm({
 				router.refresh();
 			} catch (err) {
 				setError(err?.message || "Failed to delete vehicle.");
+				setShowErrorModal(true);
 			}
 		});
 	}
@@ -310,15 +335,13 @@ export default function VehicleForm({
 				</div>
 			</div>
 
-			{error ? <p className="text-danger">{error}</p> : null}
-
 			<div className="vehicle-form-ui__actions">
 				<div className="vehicle-form-ui__actions-left">
 					{mode === "edit" ? (
 						<Button
 							type="button"
 							variant="danger"
-							onClick={handleDelete}
+							onClick={() => setShowDeleteConfirm(true)}
 							disabled={isPending}
 						>
 							Delete vehicle
@@ -351,6 +374,43 @@ export default function VehicleForm({
 					</Button>
 				</div>
 			</div>
+			{/* Confirmation modal for duplicate registration */}
+			<ConfirmModal
+				open={showConfirm}
+				title="Vehicle already exists"
+				description={`A vehicle with registration ${form.registration} already exists. Do you want to create a new one anyway?`}
+				confirmText="Submit anyway"
+				cancelText="Go back"
+				onConfirm={() => {
+					setShowConfirm(false);
+
+					startTransition(async () => {
+						await submitVehicle();
+					});
+				}}
+				onClose={() => setShowConfirm(false)}
+			/>
+			<ConfirmModal
+				open={showDeleteConfirm}
+				title="Confirm deletion"
+				description="Are you sure you want to delete this vehicle? This action cannot be undone."
+				confirmText="Yes, delete"
+				cancelText="Cancel"
+				danger
+				onConfirm={() => {
+					setShowDeleteConfirm(false);
+					handleDelete();
+				}}
+				onClose={() => setShowDeleteConfirm(false)}
+			/>
+			<ConfirmModal
+				open={showErrorModal}
+				title="Error"
+				description={error}
+				confirmText="OK"
+				onConfirm={() => setShowErrorModal(false)}
+				onClose={() => setShowErrorModal(false)}
+			/>
 		</form>
 	);
 }

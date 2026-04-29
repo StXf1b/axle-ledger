@@ -290,9 +290,35 @@ exports.Prisma.WorkLogScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.WorkspaceSubscriptionScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  billingProvider: 'billingProvider',
+  tier: 'tier',
+  status: 'status',
+  trialEndsAt: 'trialEndsAt',
+  currentPeriodStart: 'currentPeriodStart',
+  currentPeriodEnd: 'currentPeriodEnd',
+  stripeCustomerId: 'stripeCustomerId',
+  stripeSubscriptionId: 'stripeSubscriptionId',
+  stripeProductId: 'stripeProductId',
+  stripePriceId: 'stripePriceId',
+  cancelAtPeriodEnd: 'cancelAtPeriodEnd',
+  limitOverrides: 'limitOverrides',
+  featureOverrides: 'featureOverrides',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -303,6 +329,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 exports.Role = exports.$Enums.Role = {
   OWNER: 'OWNER',
@@ -368,6 +400,27 @@ exports.ReminderStatus = exports.$Enums.ReminderStatus = {
   CANCELLED: 'CANCELLED'
 };
 
+exports.BillingProvider = exports.$Enums.BillingProvider = {
+  MANUAL: 'MANUAL',
+  STRIPE: 'STRIPE'
+};
+
+exports.WorkspacePlanTier = exports.$Enums.WorkspacePlanTier = {
+  TRIAL: 'TRIAL',
+  STARTER: 'STARTER',
+  PRO: 'PRO',
+  BUSINESS: 'BUSINESS',
+  CUSTOM: 'CUSTOM'
+};
+
+exports.WorkspaceSubscriptionStatus = exports.$Enums.WorkspaceSubscriptionStatus = {
+  TRIALING: 'TRIALING',
+  ACTIVE: 'ACTIVE',
+  PAST_DUE: 'PAST_DUE',
+  CANCELED: 'CANCELED',
+  EXPIRED: 'EXPIRED'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   Workspace: 'Workspace',
@@ -378,7 +431,8 @@ exports.Prisma.ModelName = {
   Vehicle: 'Vehicle',
   Document: 'Document',
   Reminder: 'Reminder',
-  WorkLog: 'WorkLog'
+  WorkLog: 'WorkLog',
+  WorkspaceSubscription: 'WorkspaceSubscription'
 };
 
 /**

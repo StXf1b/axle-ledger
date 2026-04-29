@@ -332,3 +332,18 @@ export async function getVehicleFormData() {
 
 	return { customers };
 }
+
+export async function getVehicleByNumberPlate(registration) {
+	const workspaceId = await getCurrentWorkspaceId();
+	if (!workspaceId) return null;
+
+	return db.vehicle.findFirst({
+		where: {
+			registration,
+			workspaceId,
+		},
+		include: {
+			customer: true,
+		},
+	});
+}

@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { assertWorkspaceLimit } from "@/lib/billing/workspace-quotas";
 
 async function getWorkspaceContextOrThrow() {
 	const { userId } = await auth();
@@ -75,6 +76,8 @@ export async function createCustomer(data) {
 	if (!payload.lastName) {
 		throw new Error("Last name is required");
 	}
+
+	await assertWorkspaceLimit(workspaceId, "customers");
 
 	const customer = await db.customer.create({
 		data: {

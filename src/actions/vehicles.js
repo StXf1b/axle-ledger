@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { assertWorkspaceLimit } from "@/lib/billing/workspace-quotas";
 
 async function getWorkspaceContextOrThrow() {
 	const { userId } = await auth();
@@ -65,7 +66,7 @@ export async function createVehicle(data) {
 	if (!payload.registration) throw new Error("Registration is required");
 	if (!payload.make) throw new Error("Make is required");
 	if (!payload.model) throw new Error("Model is required");
-
+	await assertWorkspaceLimit(workspaceId, "vehicles");
 	const vehicle = await db.vehicle.create({
 		data: {
 			workspaceId,
@@ -140,5 +141,22 @@ export async function softDeleteVehicle(vehicleId) {
 	await db.vehicle.update({
 		where: { id: vehicleId },
 		data: { status: "DELETED" },
+	});
+}
+
+export async function getVehicleByNumberPlate(numberPlate) {
+	const { workspaceId } = await getWorkspaceContextOrThrow();
+
+	return db.vehicle.findFirst({
+		where: {
+			registration: numberPlate.trim().toUpperCase(),
+			workspaceId,
+		},
+		select: {
+			id: true,
+			registration: true,
+			make: true,
+			model: true,
+		},
 	});
 }

@@ -14,6 +14,7 @@ import GeneralSettingsPanel from "./GeneralSettingsPanel";
 import DashboardSettingsPanel from "./DashboardSettingsPanel";
 import StaffSettingsPanel from "./StaffSettingsPanel";
 import InvitePeoplePanel from "./InvitePeoplePanel";
+import BillingPanel from "./BillingPanel";
 
 const tabs = [
 	{
@@ -41,7 +42,7 @@ const tabs = [
 		description: "Create and manage workspace invite links",
 	},
 	{
-		id: "Billing",
+		id: "billing",
 		label: "Billing",
 		icon: CreditCard,
 		description: "Manage your billing information and payment methods",
@@ -194,6 +195,18 @@ export default function SettingsPageClient({ initialData }) {
 							>
 								<InvitePeoplePanel
 									invites={initialData.invites}
+									currentRole={initialData.currentMembership.role}
+								/>
+							</div>
+						)}
+						{activeTab === "billing" && (
+							<div
+								id="settings-panel-billing"
+								role="tabpanel"
+								aria-labelledby="settings-tab-billing"
+							>
+								<BillingPanel
+									billingInfo={initialData.billingInfo}
 									currentRole={initialData.currentMembership.role}
 								/>
 							</div>

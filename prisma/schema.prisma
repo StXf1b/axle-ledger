@@ -51,16 +51,17 @@ model Workspace {
   county        String?
   country       String? @default("Ireland")
 
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  workLogs    WorkLog[]
-  reminders   Reminder[]
-  customers   Customer[]
-  vehicles    Vehicle[]
-  documents   Document[]
-  memberships WorkspaceMember[]
-  invites     WorkspaceInvite[]
-  settings    WorkspaceSettings?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  subscription WorkspaceSubscription?
+  workLogs     WorkLog[]
+  reminders    Reminder[]
+  customers    Customer[]
+  vehicles     Vehicle[]
+  documents    Document[]
+  memberships  WorkspaceMember[]
+  invites      WorkspaceInvite[]
+  settings     WorkspaceSettings?
 
   @@index([ownerId])
 }
@@ -369,4 +370,53 @@ model WorkLog {
   @@index([createdByUserId])
   @@index([completedAt])
   @@index([createdAt])
+}
+
+enum WorkspacePlanTier {
+  TRIAL
+  STARTER
+  PRO
+  BUSINESS
+  CUSTOM
+}
+
+enum WorkspaceSubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum BillingProvider {
+  MANUAL
+  STRIPE
+}
+
+model WorkspaceSubscription {
+  id          String @id @default(cuid())
+  workspaceId String @unique
+
+  billingProvider BillingProvider             @default(MANUAL)
+  tier            WorkspacePlanTier           @default(TRIAL)
+  status          WorkspaceSubscriptionStatus @default(TRIALING)
+
+  trialEndsAt        DateTime?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  stripeProductId      String?
+  stripePriceId        String?
+  cancelAtPeriodEnd    Boolean @default(false)
+
+  limitOverrides   Json?
+  featureOverrides Json?
+  metadata         Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }

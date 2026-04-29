@@ -63,6 +63,11 @@ export type Reminder = $Result.DefaultSelection<Prisma.$ReminderPayload>
  * 
  */
 export type WorkLog = $Result.DefaultSelection<Prisma.$WorkLogPayload>
+/**
+ * Model WorkspaceSubscription
+ * 
+ */
+export type WorkspaceSubscription = $Result.DefaultSelection<Prisma.$WorkspaceSubscriptionPayload>
 
 /**
  * Enums
@@ -158,6 +163,36 @@ export const ReminderStatus: {
 
 export type ReminderStatus = (typeof ReminderStatus)[keyof typeof ReminderStatus]
 
+
+export const WorkspacePlanTier: {
+  TRIAL: 'TRIAL',
+  STARTER: 'STARTER',
+  PRO: 'PRO',
+  BUSINESS: 'BUSINESS',
+  CUSTOM: 'CUSTOM'
+};
+
+export type WorkspacePlanTier = (typeof WorkspacePlanTier)[keyof typeof WorkspacePlanTier]
+
+
+export const WorkspaceSubscriptionStatus: {
+  TRIALING: 'TRIALING',
+  ACTIVE: 'ACTIVE',
+  PAST_DUE: 'PAST_DUE',
+  CANCELED: 'CANCELED',
+  EXPIRED: 'EXPIRED'
+};
+
+export type WorkspaceSubscriptionStatus = (typeof WorkspaceSubscriptionStatus)[keyof typeof WorkspaceSubscriptionStatus]
+
+
+export const BillingProvider: {
+  MANUAL: 'MANUAL',
+  STRIPE: 'STRIPE'
+};
+
+export type BillingProvider = (typeof BillingProvider)[keyof typeof BillingProvider]
+
 }
 
 export type Role = $Enums.Role
@@ -195,6 +230,18 @@ export const ReminderType: typeof $Enums.ReminderType
 export type ReminderStatus = $Enums.ReminderStatus
 
 export const ReminderStatus: typeof $Enums.ReminderStatus
+
+export type WorkspacePlanTier = $Enums.WorkspacePlanTier
+
+export const WorkspacePlanTier: typeof $Enums.WorkspacePlanTier
+
+export type WorkspaceSubscriptionStatus = $Enums.WorkspaceSubscriptionStatus
+
+export const WorkspaceSubscriptionStatus: typeof $Enums.WorkspaceSubscriptionStatus
+
+export type BillingProvider = $Enums.BillingProvider
+
+export const BillingProvider: typeof $Enums.BillingProvider
 
 /**
  * ##  Prisma Client ʲˢ
@@ -416,6 +463,16 @@ export class PrismaClient<
     * ```
     */
   get workLog(): Prisma.WorkLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.workspaceSubscription`: Exposes CRUD operations for the **WorkspaceSubscription** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more WorkspaceSubscriptions
+    * const workspaceSubscriptions = await prisma.workspaceSubscription.findMany()
+    * ```
+    */
+  get workspaceSubscription(): Prisma.WorkspaceSubscriptionDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -859,7 +916,8 @@ export namespace Prisma {
     Vehicle: 'Vehicle',
     Document: 'Document',
     Reminder: 'Reminder',
-    WorkLog: 'WorkLog'
+    WorkLog: 'WorkLog',
+    WorkspaceSubscription: 'WorkspaceSubscription'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -875,7 +933,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "workspace" | "workspaceMember" | "workspaceInvite" | "workspaceSettings" | "customer" | "vehicle" | "document" | "reminder" | "workLog"
+      modelProps: "user" | "workspace" | "workspaceMember" | "workspaceInvite" | "workspaceSettings" | "customer" | "vehicle" | "document" | "reminder" | "workLog" | "workspaceSubscription"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1619,6 +1677,80 @@ export namespace Prisma {
           }
         }
       }
+      WorkspaceSubscription: {
+        payload: Prisma.$WorkspaceSubscriptionPayload<ExtArgs>
+        fields: Prisma.WorkspaceSubscriptionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.WorkspaceSubscriptionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.WorkspaceSubscriptionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload>
+          }
+          findFirst: {
+            args: Prisma.WorkspaceSubscriptionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.WorkspaceSubscriptionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload>
+          }
+          findMany: {
+            args: Prisma.WorkspaceSubscriptionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload>[]
+          }
+          create: {
+            args: Prisma.WorkspaceSubscriptionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload>
+          }
+          createMany: {
+            args: Prisma.WorkspaceSubscriptionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.WorkspaceSubscriptionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload>[]
+          }
+          delete: {
+            args: Prisma.WorkspaceSubscriptionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload>
+          }
+          update: {
+            args: Prisma.WorkspaceSubscriptionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload>
+          }
+          deleteMany: {
+            args: Prisma.WorkspaceSubscriptionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.WorkspaceSubscriptionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.WorkspaceSubscriptionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload>[]
+          }
+          upsert: {
+            args: Prisma.WorkspaceSubscriptionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkspaceSubscriptionPayload>
+          }
+          aggregate: {
+            args: Prisma.WorkspaceSubscriptionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateWorkspaceSubscription>
+          }
+          groupBy: {
+            args: Prisma.WorkspaceSubscriptionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<WorkspaceSubscriptionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.WorkspaceSubscriptionCountArgs<ExtArgs>
+            result: $Utils.Optional<WorkspaceSubscriptionCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1737,6 +1869,7 @@ export namespace Prisma {
     document?: DocumentOmit
     reminder?: ReminderOmit
     workLog?: WorkLogOmit
+    workspaceSubscription?: WorkspaceSubscriptionOmit
   }
 
   /* Types for Logging */
@@ -3625,6 +3758,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     owner?: boolean | UserDefaultArgs<ExtArgs>
+    subscription?: boolean | Workspace$subscriptionArgs<ExtArgs>
     workLogs?: boolean | Workspace$workLogsArgs<ExtArgs>
     reminders?: boolean | Workspace$remindersArgs<ExtArgs>
     customers?: boolean | Workspace$customersArgs<ExtArgs>
@@ -3692,6 +3826,7 @@ export namespace Prisma {
   export type WorkspaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "ownerId" | "businessEmail" | "businessPhone" | "website" | "addressLine1" | "addressLine2" | "city" | "county" | "country" | "createdAt" | "updatedAt", ExtArgs["result"]["workspace"]>
   export type WorkspaceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     owner?: boolean | UserDefaultArgs<ExtArgs>
+    subscription?: boolean | Workspace$subscriptionArgs<ExtArgs>
     workLogs?: boolean | Workspace$workLogsArgs<ExtArgs>
     reminders?: boolean | Workspace$remindersArgs<ExtArgs>
     customers?: boolean | Workspace$customersArgs<ExtArgs>
@@ -3713,6 +3848,7 @@ export namespace Prisma {
     name: "Workspace"
     objects: {
       owner: Prisma.$UserPayload<ExtArgs>
+      subscription: Prisma.$WorkspaceSubscriptionPayload<ExtArgs> | null
       workLogs: Prisma.$WorkLogPayload<ExtArgs>[]
       reminders: Prisma.$ReminderPayload<ExtArgs>[]
       customers: Prisma.$CustomerPayload<ExtArgs>[]
@@ -4132,6 +4268,7 @@ export namespace Prisma {
   export interface Prisma__WorkspaceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     owner<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    subscription<T extends Workspace$subscriptionArgs<ExtArgs> = {}>(args?: Subset<T, Workspace$subscriptionArgs<ExtArgs>>): Prisma__WorkspaceSubscriptionClient<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     workLogs<T extends Workspace$workLogsArgs<ExtArgs> = {}>(args?: Subset<T, Workspace$workLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reminders<T extends Workspace$remindersArgs<ExtArgs> = {}>(args?: Subset<T, Workspace$remindersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReminderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     customers<T extends Workspace$customersArgs<ExtArgs> = {}>(args?: Subset<T, Workspace$customersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4581,6 +4718,25 @@ export namespace Prisma {
      * Limit how many Workspaces to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Workspace.subscription
+   */
+  export type Workspace$subscriptionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    where?: WorkspaceSubscriptionWhereInput
   }
 
   /**
@@ -14926,6 +15082,1226 @@ export namespace Prisma {
 
 
   /**
+   * Model WorkspaceSubscription
+   */
+
+  export type AggregateWorkspaceSubscription = {
+    _count: WorkspaceSubscriptionCountAggregateOutputType | null
+    _min: WorkspaceSubscriptionMinAggregateOutputType | null
+    _max: WorkspaceSubscriptionMaxAggregateOutputType | null
+  }
+
+  export type WorkspaceSubscriptionMinAggregateOutputType = {
+    id: string | null
+    workspaceId: string | null
+    billingProvider: $Enums.BillingProvider | null
+    tier: $Enums.WorkspacePlanTier | null
+    status: $Enums.WorkspaceSubscriptionStatus | null
+    trialEndsAt: Date | null
+    currentPeriodStart: Date | null
+    currentPeriodEnd: Date | null
+    stripeCustomerId: string | null
+    stripeSubscriptionId: string | null
+    stripeProductId: string | null
+    stripePriceId: string | null
+    cancelAtPeriodEnd: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WorkspaceSubscriptionMaxAggregateOutputType = {
+    id: string | null
+    workspaceId: string | null
+    billingProvider: $Enums.BillingProvider | null
+    tier: $Enums.WorkspacePlanTier | null
+    status: $Enums.WorkspaceSubscriptionStatus | null
+    trialEndsAt: Date | null
+    currentPeriodStart: Date | null
+    currentPeriodEnd: Date | null
+    stripeCustomerId: string | null
+    stripeSubscriptionId: string | null
+    stripeProductId: string | null
+    stripePriceId: string | null
+    cancelAtPeriodEnd: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WorkspaceSubscriptionCountAggregateOutputType = {
+    id: number
+    workspaceId: number
+    billingProvider: number
+    tier: number
+    status: number
+    trialEndsAt: number
+    currentPeriodStart: number
+    currentPeriodEnd: number
+    stripeCustomerId: number
+    stripeSubscriptionId: number
+    stripeProductId: number
+    stripePriceId: number
+    cancelAtPeriodEnd: number
+    limitOverrides: number
+    featureOverrides: number
+    metadata: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type WorkspaceSubscriptionMinAggregateInputType = {
+    id?: true
+    workspaceId?: true
+    billingProvider?: true
+    tier?: true
+    status?: true
+    trialEndsAt?: true
+    currentPeriodStart?: true
+    currentPeriodEnd?: true
+    stripeCustomerId?: true
+    stripeSubscriptionId?: true
+    stripeProductId?: true
+    stripePriceId?: true
+    cancelAtPeriodEnd?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WorkspaceSubscriptionMaxAggregateInputType = {
+    id?: true
+    workspaceId?: true
+    billingProvider?: true
+    tier?: true
+    status?: true
+    trialEndsAt?: true
+    currentPeriodStart?: true
+    currentPeriodEnd?: true
+    stripeCustomerId?: true
+    stripeSubscriptionId?: true
+    stripeProductId?: true
+    stripePriceId?: true
+    cancelAtPeriodEnd?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WorkspaceSubscriptionCountAggregateInputType = {
+    id?: true
+    workspaceId?: true
+    billingProvider?: true
+    tier?: true
+    status?: true
+    trialEndsAt?: true
+    currentPeriodStart?: true
+    currentPeriodEnd?: true
+    stripeCustomerId?: true
+    stripeSubscriptionId?: true
+    stripeProductId?: true
+    stripePriceId?: true
+    cancelAtPeriodEnd?: true
+    limitOverrides?: true
+    featureOverrides?: true
+    metadata?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type WorkspaceSubscriptionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WorkspaceSubscription to aggregate.
+     */
+    where?: WorkspaceSubscriptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WorkspaceSubscriptions to fetch.
+     */
+    orderBy?: WorkspaceSubscriptionOrderByWithRelationInput | WorkspaceSubscriptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: WorkspaceSubscriptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WorkspaceSubscriptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WorkspaceSubscriptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned WorkspaceSubscriptions
+    **/
+    _count?: true | WorkspaceSubscriptionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: WorkspaceSubscriptionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: WorkspaceSubscriptionMaxAggregateInputType
+  }
+
+  export type GetWorkspaceSubscriptionAggregateType<T extends WorkspaceSubscriptionAggregateArgs> = {
+        [P in keyof T & keyof AggregateWorkspaceSubscription]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateWorkspaceSubscription[P]>
+      : GetScalarType<T[P], AggregateWorkspaceSubscription[P]>
+  }
+
+
+
+
+  export type WorkspaceSubscriptionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WorkspaceSubscriptionWhereInput
+    orderBy?: WorkspaceSubscriptionOrderByWithAggregationInput | WorkspaceSubscriptionOrderByWithAggregationInput[]
+    by: WorkspaceSubscriptionScalarFieldEnum[] | WorkspaceSubscriptionScalarFieldEnum
+    having?: WorkspaceSubscriptionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: WorkspaceSubscriptionCountAggregateInputType | true
+    _min?: WorkspaceSubscriptionMinAggregateInputType
+    _max?: WorkspaceSubscriptionMaxAggregateInputType
+  }
+
+  export type WorkspaceSubscriptionGroupByOutputType = {
+    id: string
+    workspaceId: string
+    billingProvider: $Enums.BillingProvider
+    tier: $Enums.WorkspacePlanTier
+    status: $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt: Date | null
+    currentPeriodStart: Date | null
+    currentPeriodEnd: Date | null
+    stripeCustomerId: string | null
+    stripeSubscriptionId: string | null
+    stripeProductId: string | null
+    stripePriceId: string | null
+    cancelAtPeriodEnd: boolean
+    limitOverrides: JsonValue | null
+    featureOverrides: JsonValue | null
+    metadata: JsonValue | null
+    createdAt: Date
+    updatedAt: Date
+    _count: WorkspaceSubscriptionCountAggregateOutputType | null
+    _min: WorkspaceSubscriptionMinAggregateOutputType | null
+    _max: WorkspaceSubscriptionMaxAggregateOutputType | null
+  }
+
+  type GetWorkspaceSubscriptionGroupByPayload<T extends WorkspaceSubscriptionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<WorkspaceSubscriptionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof WorkspaceSubscriptionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], WorkspaceSubscriptionGroupByOutputType[P]>
+            : GetScalarType<T[P], WorkspaceSubscriptionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type WorkspaceSubscriptionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    workspaceId?: boolean
+    billingProvider?: boolean
+    tier?: boolean
+    status?: boolean
+    trialEndsAt?: boolean
+    currentPeriodStart?: boolean
+    currentPeriodEnd?: boolean
+    stripeCustomerId?: boolean
+    stripeSubscriptionId?: boolean
+    stripeProductId?: boolean
+    stripePriceId?: boolean
+    cancelAtPeriodEnd?: boolean
+    limitOverrides?: boolean
+    featureOverrides?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    workspace?: boolean | WorkspaceDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["workspaceSubscription"]>
+
+  export type WorkspaceSubscriptionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    workspaceId?: boolean
+    billingProvider?: boolean
+    tier?: boolean
+    status?: boolean
+    trialEndsAt?: boolean
+    currentPeriodStart?: boolean
+    currentPeriodEnd?: boolean
+    stripeCustomerId?: boolean
+    stripeSubscriptionId?: boolean
+    stripeProductId?: boolean
+    stripePriceId?: boolean
+    cancelAtPeriodEnd?: boolean
+    limitOverrides?: boolean
+    featureOverrides?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    workspace?: boolean | WorkspaceDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["workspaceSubscription"]>
+
+  export type WorkspaceSubscriptionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    workspaceId?: boolean
+    billingProvider?: boolean
+    tier?: boolean
+    status?: boolean
+    trialEndsAt?: boolean
+    currentPeriodStart?: boolean
+    currentPeriodEnd?: boolean
+    stripeCustomerId?: boolean
+    stripeSubscriptionId?: boolean
+    stripeProductId?: boolean
+    stripePriceId?: boolean
+    cancelAtPeriodEnd?: boolean
+    limitOverrides?: boolean
+    featureOverrides?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    workspace?: boolean | WorkspaceDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["workspaceSubscription"]>
+
+  export type WorkspaceSubscriptionSelectScalar = {
+    id?: boolean
+    workspaceId?: boolean
+    billingProvider?: boolean
+    tier?: boolean
+    status?: boolean
+    trialEndsAt?: boolean
+    currentPeriodStart?: boolean
+    currentPeriodEnd?: boolean
+    stripeCustomerId?: boolean
+    stripeSubscriptionId?: boolean
+    stripeProductId?: boolean
+    stripePriceId?: boolean
+    cancelAtPeriodEnd?: boolean
+    limitOverrides?: boolean
+    featureOverrides?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type WorkspaceSubscriptionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "workspaceId" | "billingProvider" | "tier" | "status" | "trialEndsAt" | "currentPeriodStart" | "currentPeriodEnd" | "stripeCustomerId" | "stripeSubscriptionId" | "stripeProductId" | "stripePriceId" | "cancelAtPeriodEnd" | "limitOverrides" | "featureOverrides" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["workspaceSubscription"]>
+  export type WorkspaceSubscriptionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    workspace?: boolean | WorkspaceDefaultArgs<ExtArgs>
+  }
+  export type WorkspaceSubscriptionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    workspace?: boolean | WorkspaceDefaultArgs<ExtArgs>
+  }
+  export type WorkspaceSubscriptionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    workspace?: boolean | WorkspaceDefaultArgs<ExtArgs>
+  }
+
+  export type $WorkspaceSubscriptionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "WorkspaceSubscription"
+    objects: {
+      workspace: Prisma.$WorkspacePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      workspaceId: string
+      billingProvider: $Enums.BillingProvider
+      tier: $Enums.WorkspacePlanTier
+      status: $Enums.WorkspaceSubscriptionStatus
+      trialEndsAt: Date | null
+      currentPeriodStart: Date | null
+      currentPeriodEnd: Date | null
+      stripeCustomerId: string | null
+      stripeSubscriptionId: string | null
+      stripeProductId: string | null
+      stripePriceId: string | null
+      cancelAtPeriodEnd: boolean
+      limitOverrides: Prisma.JsonValue | null
+      featureOverrides: Prisma.JsonValue | null
+      metadata: Prisma.JsonValue | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["workspaceSubscription"]>
+    composites: {}
+  }
+
+  type WorkspaceSubscriptionGetPayload<S extends boolean | null | undefined | WorkspaceSubscriptionDefaultArgs> = $Result.GetResult<Prisma.$WorkspaceSubscriptionPayload, S>
+
+  type WorkspaceSubscriptionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<WorkspaceSubscriptionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: WorkspaceSubscriptionCountAggregateInputType | true
+    }
+
+  export interface WorkspaceSubscriptionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['WorkspaceSubscription'], meta: { name: 'WorkspaceSubscription' } }
+    /**
+     * Find zero or one WorkspaceSubscription that matches the filter.
+     * @param {WorkspaceSubscriptionFindUniqueArgs} args - Arguments to find a WorkspaceSubscription
+     * @example
+     * // Get one WorkspaceSubscription
+     * const workspaceSubscription = await prisma.workspaceSubscription.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends WorkspaceSubscriptionFindUniqueArgs>(args: SelectSubset<T, WorkspaceSubscriptionFindUniqueArgs<ExtArgs>>): Prisma__WorkspaceSubscriptionClient<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one WorkspaceSubscription that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {WorkspaceSubscriptionFindUniqueOrThrowArgs} args - Arguments to find a WorkspaceSubscription
+     * @example
+     * // Get one WorkspaceSubscription
+     * const workspaceSubscription = await prisma.workspaceSubscription.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends WorkspaceSubscriptionFindUniqueOrThrowArgs>(args: SelectSubset<T, WorkspaceSubscriptionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__WorkspaceSubscriptionClient<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WorkspaceSubscription that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkspaceSubscriptionFindFirstArgs} args - Arguments to find a WorkspaceSubscription
+     * @example
+     * // Get one WorkspaceSubscription
+     * const workspaceSubscription = await prisma.workspaceSubscription.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends WorkspaceSubscriptionFindFirstArgs>(args?: SelectSubset<T, WorkspaceSubscriptionFindFirstArgs<ExtArgs>>): Prisma__WorkspaceSubscriptionClient<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WorkspaceSubscription that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkspaceSubscriptionFindFirstOrThrowArgs} args - Arguments to find a WorkspaceSubscription
+     * @example
+     * // Get one WorkspaceSubscription
+     * const workspaceSubscription = await prisma.workspaceSubscription.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends WorkspaceSubscriptionFindFirstOrThrowArgs>(args?: SelectSubset<T, WorkspaceSubscriptionFindFirstOrThrowArgs<ExtArgs>>): Prisma__WorkspaceSubscriptionClient<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more WorkspaceSubscriptions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkspaceSubscriptionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all WorkspaceSubscriptions
+     * const workspaceSubscriptions = await prisma.workspaceSubscription.findMany()
+     * 
+     * // Get first 10 WorkspaceSubscriptions
+     * const workspaceSubscriptions = await prisma.workspaceSubscription.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const workspaceSubscriptionWithIdOnly = await prisma.workspaceSubscription.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends WorkspaceSubscriptionFindManyArgs>(args?: SelectSubset<T, WorkspaceSubscriptionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a WorkspaceSubscription.
+     * @param {WorkspaceSubscriptionCreateArgs} args - Arguments to create a WorkspaceSubscription.
+     * @example
+     * // Create one WorkspaceSubscription
+     * const WorkspaceSubscription = await prisma.workspaceSubscription.create({
+     *   data: {
+     *     // ... data to create a WorkspaceSubscription
+     *   }
+     * })
+     * 
+     */
+    create<T extends WorkspaceSubscriptionCreateArgs>(args: SelectSubset<T, WorkspaceSubscriptionCreateArgs<ExtArgs>>): Prisma__WorkspaceSubscriptionClient<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many WorkspaceSubscriptions.
+     * @param {WorkspaceSubscriptionCreateManyArgs} args - Arguments to create many WorkspaceSubscriptions.
+     * @example
+     * // Create many WorkspaceSubscriptions
+     * const workspaceSubscription = await prisma.workspaceSubscription.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends WorkspaceSubscriptionCreateManyArgs>(args?: SelectSubset<T, WorkspaceSubscriptionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many WorkspaceSubscriptions and returns the data saved in the database.
+     * @param {WorkspaceSubscriptionCreateManyAndReturnArgs} args - Arguments to create many WorkspaceSubscriptions.
+     * @example
+     * // Create many WorkspaceSubscriptions
+     * const workspaceSubscription = await prisma.workspaceSubscription.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many WorkspaceSubscriptions and only return the `id`
+     * const workspaceSubscriptionWithIdOnly = await prisma.workspaceSubscription.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends WorkspaceSubscriptionCreateManyAndReturnArgs>(args?: SelectSubset<T, WorkspaceSubscriptionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a WorkspaceSubscription.
+     * @param {WorkspaceSubscriptionDeleteArgs} args - Arguments to delete one WorkspaceSubscription.
+     * @example
+     * // Delete one WorkspaceSubscription
+     * const WorkspaceSubscription = await prisma.workspaceSubscription.delete({
+     *   where: {
+     *     // ... filter to delete one WorkspaceSubscription
+     *   }
+     * })
+     * 
+     */
+    delete<T extends WorkspaceSubscriptionDeleteArgs>(args: SelectSubset<T, WorkspaceSubscriptionDeleteArgs<ExtArgs>>): Prisma__WorkspaceSubscriptionClient<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one WorkspaceSubscription.
+     * @param {WorkspaceSubscriptionUpdateArgs} args - Arguments to update one WorkspaceSubscription.
+     * @example
+     * // Update one WorkspaceSubscription
+     * const workspaceSubscription = await prisma.workspaceSubscription.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends WorkspaceSubscriptionUpdateArgs>(args: SelectSubset<T, WorkspaceSubscriptionUpdateArgs<ExtArgs>>): Prisma__WorkspaceSubscriptionClient<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more WorkspaceSubscriptions.
+     * @param {WorkspaceSubscriptionDeleteManyArgs} args - Arguments to filter WorkspaceSubscriptions to delete.
+     * @example
+     * // Delete a few WorkspaceSubscriptions
+     * const { count } = await prisma.workspaceSubscription.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends WorkspaceSubscriptionDeleteManyArgs>(args?: SelectSubset<T, WorkspaceSubscriptionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WorkspaceSubscriptions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkspaceSubscriptionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many WorkspaceSubscriptions
+     * const workspaceSubscription = await prisma.workspaceSubscription.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends WorkspaceSubscriptionUpdateManyArgs>(args: SelectSubset<T, WorkspaceSubscriptionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WorkspaceSubscriptions and returns the data updated in the database.
+     * @param {WorkspaceSubscriptionUpdateManyAndReturnArgs} args - Arguments to update many WorkspaceSubscriptions.
+     * @example
+     * // Update many WorkspaceSubscriptions
+     * const workspaceSubscription = await prisma.workspaceSubscription.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more WorkspaceSubscriptions and only return the `id`
+     * const workspaceSubscriptionWithIdOnly = await prisma.workspaceSubscription.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends WorkspaceSubscriptionUpdateManyAndReturnArgs>(args: SelectSubset<T, WorkspaceSubscriptionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one WorkspaceSubscription.
+     * @param {WorkspaceSubscriptionUpsertArgs} args - Arguments to update or create a WorkspaceSubscription.
+     * @example
+     * // Update or create a WorkspaceSubscription
+     * const workspaceSubscription = await prisma.workspaceSubscription.upsert({
+     *   create: {
+     *     // ... data to create a WorkspaceSubscription
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the WorkspaceSubscription we want to update
+     *   }
+     * })
+     */
+    upsert<T extends WorkspaceSubscriptionUpsertArgs>(args: SelectSubset<T, WorkspaceSubscriptionUpsertArgs<ExtArgs>>): Prisma__WorkspaceSubscriptionClient<$Result.GetResult<Prisma.$WorkspaceSubscriptionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of WorkspaceSubscriptions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkspaceSubscriptionCountArgs} args - Arguments to filter WorkspaceSubscriptions to count.
+     * @example
+     * // Count the number of WorkspaceSubscriptions
+     * const count = await prisma.workspaceSubscription.count({
+     *   where: {
+     *     // ... the filter for the WorkspaceSubscriptions we want to count
+     *   }
+     * })
+    **/
+    count<T extends WorkspaceSubscriptionCountArgs>(
+      args?: Subset<T, WorkspaceSubscriptionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], WorkspaceSubscriptionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a WorkspaceSubscription.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkspaceSubscriptionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends WorkspaceSubscriptionAggregateArgs>(args: Subset<T, WorkspaceSubscriptionAggregateArgs>): Prisma.PrismaPromise<GetWorkspaceSubscriptionAggregateType<T>>
+
+    /**
+     * Group by WorkspaceSubscription.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkspaceSubscriptionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends WorkspaceSubscriptionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: WorkspaceSubscriptionGroupByArgs['orderBy'] }
+        : { orderBy?: WorkspaceSubscriptionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, WorkspaceSubscriptionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetWorkspaceSubscriptionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the WorkspaceSubscription model
+   */
+  readonly fields: WorkspaceSubscriptionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for WorkspaceSubscription.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__WorkspaceSubscriptionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    workspace<T extends WorkspaceDefaultArgs<ExtArgs> = {}>(args?: Subset<T, WorkspaceDefaultArgs<ExtArgs>>): Prisma__WorkspaceClient<$Result.GetResult<Prisma.$WorkspacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the WorkspaceSubscription model
+   */
+  interface WorkspaceSubscriptionFieldRefs {
+    readonly id: FieldRef<"WorkspaceSubscription", 'String'>
+    readonly workspaceId: FieldRef<"WorkspaceSubscription", 'String'>
+    readonly billingProvider: FieldRef<"WorkspaceSubscription", 'BillingProvider'>
+    readonly tier: FieldRef<"WorkspaceSubscription", 'WorkspacePlanTier'>
+    readonly status: FieldRef<"WorkspaceSubscription", 'WorkspaceSubscriptionStatus'>
+    readonly trialEndsAt: FieldRef<"WorkspaceSubscription", 'DateTime'>
+    readonly currentPeriodStart: FieldRef<"WorkspaceSubscription", 'DateTime'>
+    readonly currentPeriodEnd: FieldRef<"WorkspaceSubscription", 'DateTime'>
+    readonly stripeCustomerId: FieldRef<"WorkspaceSubscription", 'String'>
+    readonly stripeSubscriptionId: FieldRef<"WorkspaceSubscription", 'String'>
+    readonly stripeProductId: FieldRef<"WorkspaceSubscription", 'String'>
+    readonly stripePriceId: FieldRef<"WorkspaceSubscription", 'String'>
+    readonly cancelAtPeriodEnd: FieldRef<"WorkspaceSubscription", 'Boolean'>
+    readonly limitOverrides: FieldRef<"WorkspaceSubscription", 'Json'>
+    readonly featureOverrides: FieldRef<"WorkspaceSubscription", 'Json'>
+    readonly metadata: FieldRef<"WorkspaceSubscription", 'Json'>
+    readonly createdAt: FieldRef<"WorkspaceSubscription", 'DateTime'>
+    readonly updatedAt: FieldRef<"WorkspaceSubscription", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * WorkspaceSubscription findUnique
+   */
+  export type WorkspaceSubscriptionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkspaceSubscription to fetch.
+     */
+    where: WorkspaceSubscriptionWhereUniqueInput
+  }
+
+  /**
+   * WorkspaceSubscription findUniqueOrThrow
+   */
+  export type WorkspaceSubscriptionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkspaceSubscription to fetch.
+     */
+    where: WorkspaceSubscriptionWhereUniqueInput
+  }
+
+  /**
+   * WorkspaceSubscription findFirst
+   */
+  export type WorkspaceSubscriptionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkspaceSubscription to fetch.
+     */
+    where?: WorkspaceSubscriptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WorkspaceSubscriptions to fetch.
+     */
+    orderBy?: WorkspaceSubscriptionOrderByWithRelationInput | WorkspaceSubscriptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WorkspaceSubscriptions.
+     */
+    cursor?: WorkspaceSubscriptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WorkspaceSubscriptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WorkspaceSubscriptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WorkspaceSubscriptions.
+     */
+    distinct?: WorkspaceSubscriptionScalarFieldEnum | WorkspaceSubscriptionScalarFieldEnum[]
+  }
+
+  /**
+   * WorkspaceSubscription findFirstOrThrow
+   */
+  export type WorkspaceSubscriptionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkspaceSubscription to fetch.
+     */
+    where?: WorkspaceSubscriptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WorkspaceSubscriptions to fetch.
+     */
+    orderBy?: WorkspaceSubscriptionOrderByWithRelationInput | WorkspaceSubscriptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WorkspaceSubscriptions.
+     */
+    cursor?: WorkspaceSubscriptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WorkspaceSubscriptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WorkspaceSubscriptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WorkspaceSubscriptions.
+     */
+    distinct?: WorkspaceSubscriptionScalarFieldEnum | WorkspaceSubscriptionScalarFieldEnum[]
+  }
+
+  /**
+   * WorkspaceSubscription findMany
+   */
+  export type WorkspaceSubscriptionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkspaceSubscriptions to fetch.
+     */
+    where?: WorkspaceSubscriptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WorkspaceSubscriptions to fetch.
+     */
+    orderBy?: WorkspaceSubscriptionOrderByWithRelationInput | WorkspaceSubscriptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing WorkspaceSubscriptions.
+     */
+    cursor?: WorkspaceSubscriptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WorkspaceSubscriptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WorkspaceSubscriptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WorkspaceSubscriptions.
+     */
+    distinct?: WorkspaceSubscriptionScalarFieldEnum | WorkspaceSubscriptionScalarFieldEnum[]
+  }
+
+  /**
+   * WorkspaceSubscription create
+   */
+  export type WorkspaceSubscriptionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a WorkspaceSubscription.
+     */
+    data: XOR<WorkspaceSubscriptionCreateInput, WorkspaceSubscriptionUncheckedCreateInput>
+  }
+
+  /**
+   * WorkspaceSubscription createMany
+   */
+  export type WorkspaceSubscriptionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many WorkspaceSubscriptions.
+     */
+    data: WorkspaceSubscriptionCreateManyInput | WorkspaceSubscriptionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * WorkspaceSubscription createManyAndReturn
+   */
+  export type WorkspaceSubscriptionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * The data used to create many WorkspaceSubscriptions.
+     */
+    data: WorkspaceSubscriptionCreateManyInput | WorkspaceSubscriptionCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WorkspaceSubscription update
+   */
+  export type WorkspaceSubscriptionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a WorkspaceSubscription.
+     */
+    data: XOR<WorkspaceSubscriptionUpdateInput, WorkspaceSubscriptionUncheckedUpdateInput>
+    /**
+     * Choose, which WorkspaceSubscription to update.
+     */
+    where: WorkspaceSubscriptionWhereUniqueInput
+  }
+
+  /**
+   * WorkspaceSubscription updateMany
+   */
+  export type WorkspaceSubscriptionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update WorkspaceSubscriptions.
+     */
+    data: XOR<WorkspaceSubscriptionUpdateManyMutationInput, WorkspaceSubscriptionUncheckedUpdateManyInput>
+    /**
+     * Filter which WorkspaceSubscriptions to update
+     */
+    where?: WorkspaceSubscriptionWhereInput
+    /**
+     * Limit how many WorkspaceSubscriptions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * WorkspaceSubscription updateManyAndReturn
+   */
+  export type WorkspaceSubscriptionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * The data used to update WorkspaceSubscriptions.
+     */
+    data: XOR<WorkspaceSubscriptionUpdateManyMutationInput, WorkspaceSubscriptionUncheckedUpdateManyInput>
+    /**
+     * Filter which WorkspaceSubscriptions to update
+     */
+    where?: WorkspaceSubscriptionWhereInput
+    /**
+     * Limit how many WorkspaceSubscriptions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WorkspaceSubscription upsert
+   */
+  export type WorkspaceSubscriptionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the WorkspaceSubscription to update in case it exists.
+     */
+    where: WorkspaceSubscriptionWhereUniqueInput
+    /**
+     * In case the WorkspaceSubscription found by the `where` argument doesn't exist, create a new WorkspaceSubscription with this data.
+     */
+    create: XOR<WorkspaceSubscriptionCreateInput, WorkspaceSubscriptionUncheckedCreateInput>
+    /**
+     * In case the WorkspaceSubscription was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<WorkspaceSubscriptionUpdateInput, WorkspaceSubscriptionUncheckedUpdateInput>
+  }
+
+  /**
+   * WorkspaceSubscription delete
+   */
+  export type WorkspaceSubscriptionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+    /**
+     * Filter which WorkspaceSubscription to delete.
+     */
+    where: WorkspaceSubscriptionWhereUniqueInput
+  }
+
+  /**
+   * WorkspaceSubscription deleteMany
+   */
+  export type WorkspaceSubscriptionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WorkspaceSubscriptions to delete
+     */
+    where?: WorkspaceSubscriptionWhereInput
+    /**
+     * Limit how many WorkspaceSubscriptions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * WorkspaceSubscription without action
+   */
+  export type WorkspaceSubscriptionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkspaceSubscription
+     */
+    select?: WorkspaceSubscriptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkspaceSubscription
+     */
+    omit?: WorkspaceSubscriptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkspaceSubscriptionInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -15139,12 +16515,44 @@ export namespace Prisma {
   export type WorkLogScalarFieldEnum = (typeof WorkLogScalarFieldEnum)[keyof typeof WorkLogScalarFieldEnum]
 
 
+  export const WorkspaceSubscriptionScalarFieldEnum: {
+    id: 'id',
+    workspaceId: 'workspaceId',
+    billingProvider: 'billingProvider',
+    tier: 'tier',
+    status: 'status',
+    trialEndsAt: 'trialEndsAt',
+    currentPeriodStart: 'currentPeriodStart',
+    currentPeriodEnd: 'currentPeriodEnd',
+    stripeCustomerId: 'stripeCustomerId',
+    stripeSubscriptionId: 'stripeSubscriptionId',
+    stripeProductId: 'stripeProductId',
+    stripePriceId: 'stripePriceId',
+    cancelAtPeriodEnd: 'cancelAtPeriodEnd',
+    limitOverrides: 'limitOverrides',
+    featureOverrides: 'featureOverrides',
+    metadata: 'metadata',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type WorkspaceSubscriptionScalarFieldEnum = (typeof WorkspaceSubscriptionScalarFieldEnum)[keyof typeof WorkspaceSubscriptionScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
   export const QueryMode: {
@@ -15161,6 +16569,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -15358,6 +16775,62 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'BillingProvider'
+   */
+  export type EnumBillingProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingProvider'>
+    
+
+
+  /**
+   * Reference to a field of type 'BillingProvider[]'
+   */
+  export type ListEnumBillingProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingProvider[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'WorkspacePlanTier'
+   */
+  export type EnumWorkspacePlanTierFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkspacePlanTier'>
+    
+
+
+  /**
+   * Reference to a field of type 'WorkspacePlanTier[]'
+   */
+  export type ListEnumWorkspacePlanTierFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkspacePlanTier[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'WorkspaceSubscriptionStatus'
+   */
+  export type EnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkspaceSubscriptionStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'WorkspaceSubscriptionStatus[]'
+   */
+  export type ListEnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkspaceSubscriptionStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -15486,6 +16959,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Workspace"> | Date | string
     updatedAt?: DateTimeFilter<"Workspace"> | Date | string
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
+    subscription?: XOR<WorkspaceSubscriptionNullableScalarRelationFilter, WorkspaceSubscriptionWhereInput> | null
     workLogs?: WorkLogListRelationFilter
     reminders?: ReminderListRelationFilter
     customers?: CustomerListRelationFilter
@@ -15512,6 +16986,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     owner?: UserOrderByWithRelationInput
+    subscription?: WorkspaceSubscriptionOrderByWithRelationInput
     workLogs?: WorkLogOrderByRelationAggregateInput
     reminders?: ReminderOrderByRelationAggregateInput
     customers?: CustomerOrderByRelationAggregateInput
@@ -15541,6 +17016,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Workspace"> | Date | string
     updatedAt?: DateTimeFilter<"Workspace"> | Date | string
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
+    subscription?: XOR<WorkspaceSubscriptionNullableScalarRelationFilter, WorkspaceSubscriptionWhereInput> | null
     workLogs?: WorkLogListRelationFilter
     reminders?: ReminderListRelationFilter
     customers?: CustomerListRelationFilter
@@ -16483,6 +17959,126 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"WorkLog"> | Date | string
   }
 
+  export type WorkspaceSubscriptionWhereInput = {
+    AND?: WorkspaceSubscriptionWhereInput | WorkspaceSubscriptionWhereInput[]
+    OR?: WorkspaceSubscriptionWhereInput[]
+    NOT?: WorkspaceSubscriptionWhereInput | WorkspaceSubscriptionWhereInput[]
+    id?: StringFilter<"WorkspaceSubscription"> | string
+    workspaceId?: StringFilter<"WorkspaceSubscription"> | string
+    billingProvider?: EnumBillingProviderFilter<"WorkspaceSubscription"> | $Enums.BillingProvider
+    tier?: EnumWorkspacePlanTierFilter<"WorkspaceSubscription"> | $Enums.WorkspacePlanTier
+    status?: EnumWorkspaceSubscriptionStatusFilter<"WorkspaceSubscription"> | $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: DateTimeNullableFilter<"WorkspaceSubscription"> | Date | string | null
+    currentPeriodStart?: DateTimeNullableFilter<"WorkspaceSubscription"> | Date | string | null
+    currentPeriodEnd?: DateTimeNullableFilter<"WorkspaceSubscription"> | Date | string | null
+    stripeCustomerId?: StringNullableFilter<"WorkspaceSubscription"> | string | null
+    stripeSubscriptionId?: StringNullableFilter<"WorkspaceSubscription"> | string | null
+    stripeProductId?: StringNullableFilter<"WorkspaceSubscription"> | string | null
+    stripePriceId?: StringNullableFilter<"WorkspaceSubscription"> | string | null
+    cancelAtPeriodEnd?: BoolFilter<"WorkspaceSubscription"> | boolean
+    limitOverrides?: JsonNullableFilter<"WorkspaceSubscription">
+    featureOverrides?: JsonNullableFilter<"WorkspaceSubscription">
+    metadata?: JsonNullableFilter<"WorkspaceSubscription">
+    createdAt?: DateTimeFilter<"WorkspaceSubscription"> | Date | string
+    updatedAt?: DateTimeFilter<"WorkspaceSubscription"> | Date | string
+    workspace?: XOR<WorkspaceScalarRelationFilter, WorkspaceWhereInput>
+  }
+
+  export type WorkspaceSubscriptionOrderByWithRelationInput = {
+    id?: SortOrder
+    workspaceId?: SortOrder
+    billingProvider?: SortOrder
+    tier?: SortOrder
+    status?: SortOrder
+    trialEndsAt?: SortOrderInput | SortOrder
+    currentPeriodStart?: SortOrderInput | SortOrder
+    currentPeriodEnd?: SortOrderInput | SortOrder
+    stripeCustomerId?: SortOrderInput | SortOrder
+    stripeSubscriptionId?: SortOrderInput | SortOrder
+    stripeProductId?: SortOrderInput | SortOrder
+    stripePriceId?: SortOrderInput | SortOrder
+    cancelAtPeriodEnd?: SortOrder
+    limitOverrides?: SortOrderInput | SortOrder
+    featureOverrides?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    workspace?: WorkspaceOrderByWithRelationInput
+  }
+
+  export type WorkspaceSubscriptionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    workspaceId?: string
+    stripeCustomerId?: string
+    stripeSubscriptionId?: string
+    AND?: WorkspaceSubscriptionWhereInput | WorkspaceSubscriptionWhereInput[]
+    OR?: WorkspaceSubscriptionWhereInput[]
+    NOT?: WorkspaceSubscriptionWhereInput | WorkspaceSubscriptionWhereInput[]
+    billingProvider?: EnumBillingProviderFilter<"WorkspaceSubscription"> | $Enums.BillingProvider
+    tier?: EnumWorkspacePlanTierFilter<"WorkspaceSubscription"> | $Enums.WorkspacePlanTier
+    status?: EnumWorkspaceSubscriptionStatusFilter<"WorkspaceSubscription"> | $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: DateTimeNullableFilter<"WorkspaceSubscription"> | Date | string | null
+    currentPeriodStart?: DateTimeNullableFilter<"WorkspaceSubscription"> | Date | string | null
+    currentPeriodEnd?: DateTimeNullableFilter<"WorkspaceSubscription"> | Date | string | null
+    stripeProductId?: StringNullableFilter<"WorkspaceSubscription"> | string | null
+    stripePriceId?: StringNullableFilter<"WorkspaceSubscription"> | string | null
+    cancelAtPeriodEnd?: BoolFilter<"WorkspaceSubscription"> | boolean
+    limitOverrides?: JsonNullableFilter<"WorkspaceSubscription">
+    featureOverrides?: JsonNullableFilter<"WorkspaceSubscription">
+    metadata?: JsonNullableFilter<"WorkspaceSubscription">
+    createdAt?: DateTimeFilter<"WorkspaceSubscription"> | Date | string
+    updatedAt?: DateTimeFilter<"WorkspaceSubscription"> | Date | string
+    workspace?: XOR<WorkspaceScalarRelationFilter, WorkspaceWhereInput>
+  }, "id" | "workspaceId" | "stripeCustomerId" | "stripeSubscriptionId">
+
+  export type WorkspaceSubscriptionOrderByWithAggregationInput = {
+    id?: SortOrder
+    workspaceId?: SortOrder
+    billingProvider?: SortOrder
+    tier?: SortOrder
+    status?: SortOrder
+    trialEndsAt?: SortOrderInput | SortOrder
+    currentPeriodStart?: SortOrderInput | SortOrder
+    currentPeriodEnd?: SortOrderInput | SortOrder
+    stripeCustomerId?: SortOrderInput | SortOrder
+    stripeSubscriptionId?: SortOrderInput | SortOrder
+    stripeProductId?: SortOrderInput | SortOrder
+    stripePriceId?: SortOrderInput | SortOrder
+    cancelAtPeriodEnd?: SortOrder
+    limitOverrides?: SortOrderInput | SortOrder
+    featureOverrides?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: WorkspaceSubscriptionCountOrderByAggregateInput
+    _max?: WorkspaceSubscriptionMaxOrderByAggregateInput
+    _min?: WorkspaceSubscriptionMinOrderByAggregateInput
+  }
+
+  export type WorkspaceSubscriptionScalarWhereWithAggregatesInput = {
+    AND?: WorkspaceSubscriptionScalarWhereWithAggregatesInput | WorkspaceSubscriptionScalarWhereWithAggregatesInput[]
+    OR?: WorkspaceSubscriptionScalarWhereWithAggregatesInput[]
+    NOT?: WorkspaceSubscriptionScalarWhereWithAggregatesInput | WorkspaceSubscriptionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"WorkspaceSubscription"> | string
+    workspaceId?: StringWithAggregatesFilter<"WorkspaceSubscription"> | string
+    billingProvider?: EnumBillingProviderWithAggregatesFilter<"WorkspaceSubscription"> | $Enums.BillingProvider
+    tier?: EnumWorkspacePlanTierWithAggregatesFilter<"WorkspaceSubscription"> | $Enums.WorkspacePlanTier
+    status?: EnumWorkspaceSubscriptionStatusWithAggregatesFilter<"WorkspaceSubscription"> | $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: DateTimeNullableWithAggregatesFilter<"WorkspaceSubscription"> | Date | string | null
+    currentPeriodStart?: DateTimeNullableWithAggregatesFilter<"WorkspaceSubscription"> | Date | string | null
+    currentPeriodEnd?: DateTimeNullableWithAggregatesFilter<"WorkspaceSubscription"> | Date | string | null
+    stripeCustomerId?: StringNullableWithAggregatesFilter<"WorkspaceSubscription"> | string | null
+    stripeSubscriptionId?: StringNullableWithAggregatesFilter<"WorkspaceSubscription"> | string | null
+    stripeProductId?: StringNullableWithAggregatesFilter<"WorkspaceSubscription"> | string | null
+    stripePriceId?: StringNullableWithAggregatesFilter<"WorkspaceSubscription"> | string | null
+    cancelAtPeriodEnd?: BoolWithAggregatesFilter<"WorkspaceSubscription"> | boolean
+    limitOverrides?: JsonNullableWithAggregatesFilter<"WorkspaceSubscription">
+    featureOverrides?: JsonNullableWithAggregatesFilter<"WorkspaceSubscription">
+    metadata?: JsonNullableWithAggregatesFilter<"WorkspaceSubscription">
+    createdAt?: DateTimeWithAggregatesFilter<"WorkspaceSubscription"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"WorkspaceSubscription"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     clerkUserId: string
@@ -16610,6 +18206,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerCreateNestedManyWithoutWorkspaceInput
@@ -16635,6 +18232,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -16660,6 +18258,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
@@ -16685,6 +18284,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -17739,6 +19339,152 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type WorkspaceSubscriptionCreateInput = {
+    id?: string
+    billingProvider?: $Enums.BillingProvider
+    tier?: $Enums.WorkspacePlanTier
+    status?: $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: Date | string | null
+    currentPeriodStart?: Date | string | null
+    currentPeriodEnd?: Date | string | null
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
+    stripeProductId?: string | null
+    stripePriceId?: string | null
+    cancelAtPeriodEnd?: boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    workspace: WorkspaceCreateNestedOneWithoutSubscriptionInput
+  }
+
+  export type WorkspaceSubscriptionUncheckedCreateInput = {
+    id?: string
+    workspaceId: string
+    billingProvider?: $Enums.BillingProvider
+    tier?: $Enums.WorkspacePlanTier
+    status?: $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: Date | string | null
+    currentPeriodStart?: Date | string | null
+    currentPeriodEnd?: Date | string | null
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
+    stripeProductId?: string | null
+    stripePriceId?: string | null
+    cancelAtPeriodEnd?: boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WorkspaceSubscriptionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    billingProvider?: EnumBillingProviderFieldUpdateOperationsInput | $Enums.BillingProvider
+    tier?: EnumWorkspacePlanTierFieldUpdateOperationsInput | $Enums.WorkspacePlanTier
+    status?: EnumWorkspaceSubscriptionStatusFieldUpdateOperationsInput | $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripePriceId?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelAtPeriodEnd?: BoolFieldUpdateOperationsInput | boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    workspace?: WorkspaceUpdateOneRequiredWithoutSubscriptionNestedInput
+  }
+
+  export type WorkspaceSubscriptionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    workspaceId?: StringFieldUpdateOperationsInput | string
+    billingProvider?: EnumBillingProviderFieldUpdateOperationsInput | $Enums.BillingProvider
+    tier?: EnumWorkspacePlanTierFieldUpdateOperationsInput | $Enums.WorkspacePlanTier
+    status?: EnumWorkspaceSubscriptionStatusFieldUpdateOperationsInput | $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripePriceId?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelAtPeriodEnd?: BoolFieldUpdateOperationsInput | boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WorkspaceSubscriptionCreateManyInput = {
+    id?: string
+    workspaceId: string
+    billingProvider?: $Enums.BillingProvider
+    tier?: $Enums.WorkspacePlanTier
+    status?: $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: Date | string | null
+    currentPeriodStart?: Date | string | null
+    currentPeriodEnd?: Date | string | null
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
+    stripeProductId?: string | null
+    stripePriceId?: string | null
+    cancelAtPeriodEnd?: boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WorkspaceSubscriptionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    billingProvider?: EnumBillingProviderFieldUpdateOperationsInput | $Enums.BillingProvider
+    tier?: EnumWorkspacePlanTierFieldUpdateOperationsInput | $Enums.WorkspacePlanTier
+    status?: EnumWorkspaceSubscriptionStatusFieldUpdateOperationsInput | $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripePriceId?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelAtPeriodEnd?: BoolFieldUpdateOperationsInput | boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WorkspaceSubscriptionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    workspaceId?: StringFieldUpdateOperationsInput | string
+    billingProvider?: EnumBillingProviderFieldUpdateOperationsInput | $Enums.BillingProvider
+    tier?: EnumWorkspacePlanTierFieldUpdateOperationsInput | $Enums.WorkspacePlanTier
+    status?: EnumWorkspaceSubscriptionStatusFieldUpdateOperationsInput | $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripePriceId?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelAtPeriodEnd?: BoolFieldUpdateOperationsInput | boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -17934,6 +19680,11 @@ export namespace Prisma {
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
+  }
+
+  export type WorkspaceSubscriptionNullableScalarRelationFilter = {
+    is?: WorkspaceSubscriptionWhereInput | null
+    isNot?: WorkspaceSubscriptionWhereInput | null
   }
 
   export type CustomerListRelationFilter = {
@@ -18762,6 +20513,163 @@ export namespace Prisma {
     _max?: NestedDecimalFilter<$PrismaModel>
   }
 
+  export type EnumBillingProviderFilter<$PrismaModel = never> = {
+    equals?: $Enums.BillingProvider | EnumBillingProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.BillingProvider[] | ListEnumBillingProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BillingProvider[] | ListEnumBillingProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumBillingProviderFilter<$PrismaModel> | $Enums.BillingProvider
+  }
+
+  export type EnumWorkspacePlanTierFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkspacePlanTier | EnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkspacePlanTier[] | ListEnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.WorkspacePlanTier[] | ListEnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumWorkspacePlanTierFilter<$PrismaModel> | $Enums.WorkspacePlanTier
+  }
+
+  export type EnumWorkspaceSubscriptionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkspaceSubscriptionStatus | EnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkspaceSubscriptionStatus[] | ListEnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.WorkspaceSubscriptionStatus[] | ListEnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumWorkspaceSubscriptionStatusFilter<$PrismaModel> | $Enums.WorkspaceSubscriptionStatus
+  }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type WorkspaceSubscriptionCountOrderByAggregateInput = {
+    id?: SortOrder
+    workspaceId?: SortOrder
+    billingProvider?: SortOrder
+    tier?: SortOrder
+    status?: SortOrder
+    trialEndsAt?: SortOrder
+    currentPeriodStart?: SortOrder
+    currentPeriodEnd?: SortOrder
+    stripeCustomerId?: SortOrder
+    stripeSubscriptionId?: SortOrder
+    stripeProductId?: SortOrder
+    stripePriceId?: SortOrder
+    cancelAtPeriodEnd?: SortOrder
+    limitOverrides?: SortOrder
+    featureOverrides?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WorkspaceSubscriptionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    workspaceId?: SortOrder
+    billingProvider?: SortOrder
+    tier?: SortOrder
+    status?: SortOrder
+    trialEndsAt?: SortOrder
+    currentPeriodStart?: SortOrder
+    currentPeriodEnd?: SortOrder
+    stripeCustomerId?: SortOrder
+    stripeSubscriptionId?: SortOrder
+    stripeProductId?: SortOrder
+    stripePriceId?: SortOrder
+    cancelAtPeriodEnd?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WorkspaceSubscriptionMinOrderByAggregateInput = {
+    id?: SortOrder
+    workspaceId?: SortOrder
+    billingProvider?: SortOrder
+    tier?: SortOrder
+    status?: SortOrder
+    trialEndsAt?: SortOrder
+    currentPeriodStart?: SortOrder
+    currentPeriodEnd?: SortOrder
+    stripeCustomerId?: SortOrder
+    stripeSubscriptionId?: SortOrder
+    stripeProductId?: SortOrder
+    stripePriceId?: SortOrder
+    cancelAtPeriodEnd?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumBillingProviderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BillingProvider | EnumBillingProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.BillingProvider[] | ListEnumBillingProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BillingProvider[] | ListEnumBillingProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumBillingProviderWithAggregatesFilter<$PrismaModel> | $Enums.BillingProvider
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBillingProviderFilter<$PrismaModel>
+    _max?: NestedEnumBillingProviderFilter<$PrismaModel>
+  }
+
+  export type EnumWorkspacePlanTierWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkspacePlanTier | EnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkspacePlanTier[] | ListEnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.WorkspacePlanTier[] | ListEnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumWorkspacePlanTierWithAggregatesFilter<$PrismaModel> | $Enums.WorkspacePlanTier
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkspacePlanTierFilter<$PrismaModel>
+    _max?: NestedEnumWorkspacePlanTierFilter<$PrismaModel>
+  }
+
+  export type EnumWorkspaceSubscriptionStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkspaceSubscriptionStatus | EnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkspaceSubscriptionStatus[] | ListEnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.WorkspaceSubscriptionStatus[] | ListEnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumWorkspaceSubscriptionStatusWithAggregatesFilter<$PrismaModel> | $Enums.WorkspaceSubscriptionStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkspaceSubscriptionStatusFilter<$PrismaModel>
+    _max?: NestedEnumWorkspaceSubscriptionStatusFilter<$PrismaModel>
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
   export type WorkLogCreateNestedManyWithoutPerformedByUserInput = {
     create?: XOR<WorkLogCreateWithoutPerformedByUserInput, WorkLogUncheckedCreateWithoutPerformedByUserInput> | WorkLogCreateWithoutPerformedByUserInput[] | WorkLogUncheckedCreateWithoutPerformedByUserInput[]
     connectOrCreate?: WorkLogCreateOrConnectWithoutPerformedByUserInput | WorkLogCreateOrConnectWithoutPerformedByUserInput[]
@@ -19074,6 +20982,12 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput = {
+    create?: XOR<WorkspaceSubscriptionCreateWithoutWorkspaceInput, WorkspaceSubscriptionUncheckedCreateWithoutWorkspaceInput>
+    connectOrCreate?: WorkspaceSubscriptionCreateOrConnectWithoutWorkspaceInput
+    connect?: WorkspaceSubscriptionWhereUniqueInput
+  }
+
   export type WorkLogCreateNestedManyWithoutWorkspaceInput = {
     create?: XOR<WorkLogCreateWithoutWorkspaceInput, WorkLogUncheckedCreateWithoutWorkspaceInput> | WorkLogCreateWithoutWorkspaceInput[] | WorkLogUncheckedCreateWithoutWorkspaceInput[]
     connectOrCreate?: WorkLogCreateOrConnectWithoutWorkspaceInput | WorkLogCreateOrConnectWithoutWorkspaceInput[]
@@ -19127,6 +21041,12 @@ export namespace Prisma {
     create?: XOR<WorkspaceSettingsCreateWithoutWorkspaceInput, WorkspaceSettingsUncheckedCreateWithoutWorkspaceInput>
     connectOrCreate?: WorkspaceSettingsCreateOrConnectWithoutWorkspaceInput
     connect?: WorkspaceSettingsWhereUniqueInput
+  }
+
+  export type WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput = {
+    create?: XOR<WorkspaceSubscriptionCreateWithoutWorkspaceInput, WorkspaceSubscriptionUncheckedCreateWithoutWorkspaceInput>
+    connectOrCreate?: WorkspaceSubscriptionCreateOrConnectWithoutWorkspaceInput
+    connect?: WorkspaceSubscriptionWhereUniqueInput
   }
 
   export type WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput = {
@@ -19190,6 +21110,16 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutOwnedWorkspacesInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOwnedWorkspacesInput, UserUpdateWithoutOwnedWorkspacesInput>, UserUncheckedUpdateWithoutOwnedWorkspacesInput>
+  }
+
+  export type WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput = {
+    create?: XOR<WorkspaceSubscriptionCreateWithoutWorkspaceInput, WorkspaceSubscriptionUncheckedCreateWithoutWorkspaceInput>
+    connectOrCreate?: WorkspaceSubscriptionCreateOrConnectWithoutWorkspaceInput
+    upsert?: WorkspaceSubscriptionUpsertWithoutWorkspaceInput
+    disconnect?: WorkspaceSubscriptionWhereInput | boolean
+    delete?: WorkspaceSubscriptionWhereInput | boolean
+    connect?: WorkspaceSubscriptionWhereUniqueInput
+    update?: XOR<XOR<WorkspaceSubscriptionUpdateToOneWithWhereWithoutWorkspaceInput, WorkspaceSubscriptionUpdateWithoutWorkspaceInput>, WorkspaceSubscriptionUncheckedUpdateWithoutWorkspaceInput>
   }
 
   export type WorkLogUpdateManyWithoutWorkspaceNestedInput = {
@@ -19298,6 +21228,16 @@ export namespace Prisma {
     delete?: WorkspaceSettingsWhereInput | boolean
     connect?: WorkspaceSettingsWhereUniqueInput
     update?: XOR<XOR<WorkspaceSettingsUpdateToOneWithWhereWithoutWorkspaceInput, WorkspaceSettingsUpdateWithoutWorkspaceInput>, WorkspaceSettingsUncheckedUpdateWithoutWorkspaceInput>
+  }
+
+  export type WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput = {
+    create?: XOR<WorkspaceSubscriptionCreateWithoutWorkspaceInput, WorkspaceSubscriptionUncheckedCreateWithoutWorkspaceInput>
+    connectOrCreate?: WorkspaceSubscriptionCreateOrConnectWithoutWorkspaceInput
+    upsert?: WorkspaceSubscriptionUpsertWithoutWorkspaceInput
+    disconnect?: WorkspaceSubscriptionWhereInput | boolean
+    delete?: WorkspaceSubscriptionWhereInput | boolean
+    connect?: WorkspaceSubscriptionWhereUniqueInput
+    update?: XOR<XOR<WorkspaceSubscriptionUpdateToOneWithWhereWithoutWorkspaceInput, WorkspaceSubscriptionUpdateWithoutWorkspaceInput>, WorkspaceSubscriptionUncheckedUpdateWithoutWorkspaceInput>
   }
 
   export type WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput = {
@@ -20091,6 +22031,32 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCreatedWorkLogsInput, UserUpdateWithoutCreatedWorkLogsInput>, UserUncheckedUpdateWithoutCreatedWorkLogsInput>
   }
 
+  export type WorkspaceCreateNestedOneWithoutSubscriptionInput = {
+    create?: XOR<WorkspaceCreateWithoutSubscriptionInput, WorkspaceUncheckedCreateWithoutSubscriptionInput>
+    connectOrCreate?: WorkspaceCreateOrConnectWithoutSubscriptionInput
+    connect?: WorkspaceWhereUniqueInput
+  }
+
+  export type EnumBillingProviderFieldUpdateOperationsInput = {
+    set?: $Enums.BillingProvider
+  }
+
+  export type EnumWorkspacePlanTierFieldUpdateOperationsInput = {
+    set?: $Enums.WorkspacePlanTier
+  }
+
+  export type EnumWorkspaceSubscriptionStatusFieldUpdateOperationsInput = {
+    set?: $Enums.WorkspaceSubscriptionStatus
+  }
+
+  export type WorkspaceUpdateOneRequiredWithoutSubscriptionNestedInput = {
+    create?: XOR<WorkspaceCreateWithoutSubscriptionInput, WorkspaceUncheckedCreateWithoutSubscriptionInput>
+    connectOrCreate?: WorkspaceCreateOrConnectWithoutSubscriptionInput
+    upsert?: WorkspaceUpsertWithoutSubscriptionInput
+    connect?: WorkspaceWhereUniqueInput
+    update?: XOR<XOR<WorkspaceUpdateToOneWithWhereWithoutSubscriptionInput, WorkspaceUpdateWithoutSubscriptionInput>, WorkspaceUncheckedUpdateWithoutSubscriptionInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -20462,6 +22428,80 @@ export namespace Prisma {
     _max?: NestedDecimalFilter<$PrismaModel>
   }
 
+  export type NestedEnumBillingProviderFilter<$PrismaModel = never> = {
+    equals?: $Enums.BillingProvider | EnumBillingProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.BillingProvider[] | ListEnumBillingProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BillingProvider[] | ListEnumBillingProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumBillingProviderFilter<$PrismaModel> | $Enums.BillingProvider
+  }
+
+  export type NestedEnumWorkspacePlanTierFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkspacePlanTier | EnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkspacePlanTier[] | ListEnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.WorkspacePlanTier[] | ListEnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumWorkspacePlanTierFilter<$PrismaModel> | $Enums.WorkspacePlanTier
+  }
+
+  export type NestedEnumWorkspaceSubscriptionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkspaceSubscriptionStatus | EnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkspaceSubscriptionStatus[] | ListEnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.WorkspaceSubscriptionStatus[] | ListEnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumWorkspaceSubscriptionStatusFilter<$PrismaModel> | $Enums.WorkspaceSubscriptionStatus
+  }
+
+  export type NestedEnumBillingProviderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BillingProvider | EnumBillingProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.BillingProvider[] | ListEnumBillingProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BillingProvider[] | ListEnumBillingProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumBillingProviderWithAggregatesFilter<$PrismaModel> | $Enums.BillingProvider
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBillingProviderFilter<$PrismaModel>
+    _max?: NestedEnumBillingProviderFilter<$PrismaModel>
+  }
+
+  export type NestedEnumWorkspacePlanTierWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkspacePlanTier | EnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkspacePlanTier[] | ListEnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.WorkspacePlanTier[] | ListEnumWorkspacePlanTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumWorkspacePlanTierWithAggregatesFilter<$PrismaModel> | $Enums.WorkspacePlanTier
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkspacePlanTierFilter<$PrismaModel>
+    _max?: NestedEnumWorkspacePlanTierFilter<$PrismaModel>
+  }
+
+  export type NestedEnumWorkspaceSubscriptionStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkspaceSubscriptionStatus | EnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkspaceSubscriptionStatus[] | ListEnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.WorkspaceSubscriptionStatus[] | ListEnumWorkspaceSubscriptionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumWorkspaceSubscriptionStatusWithAggregatesFilter<$PrismaModel> | $Enums.WorkspaceSubscriptionStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkspaceSubscriptionStatusFilter<$PrismaModel>
+    _max?: NestedEnumWorkspaceSubscriptionStatusFilter<$PrismaModel>
+  }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
   export type WorkLogCreateWithoutPerformedByUserInput = {
     id?: string
     title: string
@@ -20608,6 +22648,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerCreateNestedManyWithoutWorkspaceInput
@@ -20632,6 +22673,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -21036,6 +23078,51 @@ export namespace Prisma {
     create: XOR<UserCreateWithoutOwnedWorkspacesInput, UserUncheckedCreateWithoutOwnedWorkspacesInput>
   }
 
+  export type WorkspaceSubscriptionCreateWithoutWorkspaceInput = {
+    id?: string
+    billingProvider?: $Enums.BillingProvider
+    tier?: $Enums.WorkspacePlanTier
+    status?: $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: Date | string | null
+    currentPeriodStart?: Date | string | null
+    currentPeriodEnd?: Date | string | null
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
+    stripeProductId?: string | null
+    stripePriceId?: string | null
+    cancelAtPeriodEnd?: boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WorkspaceSubscriptionUncheckedCreateWithoutWorkspaceInput = {
+    id?: string
+    billingProvider?: $Enums.BillingProvider
+    tier?: $Enums.WorkspacePlanTier
+    status?: $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: Date | string | null
+    currentPeriodStart?: Date | string | null
+    currentPeriodEnd?: Date | string | null
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
+    stripeProductId?: string | null
+    stripePriceId?: string | null
+    cancelAtPeriodEnd?: boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WorkspaceSubscriptionCreateOrConnectWithoutWorkspaceInput = {
+    where: WorkspaceSubscriptionWhereUniqueInput
+    create: XOR<WorkspaceSubscriptionCreateWithoutWorkspaceInput, WorkspaceSubscriptionUncheckedCreateWithoutWorkspaceInput>
+  }
+
   export type WorkLogCreateWithoutWorkspaceInput = {
     id?: string
     title: string
@@ -21438,6 +23525,57 @@ export namespace Prisma {
     createdReminders?: ReminderUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
 
+  export type WorkspaceSubscriptionUpsertWithoutWorkspaceInput = {
+    update: XOR<WorkspaceSubscriptionUpdateWithoutWorkspaceInput, WorkspaceSubscriptionUncheckedUpdateWithoutWorkspaceInput>
+    create: XOR<WorkspaceSubscriptionCreateWithoutWorkspaceInput, WorkspaceSubscriptionUncheckedCreateWithoutWorkspaceInput>
+    where?: WorkspaceSubscriptionWhereInput
+  }
+
+  export type WorkspaceSubscriptionUpdateToOneWithWhereWithoutWorkspaceInput = {
+    where?: WorkspaceSubscriptionWhereInput
+    data: XOR<WorkspaceSubscriptionUpdateWithoutWorkspaceInput, WorkspaceSubscriptionUncheckedUpdateWithoutWorkspaceInput>
+  }
+
+  export type WorkspaceSubscriptionUpdateWithoutWorkspaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    billingProvider?: EnumBillingProviderFieldUpdateOperationsInput | $Enums.BillingProvider
+    tier?: EnumWorkspacePlanTierFieldUpdateOperationsInput | $Enums.WorkspacePlanTier
+    status?: EnumWorkspaceSubscriptionStatusFieldUpdateOperationsInput | $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripePriceId?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelAtPeriodEnd?: BoolFieldUpdateOperationsInput | boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WorkspaceSubscriptionUncheckedUpdateWithoutWorkspaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    billingProvider?: EnumBillingProviderFieldUpdateOperationsInput | $Enums.BillingProvider
+    tier?: EnumWorkspacePlanTierFieldUpdateOperationsInput | $Enums.WorkspacePlanTier
+    status?: EnumWorkspaceSubscriptionStatusFieldUpdateOperationsInput | $Enums.WorkspaceSubscriptionStatus
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    currentPeriodEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripePriceId?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelAtPeriodEnd?: BoolFieldUpdateOperationsInput | boolean
+    limitOverrides?: NullableJsonNullValueInput | InputJsonValue
+    featureOverrides?: NullableJsonNullValueInput | InputJsonValue
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type WorkLogUpsertWithWhereUniqueWithoutWorkspaceInput = {
     where: WorkLogWhereUniqueInput
     update: XOR<WorkLogUpdateWithoutWorkspaceInput, WorkLogUncheckedUpdateWithoutWorkspaceInput>
@@ -21662,6 +23800,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerCreateNestedManyWithoutWorkspaceInput
@@ -21686,6 +23825,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -21767,6 +23907,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
@@ -21791,6 +23932,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -21862,6 +24004,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerCreateNestedManyWithoutWorkspaceInput
@@ -21886,6 +24029,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -21967,6 +24111,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
@@ -21991,6 +24136,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -22062,6 +24208,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerCreateNestedManyWithoutWorkspaceInput
@@ -22086,6 +24233,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -22126,6 +24274,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
@@ -22150,6 +24299,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -22312,6 +24462,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
     vehicles?: VehicleCreateNestedManyWithoutWorkspaceInput
@@ -22336,6 +24487,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
     vehicles?: VehicleUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -22484,6 +24636,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
     vehicles?: VehicleUpdateManyWithoutWorkspaceNestedInput
@@ -22508,6 +24661,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
     vehicles?: VehicleUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -22686,6 +24840,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerCreateNestedManyWithoutWorkspaceInput
@@ -22710,6 +24865,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -22851,6 +25007,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
@@ -22875,6 +25032,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -22958,6 +25116,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerCreateNestedManyWithoutWorkspaceInput
@@ -22982,6 +25141,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
     reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -23171,6 +25331,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
@@ -23195,6 +25356,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -23386,6 +25548,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerCreateNestedManyWithoutWorkspaceInput
     vehicles?: VehicleCreateNestedManyWithoutWorkspaceInput
@@ -23410,6 +25573,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
     vehicles?: VehicleUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -23599,6 +25763,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
     vehicles?: VehicleUpdateManyWithoutWorkspaceNestedInput
@@ -23623,6 +25788,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput
     vehicles?: VehicleUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -23814,6 +25980,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    subscription?: WorkspaceSubscriptionCreateNestedOneWithoutWorkspaceInput
     reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerCreateNestedManyWithoutWorkspaceInput
     vehicles?: VehicleCreateNestedManyWithoutWorkspaceInput
@@ -23838,6 +26005,7 @@ export namespace Prisma {
     country?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    subscription?: WorkspaceSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
     reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
     customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
     vehicles?: VehicleUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -24068,6 +26236,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
     vehicles?: VehicleUpdateManyWithoutWorkspaceNestedInput
@@ -24092,6 +26261,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput
     vehicles?: VehicleUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -24313,6 +26483,122 @@ export namespace Prisma {
     sentInvites?: WorkspaceInviteUncheckedUpdateManyWithoutInvitedByUserNestedInput
     uploadedDocuments?: DocumentUncheckedUpdateManyWithoutUploadedByUserNestedInput
     createdReminders?: ReminderUncheckedUpdateManyWithoutCreatedByUserNestedInput
+  }
+
+  export type WorkspaceCreateWithoutSubscriptionInput = {
+    id?: string
+    name: string
+    slug: string
+    businessEmail?: string | null
+    businessPhone?: string | null
+    website?: string | null
+    addressLine1?: string | null
+    addressLine2?: string | null
+    city?: string | null
+    county?: string | null
+    country?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner: UserCreateNestedOneWithoutOwnedWorkspacesInput
+    workLogs?: WorkLogCreateNestedManyWithoutWorkspaceInput
+    reminders?: ReminderCreateNestedManyWithoutWorkspaceInput
+    customers?: CustomerCreateNestedManyWithoutWorkspaceInput
+    vehicles?: VehicleCreateNestedManyWithoutWorkspaceInput
+    documents?: DocumentCreateNestedManyWithoutWorkspaceInput
+    memberships?: WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
+    invites?: WorkspaceInviteCreateNestedManyWithoutWorkspaceInput
+    settings?: WorkspaceSettingsCreateNestedOneWithoutWorkspaceInput
+  }
+
+  export type WorkspaceUncheckedCreateWithoutSubscriptionInput = {
+    id?: string
+    name: string
+    slug: string
+    ownerId: string
+    businessEmail?: string | null
+    businessPhone?: string | null
+    website?: string | null
+    addressLine1?: string | null
+    addressLine2?: string | null
+    city?: string | null
+    county?: string | null
+    country?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    workLogs?: WorkLogUncheckedCreateNestedManyWithoutWorkspaceInput
+    reminders?: ReminderUncheckedCreateNestedManyWithoutWorkspaceInput
+    customers?: CustomerUncheckedCreateNestedManyWithoutWorkspaceInput
+    vehicles?: VehicleUncheckedCreateNestedManyWithoutWorkspaceInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutWorkspaceInput
+    memberships?: WorkspaceMemberUncheckedCreateNestedManyWithoutWorkspaceInput
+    invites?: WorkspaceInviteUncheckedCreateNestedManyWithoutWorkspaceInput
+    settings?: WorkspaceSettingsUncheckedCreateNestedOneWithoutWorkspaceInput
+  }
+
+  export type WorkspaceCreateOrConnectWithoutSubscriptionInput = {
+    where: WorkspaceWhereUniqueInput
+    create: XOR<WorkspaceCreateWithoutSubscriptionInput, WorkspaceUncheckedCreateWithoutSubscriptionInput>
+  }
+
+  export type WorkspaceUpsertWithoutSubscriptionInput = {
+    update: XOR<WorkspaceUpdateWithoutSubscriptionInput, WorkspaceUncheckedUpdateWithoutSubscriptionInput>
+    create: XOR<WorkspaceCreateWithoutSubscriptionInput, WorkspaceUncheckedCreateWithoutSubscriptionInput>
+    where?: WorkspaceWhereInput
+  }
+
+  export type WorkspaceUpdateToOneWithWhereWithoutSubscriptionInput = {
+    where?: WorkspaceWhereInput
+    data: XOR<WorkspaceUpdateWithoutSubscriptionInput, WorkspaceUncheckedUpdateWithoutSubscriptionInput>
+  }
+
+  export type WorkspaceUpdateWithoutSubscriptionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    businessEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    businessPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    addressLine1?: NullableStringFieldUpdateOperationsInput | string | null
+    addressLine2?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    county?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+    workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
+    reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
+    customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
+    vehicles?: VehicleUpdateManyWithoutWorkspaceNestedInput
+    documents?: DocumentUpdateManyWithoutWorkspaceNestedInput
+    memberships?: WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
+    invites?: WorkspaceInviteUpdateManyWithoutWorkspaceNestedInput
+    settings?: WorkspaceSettingsUpdateOneWithoutWorkspaceNestedInput
+  }
+
+  export type WorkspaceUncheckedUpdateWithoutSubscriptionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    businessEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    businessPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    addressLine1?: NullableStringFieldUpdateOperationsInput | string | null
+    addressLine2?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    county?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
+    reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
+    customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput
+    vehicles?: VehicleUncheckedUpdateManyWithoutWorkspaceNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutWorkspaceNestedInput
+    memberships?: WorkspaceMemberUncheckedUpdateManyWithoutWorkspaceNestedInput
+    invites?: WorkspaceInviteUncheckedUpdateManyWithoutWorkspaceNestedInput
+    settings?: WorkspaceSettingsUncheckedUpdateOneWithoutWorkspaceNestedInput
   }
 
   export type WorkLogCreateManyPerformedByUserInput = {
@@ -24593,6 +26879,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUpdateManyWithoutWorkspaceNestedInput
@@ -24617,6 +26904,7 @@ export namespace Prisma {
     country?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscription?: WorkspaceSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
     workLogs?: WorkLogUncheckedUpdateManyWithoutWorkspaceNestedInput
     reminders?: ReminderUncheckedUpdateManyWithoutWorkspaceNestedInput
     customers?: CustomerUncheckedUpdateManyWithoutWorkspaceNestedInput

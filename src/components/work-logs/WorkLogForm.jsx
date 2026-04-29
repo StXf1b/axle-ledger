@@ -23,6 +23,7 @@ import {
 } from "@/actions/work-logs";
 import { formatCurrency, formatOdometer } from "@/lib/work-log-utils";
 import "./WorkLogForm.css";
+import ConfirmModal from "../ui/ConfirmModal";
 
 function getTodayValue() {
 	return new Date().toISOString().slice(0, 10);
@@ -39,6 +40,7 @@ export default function WorkLogForm({
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [error, setError] = useState("");
+	const [showErrorModal, setShowErrorModal] = useState(false);
 
 	const [form, setForm] = useState({
 		title: initialData?.title || "",
@@ -148,6 +150,7 @@ export default function WorkLogForm({
 				router.refresh();
 			} catch (err) {
 				setError(err?.message || "Failed to save work log.");
+				setShowErrorModal(true);
 			}
 		});
 	}
@@ -165,6 +168,7 @@ export default function WorkLogForm({
 				router.refresh();
 			} catch (err) {
 				setError(err?.message || "Failed to delete work log.");
+				setShowErrorModal(true);
 			}
 		});
 	}
@@ -489,6 +493,16 @@ export default function WorkLogForm({
 					</Button>
 				</div>
 			</div>
+			<ConfirmModal
+				open={showErrorModal}
+				onClose={() => setShowErrorModal(false)}
+				title="Error"
+				description={error}
+				confirmText="Close"
+				danger
+				onConfirm={() => setShowErrorModal(false)}
+				showCancelButton={false}
+			/>
 		</form>
 	);
 }

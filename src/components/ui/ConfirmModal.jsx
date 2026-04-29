@@ -16,6 +16,7 @@ export default function ConfirmModal({
 	loading = false,
 	danger = false,
 	note = "",
+	showCancelButton = true,
 }) {
 	const [mounted, setMounted] = useState(false);
 
@@ -90,25 +91,38 @@ export default function ConfirmModal({
 					</div>
 				) : null}
 
-				<div className="confirm-modal__actions">
-					<button
-						type="button"
-						className="btn btn-secondary"
-						onClick={onClose}
-						disabled={loading}
-					>
-						{cancelText}
-					</button>
+				{showCancelButton ? (
+					<div className="confirm-modal__actions">
+						<button
+							type="button"
+							className="btn btn-secondary"
+							onClick={onClose}
+							disabled={loading}
+						>
+							{cancelText}
+						</button>
 
-					<button
-						type="button"
-						className={`btn ${danger ? "btn-danger" : "btn-primary"}`}
-						onClick={onConfirm}
-						disabled={loading}
-					>
-						{loading ? "Working..." : confirmText}
-					</button>
-				</div>
+						<button
+							type="button"
+							className={`btn ${danger ? "btn-danger" : "btn-primary"}`}
+							onClick={onConfirm}
+							disabled={loading}
+						>
+							{loading ? "Working..." : confirmText}
+						</button>
+					</div>
+				) : (
+					<div className="confirm-modal__actions">
+						<button
+							type="button"
+							className={`btn ${danger ? "btn-danger" : "btn-primary"}`}
+							onClick={onConfirm}
+							disabled={loading}
+						>
+							{loading ? "Working..." : confirmText}
+						</button>
+					</div>
+				)}
 			</div>
 		</div>,
 		document.body,

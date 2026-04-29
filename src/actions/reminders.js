@@ -4,6 +4,10 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { REMINDER_TYPE_OPTIONS } from "@/lib/reminder-utils";
+import {
+	assertWorkspaceLimit,
+	assertWorkspaceFeatureEnabled,
+} from "@/lib/billing/workspace-quotas";
 
 const VALID_TYPES = new Set(REMINDER_TYPE_OPTIONS.map((item) => item.value));
 const VALID_UPDATE_STATUSES = new Set(["OPEN", "COMPLETED", "CANCELLED"]);
@@ -166,7 +170,8 @@ async function getReminderOrThrow(reminderId, workspaceId) {
 
 export async function createReminder(payload) {
 	const { appUser, workspace } = await getWorkspaceContextOrThrow();
-
+	await assertWorkspaceFeatureEnabled(workspace.id, "remindersEnabled");
+	await assertWorkspaceLimit(workspace.id, "reminders");
 	const baseData = buildReminderPayload(payload);
 	const linkedData = await resolveLinkedEntities({
 		workspaceId: workspace.id,

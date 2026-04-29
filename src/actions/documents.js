@@ -8,6 +8,11 @@ import { db } from "@/lib/db";
 import { getR2BucketName, getR2Client } from "@/lib/r2";
 import { DOCUMENT_CATEGORY_OPTIONS } from "@/lib/document-utils";
 import { getFileExtension } from "@/lib/document-upload";
+import {
+	assertWorkspaceLimit,
+	assertWorkspaceFeatureEnabled,
+	assertWorkspaceStorageAvailable,
+} from "@/lib/billing/workspace-quotas";
 
 const VALID_CATEGORIES = new Set(
 	DOCUMENT_CATEGORY_OPTIONS.map((item) => item.value),
@@ -178,7 +183,12 @@ async function deleteObjectIfExists(fileKey) {
 
 export async function createDocument(payload) {
 	const { appUser, workspace } = await getWorkspaceContextOrThrow();
-
+	await assertWorkspaceFeatureEnabled(workspace.id, "documentsEnabled");
+	await assertWorkspaceLimit(workspace.id, "documents");
+	await assertWorkspaceStorageAvailable(
+		workspace.id,
+		Number(payload.sizeBytes),
+	);
 	const baseData = buildDocumentPayload(payload);
 	const linkedData = await resolveLinkedEntities({
 		workspaceId: workspace.id,
@@ -209,6 +219,12 @@ export async function createDocument(payload) {
 
 export async function updateDocument(documentId, payload) {
 	const { workspace } = await getWorkspaceContextOrThrow();
+	await assertWorkspaceFeatureEnabled(workspace.id, "documentsEnabled");
+	await assertWorkspaceLimit(workspace.id, "documents");
+	await assertWorkspaceStorageAvailable(
+		workspace.id,
+		Number(payload.sizeBytes),
+	);
 
 	const existingDocument = await db.document.findFirst({
 		where: {

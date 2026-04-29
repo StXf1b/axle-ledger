@@ -20,6 +20,7 @@ import {
 } from "@/actions/reminders";
 import { REMINDER_TYPE_OPTIONS } from "@/lib/reminder-utils";
 import "./ReminderForm.css";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function ReminderForm({
 	mode = "create",
@@ -31,6 +32,7 @@ export default function ReminderForm({
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [error, setError] = useState("");
+	const [showErrorModal, setShowErrorModal] = useState(false);
 
 	const [form, setForm] = useState({
 		title: initialData?.title || "",
@@ -109,6 +111,7 @@ export default function ReminderForm({
 				router.refresh();
 			} catch (err) {
 				setError(err?.message || "Failed to save reminder.");
+				setShowErrorModal(true);
 			}
 		});
 	}
@@ -126,6 +129,7 @@ export default function ReminderForm({
 				router.refresh();
 			} catch (err) {
 				setError(err?.message || "Failed to delete reminder.");
+				setShowErrorModal(true);
 			}
 		});
 	}
@@ -266,8 +270,6 @@ export default function ReminderForm({
 				</div>
 			</div>
 
-			{error ? <p className="text-danger">{error}</p> : null}
-
 			<div className="reminder-form-ui__actions">
 				<div className="reminder-form-ui__actions-left">
 					{mode === "edit" ? (
@@ -307,6 +309,16 @@ export default function ReminderForm({
 					</Button>
 				</div>
 			</div>
+			<ConfirmModal
+				open={showErrorModal}
+				onClose={() => setShowErrorModal(false)}
+				title="Error"
+				description={error}
+				confirmText="Close"
+				danger
+				onConfirm={() => setShowErrorModal(false)}
+				showCancelButton={false}
+			/>
 		</form>
 	);
 }

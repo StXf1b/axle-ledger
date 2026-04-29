@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { assertWorkspaceLimit } from "@/lib/billing/workspace-quotas";
 
 function generateToken() {
 	return randomBytes(24).toString("hex");
@@ -100,6 +101,8 @@ export async function createWorkspaceInvite({ email, role }) {
 			token: existingInvite.token,
 		};
 	}
+
+	await assertWorkspaceLimit(workspace.id, "pendingInvites");
 
 	const token = generateToken();
 	const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
@@ -244,6 +247,8 @@ export async function acceptWorkspaceInvite(token) {
 				"This account already belongs to another workspace. Please delete the existing workspace before accepting this invite.",
 		};
 	}
+
+	await assertWorkspaceLimit(invite.workspaceId, "members");
 
 	await db.$transaction(async (tx) => {
 		await tx.workspaceMember.create({

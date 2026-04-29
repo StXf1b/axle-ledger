@@ -47,6 +47,9 @@ export default function ServiceHistoryCard({
 				</div>
 
 				<div className="service-history-card__header-right">
+					<Link href="/documents" className="btn btn-secondary btn-sm">
+						View all
+					</Link>
 					<Link href={createHref} className="btn btn-primary btn-sm">
 						<Plus size={16} />
 						Add work log

@@ -1,5 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { WORKSPACE_PLAN_DEFINITIONS } from "@/lib/billing/workspace-plans";
+import {
+	ensureWorkspaceSubscription,
+	resolveWorkspaceEntitlements,
+} from "@/lib/billing/workspace-subscription";
+import {
+	getWorkspaceUsage,
+	buildWorkspaceUsageSummary,
+} from "@/lib/billing/workspace-usage";
 
 export async function getSettingsPageData() {
 	const { userId } = await auth();
@@ -47,6 +56,26 @@ export async function getSettingsPageData() {
 
 	const membership = appUser.memberships[0];
 	const workspace = membership.workspace;
+
+	const [subscription, usage] = await Promise.all([
+		ensureWorkspaceSubscription(workspace.id),
+		getWorkspaceUsage(workspace.id),
+	]);
+
+	const entitlements = resolveWorkspaceEntitlements(subscription);
+	const usageSummary = buildWorkspaceUsageSummary(entitlements.limits, usage);
+
+	const plans = Object.entries(WORKSPACE_PLAN_DEFINITIONS).map(
+		([tier, definition]) => ({
+			tier,
+			label: definition.label,
+			billing: definition.billing,
+			limits: definition.limits,
+			features: definition.features,
+			isCurrent: tier === entitlements.tier,
+			isCustom: tier === "CUSTOM",
+		}),
+	);
 
 	return {
 		currentUser: {
@@ -106,5 +135,30 @@ export async function getSettingsPageData() {
 			expiresAt: invite.expiresAt.toISOString(),
 			createdAt: invite.createdAt.toISOString(),
 		})),
+		billingInfo: {
+			currentPlan: {
+				tier: entitlements.tier,
+				label: entitlements.label,
+				status: entitlements.status,
+				billingProvider: entitlements.billingProvider,
+				trialEndsAt: entitlements.trialEndsAt
+					? new Date(entitlements.trialEndsAt).toISOString()
+					: null,
+				currentPeriodStart: entitlements.currentPeriodStart
+					? new Date(entitlements.currentPeriodStart).toISOString()
+					: null,
+				currentPeriodEnd: entitlements.currentPeriodEnd
+					? new Date(entitlements.currentPeriodEnd).toISOString()
+					: null,
+				cancelAtPeriodEnd: entitlements.cancelAtPeriodEnd,
+				access: entitlements.access,
+				limits: entitlements.limits,
+				features: entitlements.features,
+			},
+			usage,
+			usageSummary,
+			plans,
+			canManageBilling: membership.role === "OWNER",
+		},
 	};
 }

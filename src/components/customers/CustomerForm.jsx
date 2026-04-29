@@ -11,7 +11,7 @@ import {
 	StickyNote,
 	ArrowRight,
 } from "lucide-react";
-
+import ConfirmModal from "../ui/ConfirmModal";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { createCustomer, updateCustomer } from "@/actions/customers";
@@ -42,6 +42,7 @@ export default function CustomerForm({
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [error, setError] = useState("");
+	const [showErrorModal, setShowErrorModal] = useState(false);
 
 	const [form, setForm] = useState({
 		firstName: initialData?.firstName || defaultValues.firstName,
@@ -91,6 +92,7 @@ export default function CustomerForm({
 				router.refresh();
 			} catch (err) {
 				setError(err?.message || "Failed to save customer.");
+				setShowErrorModal(true);
 			}
 		});
 	}
@@ -273,8 +275,6 @@ export default function CustomerForm({
 				</div>
 			</div>
 
-			{error ? <p className="text-danger">{error}</p> : null}
-
 			<div className="customer-form-ui__actions">
 				<Button
 					type="button"
@@ -299,6 +299,14 @@ export default function CustomerForm({
 					{mode === "edit" ? "Save customer" : "Create customer"}
 				</Button>
 			</div>
+			<ConfirmModal
+				open={showErrorModal}
+				title="Error"
+				description={error}
+				confirmText="OK"
+				onConfirm={() => setShowErrorModal(false)}
+				onClose={() => setShowErrorModal(false)}
+			/>
 		</form>
 	);
 }

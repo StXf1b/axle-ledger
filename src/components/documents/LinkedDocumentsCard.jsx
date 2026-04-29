@@ -50,6 +50,9 @@ export default function LinkedDocumentsCard({
 				</div>
 
 				<div className="linked-documents-card__header-right">
+					<Link href="/documents" className="btn btn-secondary btn-sm">
+						View all
+					</Link>
 					<Link href={createHref} className="btn btn-primary btn-sm">
 						<Plus size={16} />
 						Add document

@@ -3,6 +3,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import {
+	assertWorkspaceLimit,
+	assertWorkspaceFeatureEnabled,
+} from "@/lib/billing/workspace-quotas";
 
 function emptyToNull(value) {
 	if (value === null || value === undefined) return null;
@@ -293,6 +297,8 @@ async function getWorkLogOrThrow(workLogId, workspaceId) {
 
 export async function createWorkLog(payload) {
 	const { appUser, workspace } = await getWorkspaceContextOrThrow();
+	await assertWorkspaceFeatureEnabled(workspace.id, "workLogsEnabled");
+	await assertWorkspaceLimit(workspace.id, "workLogs");
 
 	const baseData = buildWorkLogPayload(payload);
 	const linked = await resolveLinkedEntities({

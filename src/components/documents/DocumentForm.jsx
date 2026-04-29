@@ -23,6 +23,7 @@ import {
 	DOCUMENT_CATEGORY_OPTIONS,
 	formatFileSize,
 } from "@/lib/document-utils";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 function stripExtension(fileName = "") {
 	const lastDot = fileName.lastIndexOf(".");
@@ -54,6 +55,7 @@ export default function DocumentForm({
 	const [selectedFile, setSelectedFile] = useState(null);
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [showErrorModal, setShowErrorModal] = useState(false);
 
 	const filteredVehicles = useMemo(() => {
 		if (!form.customerId) return vehicles;
@@ -185,6 +187,7 @@ export default function DocumentForm({
 			router.refresh();
 		} catch (err) {
 			setError(err?.message || "Failed to save document.");
+			setShowErrorModal(true);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -205,6 +208,7 @@ export default function DocumentForm({
 			router.refresh();
 		} catch (err) {
 			setError(err?.message || "Failed to delete document.");
+			setShowErrorModal(true);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -388,8 +392,6 @@ export default function DocumentForm({
 				</div>
 			</div>
 
-			{error ? <p className="text-danger">{error}</p> : null}
-
 			<div className="document-form-ui__actions">
 				<div>
 					{mode === "edit" ? (
@@ -430,6 +432,16 @@ export default function DocumentForm({
 					</Button>
 				</div>
 			</div>
+			<ConfirmModal
+				open={showErrorModal}
+				onClose={() => setShowErrorModal(false)}
+				title="Error"
+				description={error}
+				confirmText="Close"
+				danger
+				onConfirm={() => setShowErrorModal(false)}
+				showCancelButton={false}
+			/>
 		</form>
 	);
 }

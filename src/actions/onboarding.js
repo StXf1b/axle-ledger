@@ -80,6 +80,15 @@ export async function createOwnerWorkspace(formData) {
 				workspaceId: workspace.id,
 			},
 		});
+		await tx.workspaceSubscription.create({
+			data: {
+				workspaceId: workspace.id,
+				billingProvider: "MANUAL",
+				tier: "TRIAL",
+				status: "TRIALING",
+				trialEndsAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+			},
+		});
 	});
 
 	redirect("/dashboard");
