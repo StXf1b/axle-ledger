@@ -1,7 +1,5 @@
-import React from "react";
+import AppLoading from "@/components/ui/AppLoading";
 
-const Loading = () => {
-	return <div>Loading</div>;
-};
-
-export default Loading;
+export default function Loading() {
+	return <AppLoading title="Loading..." />;
+}

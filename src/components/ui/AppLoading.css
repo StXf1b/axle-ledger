@@ -1,232 +1,51 @@
-.app-loading-page {
+.loading-spinner-page {
 	min-height: 100vh;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 24px;
-	background:
-		radial-gradient(
-			circle at top left,
-			rgba(59, 130, 246, 0.08),
-			transparent 22%
-		),
-		radial-gradient(
-			circle at top right,
-			rgba(6, 182, 212, 0.05),
-			transparent 18%
-		),
-		linear-gradient(to bottom, #0b0f14, #0a0e13 60%, #0b0f14);
 }
 
-.app-loading-card {
-	position: relative;
-	width: 100%;
-	max-width: 520px;
-	padding: 36px 28px;
-	border-radius: 28px;
-	border: 1px solid var(--border);
-	background:
-		radial-gradient(
-			circle at top center,
-			rgba(59, 130, 246, 0.08),
-			transparent 30%
-		),
-		linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
-		var(--surface);
-	box-shadow: var(--shadow-md);
+.loading-spinner-card {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	text-align: center;
-	overflow: hidden;
-}
-
-.app-loading-glow {
-	position: absolute;
-	inset: auto;
-	top: -80px;
-	left: 50%;
-	transform: translateX(-50%);
-	width: 220px;
-	height: 220px;
-	border-radius: 999px;
-	background: radial-gradient(
-		circle,
-		rgba(59, 130, 246, 0.14),
-		transparent 70%
-	);
-	pointer-events: none;
-	filter: blur(10px);
-}
-
-.app-loading-eyebrow {
-	position: relative;
-	z-index: 1;
-	margin: 0 0 14px;
-	font-size: 0.78rem;
-	font-weight: 700;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: var(--primary);
-}
-
-.app-loading-spinner-wrap {
-	position: relative;
-	width: 84px;
-	height: 84px;
-	margin-bottom: 20px;
-	display: grid;
-	place-items: center;
-}
-
-.app-loading-spinner-ring {
-	position: absolute;
-	inset: 0;
-	border-radius: 999px;
-	border: 2px solid rgba(59, 130, 246, 0.14);
-	border-top-color: rgba(59, 130, 246, 0.9);
-	border-right-color: rgba(59, 130, 246, 0.35);
-	animation: axleledger-spin 1.15s linear infinite;
-	box-shadow:
-		0 0 0 1px rgba(59, 130, 246, 0.04),
-		0 0 24px rgba(59, 130, 246, 0.1);
-}
-
-.app-loading-spinner-core {
-	width: 44px;
-	height: 44px;
-	border-radius: 18px;
-	background: linear-gradient(
-		180deg,
-		rgba(59, 130, 246, 0.24),
-		rgba(37, 99, 235, 0.12)
-	);
-	border: 1px solid rgba(59, 130, 246, 0.24);
-	box-shadow:
-		0 0 0 1px rgba(59, 130, 246, 0.05),
-		0 12px 24px rgba(37, 99, 235, 0.12);
-}
-
-.app-loading-title {
-	margin: 0;
-	font-size: clamp(1.5rem, 2vw, 2rem);
-	font-weight: 700;
-	letter-spacing: -0.04em;
-	color: var(--text);
-}
-
-.app-loading-description {
-	margin-top: 10px;
-	max-width: 420px;
-	font-size: 0.98rem;
-	line-height: 1.7;
-	color: var(--text-muted);
-}
-
-.app-loading-bar {
-	position: relative;
-	width: 100%;
-	height: 10px;
-	margin-top: 24px;
-	border-radius: 999px;
-	overflow: hidden;
-	background: rgba(255, 255, 255, 0.04);
-	border: 1px solid var(--border);
-}
-
-.app-loading-bar-fill {
-	position: absolute;
-	inset: 0 auto 0 -35%;
-	width: 35%;
-	border-radius: inherit;
-	background: linear-gradient(
-		90deg,
-		rgba(59, 130, 246, 0),
-		rgba(59, 130, 246, 0.9),
-		rgba(6, 182, 212, 0.7)
-	);
-	animation: axleledger-loading-bar 1.6s ease-in-out infinite;
-	box-shadow: 0 0 18px rgba(59, 130, 246, 0.18);
-}
-
-.app-loading-dots {
-	display: flex;
-	align-items: center;
 	justify-content: center;
-	gap: 8px;
-	margin-top: 18px;
+	gap: 18px;
 }
 
-.app-loading-dots span {
-	width: 8px;
-	height: 8px;
-	border-radius: 999px;
-	background: var(--text-faint);
-	animation: axleledger-dot-pulse 1.2s ease-in-out infinite;
+.loading-spinner {
+	width: 54px;
+	height: 54px;
+	border-radius: 50%;
+	border: 4px solid rgba(96, 165, 250, 0.16);
+	border-top-color: #3b82f6;
+	border-right-color: #60a5fa;
+	animation: spinnerRotate 0.8s linear infinite;
+	box-shadow: 0 0 10px rgba(59, 130, 246, 0.35);
 }
 
-.app-loading-dots span:nth-child(2) {
-	animation-delay: 0.15s;
+.loading-spinner-card p {
+	margin: 0;
+	color: #b8cce8;
+	font-size: 15px;
+	font-weight: 500;
+	letter-spacing: 0.01em;
 }
 
-.app-loading-dots span:nth-child(3) {
-	animation-delay: 0.3s;
-}
-
-@keyframes axleledger-spin {
+@keyframes spinnerRotate {
 	to {
 		transform: rotate(360deg);
 	}
 }
 
-@keyframes axleledger-loading-bar {
-	0% {
-		left: -35%;
-	}
-	100% {
-		left: 100%;
-	}
-}
-
-@keyframes axleledger-dot-pulse {
-	0%,
-	100% {
-		opacity: 0.35;
-		transform: translateY(0);
-	}
-	50% {
-		opacity: 1;
-		transform: translateY(-2px);
-		background: var(--primary);
-	}
-}
-
-@media (max-width: 640px) {
-	.app-loading-page {
-		padding: 16px;
+@media (max-width: 600px) {
+	.loading-spinner-card {
+		width: 100%;
+		padding: 30px 24px;
 	}
 
-	.app-loading-card {
-		padding: 28px 18px;
-		border-radius: 22px;
-	}
-
-	.app-loading-spinner-wrap {
-		width: 72px;
-		height: 72px;
-	}
-
-	.app-loading-spinner-core {
-		width: 38px;
-		height: 38px;
-		border-radius: 14px;
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.app-loading-spinner-ring,
-	.app-loading-bar-fill,
-	.app-loading-dots span {
-		animation: none;
+	.loading-spinner {
+		width: 48px;
+		height: 48px;
 	}
 }

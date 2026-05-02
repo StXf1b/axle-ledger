@@ -45,7 +45,7 @@ export default function RootLayout({ children }) {
 				"setup-mfa": "/session-tasks/setup-mfa",
 			}}
 		>
-			<html lang="en" suppressHydrationWarning>
+			<html lang="en" suppressHydrationWarning scroll-behavior="smooth">
 				<body className={`${inter.variable} ${jakarta.variable} antialiased`}>
 					{children}
 				</body>

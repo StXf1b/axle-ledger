@@ -12,6 +12,7 @@ import {
 	X,
 } from "lucide-react";
 import styles from "./Sidebar.module.css";
+import Image from "next/image";
 
 const navItems = [
 	{
@@ -72,7 +73,14 @@ export default function Sidebar({
 			>
 				<div className={styles.header}>
 					<Link href="/dashboard" className={styles.brand}>
-						<div className={styles.brandMark}>A</div>
+						<div>
+							<Image
+								src="/logo.png"
+								alt="AxleLedger Logo"
+								width={50}
+								height={50}
+							/>
+						</div>
 
 						{!collapsed && (
 							<div className={styles.brandText}>
