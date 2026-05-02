@@ -1,3 +1,4 @@
+import Image from "next/image";
 import "./AuthCard.css";
 
 export default function AuthCard({
@@ -5,7 +6,6 @@ export default function AuthCard({
 	subtitle,
 	children,
 	footer,
-	logo = null,
 	badge = "AxleLedger",
 	className = "",
 }) {
@@ -18,14 +18,10 @@ export default function AuthCard({
 
 				<div className="ax-auth-card__inner">
 					<div className="ax-auth-card__header">
-						{logo ? (
-							<div className="ax-auth-card__logo">{logo}</div>
-						) : (
-							<div className="ax-auth-card__brand">
-								<div className="ax-auth-card__brand-mark">A</div>
-								<span className="ax-auth-card__brand-text">{badge}</span>
-							</div>
-						)}
+						<div className="ax-auth-card__brand">
+							<Image src="/logo.png" alt="Logo" width={40} height={40} />
+							<span className="ax-auth-card__brand-text">{badge}</span>
+						</div>
 
 						<div className="ax-auth-card__heading">
 							<h1 className="ax-auth-card__title">{title}</h1>
