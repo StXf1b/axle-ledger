@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
 	LayoutDashboard,
 	Users,
@@ -10,51 +11,79 @@ import {
 	Settings,
 	Wrench,
 	X,
+	Activity,
+	PanelLeftClose,
+	PanelLeftOpen,
 } from "lucide-react";
-import styles from "./Sidebar.module.css";
-import Image from "next/image";
 
-const navItems = [
+import styles from "./Sidebar.module.css";
+
+const navGroups = [
 	{
-		label: "Dashboard",
-		href: "/dashboard",
-		icon: LayoutDashboard,
+		title: "Overview",
+		items: [
+			{
+				label: "Dashboard",
+				href: "/dashboard",
+				icon: LayoutDashboard,
+			},
+			{
+				label: "Recent Activity",
+				href: "/recent-activity",
+				icon: Activity,
+			},
+		],
 	},
 	{
-		label: "Customers",
-		href: "/customers",
-		icon: Users,
+		title: "Garage",
+		items: [
+			{
+				label: "Customers",
+				href: "/customers",
+				icon: Users,
+			},
+			{
+				label: "Vehicles",
+				href: "/vehicles",
+				icon: CarFront,
+			},
+			{
+				label: "Work Logs",
+				href: "/work-logs",
+				icon: Wrench,
+			},
+		],
 	},
 	{
-		label: "Vehicles",
-		href: "/vehicles",
-		icon: CarFront,
+		title: "Operations",
+		items: [
+			{
+				label: "Reminders",
+				href: "/reminders",
+				icon: Bell,
+			},
+			{
+				label: "Documents",
+				href: "/documents",
+				icon: FileText,
+			},
+		],
 	},
 	{
-		label: "Reminders",
-		href: "/reminders",
-		icon: Bell,
-	},
-	{
-		label: "Documents",
-		href: "/documents",
-		icon: FileText,
-	},
-	{
-		label: "Work Logs",
-		href: "/work-logs",
-		icon: Wrench,
-	},
-	{
-		label: "Settings",
-		href: "/settings",
-		icon: Settings,
+		title: "System",
+		items: [
+			{
+				label: "Settings",
+				href: "/settings",
+				icon: Settings,
+			},
+		],
 	},
 ];
 
 function isActive(pathname, href) {
 	if (href === "/dashboard") return pathname === "/dashboard";
-	return pathname.startsWith(href);
+	return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export default function Sidebar({
@@ -65,67 +94,71 @@ export default function Sidebar({
 	onToggleCollapse,
 }) {
 	return (
-		<>
-			<aside
-				className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""} ${
-					mobileOpen ? styles.mobileOpen : ""
-				}`}
-			>
-				<div className={styles.header}>
-					<Link href="/dashboard" className={styles.brand}>
-						<div>
-							<Image
-								src="/logo.png"
-								alt="AxleLedger Logo"
-								width={50}
-								height={50}
-							/>
-						</div>
+		<aside
+			className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""} ${
+				mobileOpen ? styles.mobileOpen : ""
+			}`}
+			aria-label="Main sidebar"
+		>
+			<div className={styles.sidebarGlow} />
 
-						{!collapsed && (
-							<div className={styles.brandText}>
-								<span className={styles.brandTitle}>AxleLedger</span>
-								<span className={styles.brandSubtitle}>Dashboard</span>
-							</div>
-						)}
-					</Link>
-
-					<div className={styles.headerActions}>
-						<button
-							type="button"
-							className={styles.iconButtonMobile}
-							onClick={onCloseMobile}
-							aria-label="Close sidebar"
-						>
-							<X size={18} />
-						</button>
+			<div className={styles.header}>
+				<Link href="/dashboard" className={styles.brand}>
+					<div className={styles.logoWrap}>
+						<Image
+							src="/logo.png"
+							alt="AxleLedger Logo"
+							width={44}
+							height={44}
+							className={styles.logoImage}
+							priority
+						/>
 					</div>
-				</div>
 
-				<nav className={styles.nav}>
-					{navItems.map((item) => {
-						const Icon = item.icon;
-						const active = isActive(pathname, item.href);
+					{!collapsed && (
+						<div className={styles.brandText}>
+							<span className={styles.brandTitle}>AxleLedger</span>
+							<span className={styles.brandSubtitle}>Garage Dashboard</span>
+						</div>
+					)}
+				</Link>
+			</div>
 
-						return (
-							<Link
-								key={item.href}
-								href={item.href}
-								className={`${styles.link} ${active ? styles.active : ""}`}
-								title={collapsed ? item.label : ""}
-							>
-								<span className={styles.linkIcon}>
-									<Icon size={20} />
-								</span>
+			<nav className={styles.nav}>
+				{navGroups.map((group) => (
+					<section className={styles.navGroup} key={group.title}>
+						{!collapsed && <p className={styles.groupLabel}>{group.title}</p>}
 
-								{!collapsed && (
-									<span className={styles.linkText}>{item.label}</span>
-								)}
-							</Link>
-						);
-					})}
-				</nav>
-			</aside>
-		</>
+						<div className={styles.groupLinks}>
+							{group.items.map((item) => {
+								const Icon = item.icon;
+								const active = isActive(pathname, item.href);
+
+								return (
+									<Link
+										key={item.href}
+										href={item.href}
+										className={`${styles.link} ${active ? styles.active : ""}`}
+										title={collapsed ? item.label : ""}
+										aria-current={active ? "page" : undefined}
+										onClick={onCloseMobile}
+									>
+										<span className={styles.activeIndicator} />
+
+										<span className={styles.linkIcon}>
+											<Icon size={19} strokeWidth={2.1} />
+										</span>
+
+										{!collapsed && (
+											<span className={styles.linkText}>{item.label}</span>
+										)}
+									</Link>
+								);
+							})}
+						</div>
+					</section>
+				))}
+			</nav>
+		</aside>
 	);
 }

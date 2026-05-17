@@ -271,7 +271,7 @@ function RecentActivityCard({ items }) {
 					</p>
 				</div>
 
-				<Link href="/work-logs" className="dashboard-list-card__view-all">
+				<Link href="/recent-activity" className="dashboard-list-card__view-all">
 					See all
 				</Link>
 			</div>
