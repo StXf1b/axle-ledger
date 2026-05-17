@@ -13,6 +13,7 @@ import {
 	CarFront,
 	BadgeCheck,
 	Plus,
+	Copy,
 } from "lucide-react";
 
 import Button from "@/components/ui/Button";
@@ -133,15 +134,35 @@ export default function CustomerDetailView({ customer }) {
 
 						<div className="customer-detail-list">
 							<div className="customer-detail-list__item">
-								<span>
-									<Phone size={16} /> Phone
+								<span className="flex items-center gap-1 justify-between">
+									<span>
+										<Phone size={16} /> Phone
+									</span>
+									<span className="copy-icon" title="Copy phone to clipboard">
+										<Copy
+											onClick={() =>
+												navigator.clipboard.writeText(customer.phone)
+											}
+											size={18}
+										/>
+									</span>
 								</span>
 								<strong>{customer.phone || "Not added"}</strong>
 							</div>
 
 							<div className="customer-detail-list__item">
-								<span>
-									<Mail size={16} /> Email
+								<span className="flex items-center gap-1 justify-between">
+									<span>
+										<Mail size={16} /> Email
+									</span>
+									<span className="copy-icon" title="Copy email to clipboard">
+										<Copy
+											onClick={() =>
+												navigator.clipboard.writeText(customer.email)
+											}
+											size={18}
+										/>
+									</span>
 								</span>
 								<strong>{customer.email || "Not added"}</strong>
 							</div>

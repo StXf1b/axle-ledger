@@ -17,7 +17,7 @@ import Button from "@/components/ui/Button";
 import {
 	createVehicle,
 	updateVehicle,
-	softDeleteVehicle,
+	deleteVehicle,
 	getVehicleByNumberPlate,
 } from "@/actions/vehicles";
 
@@ -113,10 +113,9 @@ export default function VehicleForm({
 
 	function handleDelete() {
 		if (!vehicleId) return;
-
 		startTransition(async () => {
 			try {
-				await softDeleteVehicle(vehicleId);
+				await deleteVehicle(vehicleId);
 				router.push("/vehicles");
 				router.refresh();
 			} catch (err) {

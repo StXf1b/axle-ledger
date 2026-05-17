@@ -1114,6 +1114,19 @@ select optgroup,
 	transform: translateY(-1px);
 }
 
+.copy-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 4px;
+	color: var(--text-faint);
+	transition: color var(--transition-fast);
+	cursor: pointer;
+}
+.copy-icon:hover {
+	color: var(--text-soft);
+}
+
 @media (max-width: 640px) {
 	.notfound-page {
 		padding: 16px;

@@ -1,17 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-	Settings,
-	LayoutDashboard,
-	Users,
-	UserPlus,
-	CreditCard,
-} from "lucide-react";
+import { Settings, Users, UserPlus, CreditCard } from "lucide-react";
 
 import "./SettingsPageClient.css";
 import GeneralSettingsPanel from "./GeneralSettingsPanel";
-import DashboardSettingsPanel from "./DashboardSettingsPanel";
 import StaffSettingsPanel from "./StaffSettingsPanel";
 import InvitePeoplePanel from "./InvitePeoplePanel";
 import BillingPanel from "./BillingPanel";
@@ -22,12 +15,6 @@ const tabs = [
 		label: "General",
 		icon: Settings,
 		description: "Business profile and workspace basics",
-	},
-	{
-		id: "dashboard",
-		label: "Dashboard",
-		icon: LayoutDashboard,
-		description: "Dashboard appearance and default views",
 	},
 	{
 		id: "staff",
@@ -155,19 +142,6 @@ export default function SettingsPageClient({ initialData }) {
 							>
 								<GeneralSettingsPanel
 									workspace={initialData.workspace}
-									currentRole={initialData.currentMembership.role}
-								/>
-							</div>
-						)}
-
-						{activeTab === "dashboard" && (
-							<div
-								id="settings-panel-dashboard"
-								role="tabpanel"
-								aria-labelledby="settings-tab-dashboard"
-							>
-								<DashboardSettingsPanel
-									settings={initialData.settings}
 									currentRole={initialData.currentMembership.role}
 								/>
 							</div>

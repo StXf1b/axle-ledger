@@ -429,7 +429,11 @@ export default function WorkLogForm({
 			<div className="work-log-form-ui__section">
 				<div className="work-log-form-ui__section-header">
 					<h3>Internal notes</h3>
-					<p>Add workshop context, customer notes, or extra internal detail.</p>
+					<p>
+						Add workshop context, customer notes, or extra internal detail.
+						These notes won&apos;t be visible to customers if you share the work
+						logs.
+					</p>
 				</div>
 
 				<div className="field">

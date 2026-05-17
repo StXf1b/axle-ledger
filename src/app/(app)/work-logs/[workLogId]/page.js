@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PencilLine, CarFront, UserRound, Wrench } from "lucide-react";
+import { PencilLine, CarFront, UserRound, Wrench, Send } from "lucide-react";
 
 import { db } from "@/lib/db";
 import { getCurrentWorkspaceContext } from "@/lib/auth";
@@ -102,6 +102,10 @@ export default async function WorkLogDetailPage({ params }) {
 							Edit work log
 						</button>
 					</Link>
+					<button className="btn btn-primary">
+						<Send size={18} />
+						Send to customer
+					</button>
 				</div>
 			</div>
 
