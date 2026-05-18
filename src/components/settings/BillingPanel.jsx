@@ -344,6 +344,7 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 						<p>Current period end</p>
 						<h4>{formatDate(currentPlan.currentPeriodEnd)}</h4>
 					</div>
+					{console.log(currentPlan)}
 
 					<div className="billing-meta-card">
 						<p>Cancellation</p>

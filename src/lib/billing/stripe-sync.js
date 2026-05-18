@@ -134,6 +134,31 @@ async function resolveLookupKeyFromPrice(price) {
 	};
 }
 
+function getSubscriptionItemForPeriods(subscription) {
+	if (subscription?.items?.data?.length) {
+		return subscription.items.data[0];
+	}
+
+	if (Array.isArray(subscription?.pending_update?.subscription_items)) {
+		return subscription.pending_update.subscription_items[0] || null;
+	}
+
+	if (subscription?.pending_update?.subscription_items) {
+		return subscription.pending_update.subscription_items;
+	}
+
+	return null;
+}
+
+function getSubscriptionPeriodDates(subscription) {
+	const item = getSubscriptionItemForPeriods(subscription);
+
+	return {
+		currentPeriodStart: fromUnixTimestamp(item?.current_period_start || null),
+		currentPeriodEnd: fromUnixTimestamp(item?.current_period_end || null),
+	};
+}
+
 async function resolveWorkspaceIdFromStripeRefs({
 	stripeCustomerId,
 	stripeSubscriptionId,
@@ -280,6 +305,9 @@ export async function syncWorkspaceSubscriptionFromStripeSubscription(
 
 	await ensureWorkspaceSubscription(workspaceId);
 
+	const { currentPeriodStart, currentPeriodEnd } =
+		getSubscriptionPeriodDates(subscription);
+
 	await db.workspaceSubscription.update({
 		where: {
 			workspaceId,
@@ -292,9 +320,9 @@ export async function syncWorkspaceSubscriptionFromStripeSubscription(
 			stripeSubscriptionId: subscription.id,
 			stripeProductId: productId || undefined,
 			stripePriceId: priceId || undefined,
-			currentPeriodStart: fromUnixTimestamp(subscription.current_period_start),
-			currentPeriodEnd: fromUnixTimestamp(subscription.current_period_end),
-			cancelAtPeriodEnd: !!subscription.cancel_at_period_end,
+			currentPeriodStart,
+			currentPeriodEnd,
+			cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
 			trialEndsAt: null,
 		},
 	});
