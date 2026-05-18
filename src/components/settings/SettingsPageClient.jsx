@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Settings, Users, UserPlus, CreditCard } from "lucide-react";
-
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import "./SettingsPageClient.css";
 import GeneralSettingsPanel from "./GeneralSettingsPanel";
 import StaffSettingsPanel from "./StaffSettingsPanel";
@@ -37,12 +37,36 @@ const tabs = [
 ];
 
 export default function SettingsPageClient({ initialData }) {
-	const [activeTab, setActiveTab] = useState("general");
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
 
+	function getValidTabFromUrl() {
+		const tabFromUrl = searchParams.get("tab");
+		return tabs.some((tab) => tab.id === tabFromUrl) ? tabFromUrl : "general";
+	}
+
+	const [activeTab, setActiveTab] = useState(getValidTabFromUrl());
 	const activeTabMeta = useMemo(
 		() => tabs.find((tab) => tab.id === activeTab),
 		[activeTab],
 	);
+	useEffect(() => {
+		const nextTab = getValidTabFromUrl();
+
+		setActiveTab((current) => (current === nextTab ? current : nextTab));
+	}, [searchParams]);
+
+	function handleTabChange(tabId) {
+		setActiveTab(tabId);
+
+		const params = new URLSearchParams(searchParams.toString());
+		params.set("tab", tabId);
+
+		router.replace(`${pathname}?${params.toString()}`, {
+			scroll: false,
+		});
+	}
 
 	if (!initialData) {
 		return (
@@ -95,7 +119,7 @@ export default function SettingsPageClient({ initialData }) {
 										aria-controls={`settings-panel-${tab.id}`}
 										id={`settings-tab-${tab.id}`}
 										className={`settings-tab ${isActive ? "settings-tab--active" : ""}`}
-										onClick={() => setActiveTab(tab.id)}
+										onClick={() => handleTabChange(tab.id)}
 									>
 										<span className="settings-tab__icon">
 											<Icon size={18} />

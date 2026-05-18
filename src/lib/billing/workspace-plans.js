@@ -12,8 +12,8 @@ export const WORKSPACE_PLAN_DEFINITIONS = {
 		},
 		limits: {
 			members: 3,
-			customers: 10, // intentionally low for testing purposes
-			vehicles: 30, // intentionally low for testing purposes
+			customers: 10,
+			vehicles: 30,
 			documents: 10,
 			documentStorageBytes: 0.2 * GB,
 			reminders: 20,
@@ -31,8 +31,8 @@ export const WORKSPACE_PLAN_DEFINITIONS = {
 	STARTER: {
 		label: "Starter",
 		billing: {
-			monthlyPriceCents: 1900,
-			yearlyPriceCents: 19000,
+			monthlyPriceCents: 1899,
+			yearlyPriceCents: 18999,
 			stripeLookupKeyMonthly: "starter_monthly",
 			stripeLookupKeyYearly: "starter_yearly",
 		},
@@ -57,8 +57,8 @@ export const WORKSPACE_PLAN_DEFINITIONS = {
 	PRO: {
 		label: "Pro",
 		billing: {
-			monthlyPriceCents: 4900,
-			yearlyPriceCents: 49000,
+			monthlyPriceCents: 4999,
+			yearlyPriceCents: 44999,
 			stripeLookupKeyMonthly: "pro_monthly",
 			stripeLookupKeyYearly: "pro_yearly",
 		},
@@ -83,8 +83,8 @@ export const WORKSPACE_PLAN_DEFINITIONS = {
 	BUSINESS: {
 		label: "Business",
 		billing: {
-			monthlyPriceCents: 9900,
-			yearlyPriceCents: 99000,
+			monthlyPriceCents: 9999,
+			yearlyPriceCents: 84999,
 			stripeLookupKeyMonthly: "business_monthly",
 			stripeLookupKeyYearly: "business_yearly",
 		},

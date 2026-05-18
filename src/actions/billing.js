@@ -1,10 +1,15 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-
-const ALLOWED_TIERS = ["TRIAL", "STARTER", "PRO", "BUSINESS"];
+import { getAppUrl, getStripeClient } from "@/lib/stripe";
+import { ensureWorkspaceSubscription } from "@/lib/billing/workspace-subscription";
+import {
+	ensureStripeCustomerForWorkspace,
+	getStripePriceForTierInterval,
+	isBillingInterval,
+	isPaidTier,
+} from "@/lib/billing/stripe-sync";
 
 async function getWorkspaceContextOrThrow() {
 	const { userId } = await auth();
@@ -40,51 +45,106 @@ async function getWorkspaceContextOrThrow() {
 	};
 }
 
-export async function updateWorkspacePlan(nextTier) {
-	const { membership, workspace } = await getWorkspaceContextOrThrow();
+export async function createStripeCheckoutSession({ tier, interval }) {
+	const { appUser, membership, workspace } = await getWorkspaceContextOrThrow();
 
 	if (membership.role !== "OWNER") {
-		throw new Error("Only the workspace owner can change the billing plan");
+		throw new Error("Only the workspace owner can manage billing.");
 	}
 
-	if (!ALLOWED_TIERS.includes(nextTier)) {
-		throw new Error("Invalid plan selected");
+	if (!isPaidTier(tier)) {
+		throw new Error("Only paid plans can be purchased through Stripe.");
 	}
 
-	const now = new Date();
-	const nextPeriodEnd = new Date(now);
-	nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+	if (!isBillingInterval(interval)) {
+		throw new Error("Invalid billing interval.");
+	}
 
-	const trialEndsAt = new Date(now);
-	trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+	const subscription = await ensureWorkspaceSubscription(workspace.id);
 
-	await db.workspaceSubscription.upsert({
-		where: {
+	if (
+		subscription.billingProvider === "STRIPE" &&
+		subscription.stripeSubscriptionId &&
+		!["CANCELED", "EXPIRED"].includes(subscription.status)
+	) {
+		throw new Error(
+			"This workspace already has an active Stripe subscription. Use the billing portal to change or cancel it.",
+		);
+	}
+
+	const stripe = getStripeClient();
+	const baseUrl = getAppUrl();
+	const stripeCustomerId = await ensureStripeCustomerForWorkspace({
+		workspace,
+		ownerUser: appUser,
+	});
+	const price = await getStripePriceForTierInterval(tier, interval);
+
+	const session = await stripe.checkout.sessions.create({
+		mode: "subscription",
+		customer: stripeCustomerId,
+		client_reference_id: workspace.id,
+		line_items: [
+			{
+				price: price.id,
+				quantity: 1,
+			},
+		],
+		allow_promotion_codes: true,
+		billing_address_collection: "auto",
+		success_url: `${baseUrl}/settings?tab=billing&billing=success`,
+		cancel_url: `${baseUrl}/settings?tab=billing&billing=cancelled`,
+		metadata: {
 			workspaceId: workspace.id,
+			tier,
+			interval,
 		},
-		update: {
-			tier: nextTier,
-			status: nextTier === "TRIAL" ? "TRIALING" : "ACTIVE",
-			billingProvider: "MANUAL",
-			trialEndsAt: nextTier === "TRIAL" ? trialEndsAt : null,
-			currentPeriodStart: nextTier === "TRIAL" ? null : now,
-			currentPeriodEnd: nextTier === "TRIAL" ? null : nextPeriodEnd,
-			cancelAtPeriodEnd: false,
-		},
-		create: {
-			workspaceId: workspace.id,
-			tier: nextTier,
-			status: nextTier === "TRIAL" ? "TRIALING" : "ACTIVE",
-			billingProvider: "MANUAL",
-			trialEndsAt: nextTier === "TRIAL" ? trialEndsAt : null,
-			currentPeriodStart: nextTier === "TRIAL" ? null : now,
-			currentPeriodEnd: nextTier === "TRIAL" ? null : nextPeriodEnd,
-			cancelAtPeriodEnd: false,
+		subscription_data: {
+			metadata: {
+				workspaceId: workspace.id,
+				tier,
+				interval,
+			},
 		},
 	});
 
-	revalidatePath("/settings");
-	revalidatePath("/dashboard");
+	if (!session.url) {
+		throw new Error("Could not create Stripe Checkout session.");
+	}
 
-	return { ok: true };
+	return {
+		ok: true,
+		url: session.url,
+	};
+}
+
+export async function createStripePortalSession() {
+	const { membership, workspace } = await getWorkspaceContextOrThrow();
+
+	if (membership.role !== "OWNER") {
+		throw new Error("Only the workspace owner can manage billing.");
+	}
+
+	const subscription = await ensureWorkspaceSubscription(workspace.id);
+
+	if (!subscription.stripeCustomerId) {
+		throw new Error("No Stripe customer found for this workspace yet.");
+	}
+
+	const stripe = getStripeClient();
+	const baseUrl = getAppUrl();
+
+	const session = await stripe.billingPortal.sessions.create({
+		customer: subscription.stripeCustomerId,
+		return_url: `${baseUrl}/settings?tab=billing`,
+	});
+
+	if (!session.url) {
+		throw new Error("Could not create Stripe billing portal session.");
+	}
+
+	return {
+		ok: true,
+		url: session.url,
+	};
 }

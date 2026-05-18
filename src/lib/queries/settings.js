@@ -65,17 +65,16 @@ export async function getSettingsPageData() {
 	const entitlements = resolveWorkspaceEntitlements(subscription);
 	const usageSummary = buildWorkspaceUsageSummary(entitlements.limits, usage);
 
-	const plans = Object.entries(WORKSPACE_PLAN_DEFINITIONS).map(
-		([tier, definition]) => ({
+	const plans = Object.entries(WORKSPACE_PLAN_DEFINITIONS)
+		.filter(([tier]) => tier !== "CUSTOM")
+		.map(([tier, definition]) => ({
 			tier,
 			label: definition.label,
 			billing: definition.billing,
 			limits: definition.limits,
 			features: definition.features,
 			isCurrent: tier === entitlements.tier,
-			isCustom: tier === "CUSTOM",
-		}),
-	);
+		}));
 
 	return {
 		currentUser: {
@@ -151,9 +150,11 @@ export async function getSettingsPageData() {
 					? new Date(entitlements.currentPeriodEnd).toISOString()
 					: null,
 				cancelAtPeriodEnd: entitlements.cancelAtPeriodEnd,
-				access: entitlements.access,
 				limits: entitlements.limits,
 				features: entitlements.features,
+				stripeCustomerId: subscription.stripeCustomerId || null,
+				stripeSubscriptionId: subscription.stripeSubscriptionId || null,
+				stripePriceId: subscription.stripePriceId || null,
 			},
 			usage,
 			usageSummary,

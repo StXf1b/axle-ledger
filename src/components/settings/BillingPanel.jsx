@@ -1,28 +1,34 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-	CreditCard,
 	BadgeCheck,
+	Bell,
+	CalendarClock,
+	CreditCard,
+	ExternalLink,
+	FileText,
+	FolderUp,
+	ShieldCheck,
 	Users,
 	CarFront,
 	UserRound,
-	FileText,
-	Bell,
 	Wrench,
-	Upload,
-	ArrowUpRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { updateWorkspacePlan } from "@/actions/billing";
+import {
+	createStripeCheckoutSession,
+	createStripePortalSession,
+} from "@/actions/billing";
 import "./BillingPanel.css";
 
 function formatMoney(cents) {
 	if (cents == null) return "Custom";
+
 	return new Intl.NumberFormat("en-IE", {
 		style: "currency",
 		currency: "EUR",
-		maximumFractionDigits: 0,
+		maximumFractionDigits: 2,
 	}).format(cents / 100);
 }
 
@@ -32,11 +38,13 @@ function formatBytes(bytes) {
 	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
 	if (bytes < 1024 * 1024 * 1024)
 		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+
 	return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
 function formatDate(value) {
 	if (!value) return "—";
+
 	return new Date(value).toLocaleDateString("en-IE", {
 		day: "2-digit",
 		month: "short",
@@ -78,17 +86,12 @@ function UsageCard({ label, current, max, percent, helper, icon: Icon }) {
 					{current}
 					{max == null ? "" : ` / ${max}`}
 				</h4>
-				{percent != null ? (
-					<span
-						className={`billing-usage-card__percent billing-usage-card__percent--${tone}`}
-					>
-						{percent}%
-					</span>
-				) : (
-					<span className="billing-usage-card__percent billing-usage-card__percent--neutral">
-						Unlimited
-					</span>
-				)}
+
+				<span
+					className={`billing-usage-card__percent billing-usage-card__percent--${tone}`}
+				>
+					{percent == null ? "Unlimited" : `${percent}%`}
+				</span>
 			</div>
 
 			<div className="billing-usage-card__bar">
@@ -105,14 +108,26 @@ function UsageCard({ label, current, max, percent, helper, icon: Icon }) {
 
 export default function BillingPanel({ billingInfo, currentRole }) {
 	const router = useRouter();
-	const [isPending, startTransition] = useTransition();
+	const searchParams = useSearchParams();
+	const [billingCycle, setBillingCycle] = useState("monthly");
 	const [error, setError] = useState("");
-	const [success, setSuccess] = useState("");
+	const [busyKey, setBusyKey] = useState("");
+	const [isPending, startTransition] = useTransition();
 
 	const isOwner = currentRole === "OWNER";
 	const currentPlan = billingInfo?.currentPlan;
 	const usageSummary = billingInfo?.usageSummary || {};
-	const plans = billingInfo?.plans || [];
+	const paidPlans =
+		billingInfo?.plans?.filter(
+			(plan) => !["TRIAL", "CUSTOM"].includes(plan.tier),
+		) || [];
+
+	const portalAvailable = !!currentPlan?.stripeCustomerId;
+	const isStripeManaged =
+		currentPlan?.billingProvider === "STRIPE" &&
+		!!currentPlan?.stripeSubscriptionId;
+
+	const bannerState = searchParams.get("billing");
 
 	const usageCards = useMemo(
 		() => [
@@ -143,7 +158,7 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 			{
 				key: "documentStorageBytes",
 				label: "Storage",
-				icon: Upload,
+				icon: FolderUp,
 				data: usageSummary.documentStorageBytes,
 				isBytes: true,
 			},
@@ -159,35 +174,91 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 				icon: Wrench,
 				data: usageSummary.workLogs,
 			},
-			{
-				key: "pendingInvites",
-				label: "Pending invites",
-				icon: CreditCard,
-				data: usageSummary.pendingInvites,
-			},
 		],
 		[usageSummary],
 	);
 
-	function handlePlanChange(nextTier) {
-		if (!isOwner) return;
+	function getBannerMessage() {
+		if (bannerState === "success") {
+			return {
+				type: "success",
+				text: "Stripe checkout completed. Billing details will refresh as soon as Stripe sends the subscription webhook.",
+			};
+		}
 
+		if (bannerState === "cancelled") {
+			return {
+				type: "warning",
+				text: "Checkout was cancelled. No billing changes were made.",
+			};
+		}
+
+		if (currentPlan?.cancelAtPeriodEnd) {
+			return {
+				type: "warning",
+				text: `Your current paid subscription is set to cancel at period end on ${formatDate(currentPlan.currentPeriodEnd)}. After that, the workspace falls back to the free Trial limits.`,
+			};
+		}
+
+		return null;
+	}
+
+	const banner = getBannerMessage();
+
+	function getPlanPrice(plan) {
+		return billingCycle === "monthly"
+			? plan.billing.monthlyPriceCents
+			: plan.billing.yearlyPriceCents;
+	}
+
+	function getActionLabel(plan) {
+		if (!isOwner) return "Owner only";
+		if (plan.tier === currentPlan?.tier) return "Current plan";
+		if (isStripeManaged) return "Change in portal";
+		return billingCycle === "monthly" ? "Start monthly" : "Start yearly";
+	}
+
+	async function handleCheckout(planTier) {
 		startTransition(async () => {
 			try {
 				setError("");
-				setSuccess("");
+				setBusyKey(`${planTier}-${billingCycle}`);
 
-				const result = await updateWorkspacePlan(nextTier);
+				const result = await createStripeCheckoutSession({
+					tier: planTier,
+					interval: billingCycle,
+				});
 
-				if (!result?.ok) {
-					setError("Failed to update plan.");
-					return;
+				if (!result?.url) {
+					throw new Error("Could not create Stripe checkout session.");
 				}
 
-				setSuccess("Workspace plan updated successfully.");
-				router.refresh();
+				window.location.href = result.url;
 			} catch (err) {
-				setError(err?.message || "Failed to update plan.");
+				setError(err?.message || "Could not start Stripe checkout.");
+			} finally {
+				setBusyKey("");
+			}
+		});
+	}
+
+	async function handlePortal() {
+		startTransition(async () => {
+			try {
+				setError("");
+				setBusyKey("portal");
+
+				const result = await createStripePortalSession();
+
+				if (!result?.url) {
+					throw new Error("Could not open Stripe billing portal.");
+				}
+
+				window.location.href = result.url;
+			} catch (err) {
+				setError(err?.message || "Could not open Stripe billing portal.");
+			} finally {
+				setBusyKey("");
 			}
 		});
 	}
@@ -202,13 +273,16 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 
 	return (
 		<div className="billing-panel stack-lg">
-			<div className="billing-hero card">
+			<div className="billing-hero">
+				<div className="billing-hero__glow billing-hero__glow--one" />
+				<div className="billing-hero__glow billing-hero__glow--two" />
+
 				<div className="billing-hero__left">
 					<div className="billing-hero__badge-wrap">
 						<span className="billing-hero__icon">
 							<BadgeCheck size={18} />
 						</span>
-						<p className="billing-hero__eyebrow">Current workspace plan</p>
+						<p className="billing-hero__eyebrow">Workspace billing</p>
 					</div>
 
 					<div className="billing-hero__heading">
@@ -229,9 +303,35 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 					</div>
 
 					<p className="billing-hero__description">
-						Your workspace plan controls usage limits for staff, customers,
-						vehicles, reminders, documents, uploads, and work logs.
+						Your workspace plan controls staff seats, customers, vehicles,
+						documents, reminders, uploads, and work logs. Trial stays free
+						forever, but paid plans are managed by Stripe.
 					</p>
+
+					<div className="billing-hero__actions">
+						{portalAvailable ? (
+							<button
+								type="button"
+								className="billing-btn billing-btn--secondary"
+								onClick={handlePortal}
+								disabled={!isOwner || isPending}
+							>
+								<ExternalLink size={16} />
+								Manage billing
+							</button>
+						) : null}
+
+						{currentPlan.tier === "TRIAL" ? (
+							<span className="billing-hero__hint">
+								Pick a paid plan below to start Checkout.
+							</span>
+						) : (
+							<span className="billing-hero__hint">
+								Plan changes, payment methods, and cancellations are handled in
+								Stripe Portal.
+							</span>
+						)}
+					</div>
 				</div>
 
 				<div className="billing-hero__meta">
@@ -241,23 +341,39 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 					</div>
 
 					<div className="billing-meta-card">
-						<p>Trial ends</p>
-						<h4>{formatDate(currentPlan.trialEndsAt)}</h4>
+						<p>Current period end</p>
+						<h4>{formatDate(currentPlan.currentPeriodEnd)}</h4>
 					</div>
 
 					<div className="billing-meta-card">
-						<p>Current period</p>
-						<h4>{formatDate(currentPlan.currentPeriodEnd)}</h4>
+						<p>Cancellation</p>
+						<h4>
+							{currentPlan.cancelAtPeriodEnd ? "At period end" : "Active"}
+						</h4>
 					</div>
 				</div>
 			</div>
+
+			{banner ? (
+				<div className={`billing-banner billing-banner--${banner.type}`}>
+					<CalendarClock size={16} />
+					<p>{banner.text}</p>
+				</div>
+			) : null}
+
+			{error ? (
+				<div className="billing-banner billing-banner--danger">
+					<ShieldCheck size={16} />
+					<p>{error}</p>
+				</div>
+			) : null}
 
 			<div className="billing-section card stack-md">
 				<div className="billing-section__header">
 					<div>
 						<h3 className="billing-section__title">Usage and limits</h3>
 						<p className="billing-section__subtitle">
-							Live workspace usage compared to the current plan allowances.
+							Live workspace usage compared against the current plan quota.
 						</p>
 					</div>
 				</div>
@@ -269,6 +385,7 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 						const current = item.isBytes
 							? formatBytes(item.data.current)
 							: item.data.current;
+
 						const max =
 							item.data.max == null
 								? null
@@ -276,13 +393,12 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 									? formatBytes(item.data.max)
 									: item.data.max;
 
-						let helper = "Within plan limit";
-						if (item.data.max != null) {
-							helper =
-								item.data.remaining === 0
+						const helper =
+							item.data.max == null
+								? "Unlimited on this plan"
+								: item.data.remaining === 0
 									? "Limit reached"
 									: `${item.isBytes ? formatBytes(item.data.remaining) : item.data.remaining} remaining`;
-						}
 
 						return (
 							<UsageCard
@@ -301,113 +417,122 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 				<div className="billing-upload-note">
 					<p>
 						<strong>Max file upload:</strong>{" "}
-						{formatBytes(currentPlan.limits.maxUploadBytes)}
+						{formatBytes(currentPlan.limits.maxUploadBytes)} per file
 					</p>
 				</div>
 			</div>
 
 			<div className="billing-section card stack-md">
-				<div className="billing-section__header">
+				<div className="billing-section__header billing-section__header--split">
 					<div>
 						<h3 className="billing-section__title">Plans</h3>
 						<p className="billing-section__subtitle">
-							For now, these buttons switch plans manually. Later, these actions
-							can be replaced with Stripe checkout and billing portal flows.
+							Prices shown ex VAT. New purchases go through Stripe Checkout.
+							Existing paid subscriptions are changed from Stripe Portal.
 						</p>
+					</div>
+
+					<div className="billing-cycle-toggle">
+						<button
+							type="button"
+							className={`billing-cycle-toggle__btn ${
+								billingCycle === "monthly"
+									? "billing-cycle-toggle__btn--active"
+									: ""
+							}`}
+							onClick={() => setBillingCycle("monthly")}
+						>
+							Monthly
+						</button>
+
+						<button
+							type="button"
+							className={`billing-cycle-toggle__btn ${
+								billingCycle === "yearly"
+									? "billing-cycle-toggle__btn--active"
+									: ""
+							}`}
+							onClick={() => setBillingCycle("yearly")}
+						>
+							Yearly
+						</button>
 					</div>
 				</div>
 
-				{error ? <p className="text-danger">{error}</p> : null}
-				{success ? <p className="text-success">{success}</p> : null}
-
 				<div className="billing-plans-grid">
-					{plans.map((plan) => (
-						<div
-							key={plan.tier}
-							className={`billing-plan-card ${
-								plan.isCurrent ? "billing-plan-card--current" : ""
-							}`}
-						>
-							<div className="billing-plan-card__top">
-								<div>
-									<p className="billing-plan-card__eyebrow">{plan.label}</p>
-									<h4 className="billing-plan-card__price">
-										{plan.billing.monthlyPriceCents == null
-											? "Contact us"
-											: `${formatMoney(plan.billing.monthlyPriceCents)}/mo`}
-									</h4>
+					{paidPlans.map((plan) => {
+						const priceCents = getPlanPrice(plan);
+						const isCurrent = plan.tier === currentPlan.tier;
+						const cardBusy = busyKey === `${plan.tier}-${billingCycle}`;
+
+						return (
+							<div
+								key={plan.tier}
+								className={`billing-plan-card ${
+									isCurrent ? "billing-plan-card--current" : ""
+								}`}
+							>
+								<div className="billing-plan-card__top">
+									<div>
+										<p className="billing-plan-card__eyebrow">{plan.label}</p>
+										<h4 className="billing-plan-card__price">
+											{priceCents == null
+												? "Contact us"
+												: `${formatMoney(priceCents)}/${billingCycle === "monthly" ? "mo" : "yr"}`}
+										</h4>
+										<p className="billing-plan-card__vat">ex VAT</p>
+									</div>
+
+									{isCurrent ? (
+										<span className="badge badge-info">Current</span>
+									) : null}
 								</div>
 
-								{plan.isCurrent ? (
-									<span className="badge badge-info">Current</span>
-								) : null}
-							</div>
+								<div className="billing-plan-card__limits">
+									<p>Staff: {plan.limits.members ?? "Unlimited"}</p>
+									<p>Customers: {plan.limits.customers ?? "Unlimited"}</p>
+									<p>Vehicles: {plan.limits.vehicles ?? "Unlimited"}</p>
+									<p>Documents: {plan.limits.documents ?? "Unlimited"}</p>
+									<p>
+										Storage: {formatBytes(plan.limits.documentStorageBytes)}
+									</p>
+									<p>Reminders: {plan.limits.reminders ?? "Unlimited"}</p>
+									<p>Work logs: {plan.limits.workLogs ?? "Unlimited"}</p>
+									<p>Upload limit: {formatBytes(plan.limits.maxUploadBytes)}</p>
+								</div>
 
-							<div className="billing-plan-card__limits">
-								<p>
-									Staff:{" "}
-									{plan.limits.members == null
-										? "Unlimited"
-										: plan.limits.members}
-								</p>
-								<p>
-									Customers:{" "}
-									{plan.limits.customers == null
-										? "Unlimited"
-										: plan.limits.customers}
-								</p>
-								<p>
-									Vehicles:{" "}
-									{plan.limits.vehicles == null
-										? "Unlimited"
-										: plan.limits.vehicles}
-								</p>
-								<p>
-									Documents:{" "}
-									{plan.limits.documents == null
-										? "Unlimited"
-										: plan.limits.documents}
-								</p>
-								<p>Storage: {formatBytes(plan.limits.documentStorageBytes)}</p>
-								<p>
-									Reminders:{" "}
-									{plan.limits.reminders == null
-										? "Unlimited"
-										: plan.limits.reminders}
-								</p>
-								<p>
-									Work logs:{" "}
-									{plan.limits.workLogs == null
-										? "Unlimited"
-										: plan.limits.workLogs}
-								</p>
-								<p>Max upload: {formatBytes(plan.limits.maxUploadBytes)}</p>
+								<div className="billing-plan-card__actions">
+									<button
+										type="button"
+										className={`billing-btn ${
+											isCurrent
+												? "billing-btn--secondary"
+												: "billing-btn--primary"
+										}`}
+										disabled={
+											!isOwner ||
+											isPending ||
+											cardBusy ||
+											busyKey === "portal" ||
+											isCurrent
+										}
+										onClick={() =>
+											isStripeManaged
+												? handlePortal()
+												: handleCheckout(plan.tier)
+										}
+									>
+										{cardBusy ? "Redirecting..." : getActionLabel(plan)}
+									</button>
+								</div>
 							</div>
-
-							<div className="billing-plan-card__actions">
-								<button
-									type="button"
-									className={`btn ${plan.isCurrent ? "btn-secondary" : "btn-primary"}`}
-									disabled={
-										!isOwner || isPending || plan.isCurrent || plan.isCustom
-									}
-									onClick={() => handlePlanChange(plan.tier)}
-								>
-									<ArrowUpRight size={16} />
-									{plan.isCurrent
-										? "Current plan"
-										: plan.isCustom
-											? "Contact sales"
-											: "Switch plan"}
-								</button>
-							</div>
-						</div>
-					))}
+						);
+					})}
 				</div>
 
 				{!isOwner ? (
 					<p className="text-muted">
-						Only the workspace owner can manage billing and change the plan.
+						Only the workspace owner can manage billing.
 					</p>
 				) : null}
 			</div>
