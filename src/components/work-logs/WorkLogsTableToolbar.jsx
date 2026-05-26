@@ -1,10 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 export default function WorkLogsTableToolbar({
-	search,
-	onSearchChange,
+	initialSearch = "",
 	onSearchSubmit,
 	onClearSearch,
 	performedBy,
@@ -12,23 +12,35 @@ export default function WorkLogsTableToolbar({
 	staffOptions = [],
 	isPending = false,
 }) {
+	const [searchInput, setSearchInput] = useState(initialSearch);
+
+	function handleSubmit(event) {
+		event.preventDefault();
+		onSearchSubmit(searchInput.trim());
+	}
+
+	function handleClearSearch() {
+		setSearchInput("");
+		onClearSearch();
+	}
+
 	return (
 		<div className="work-logs-toolbar">
 			<div className="work-logs-toolbar__left">
-				<form className="work-logs-search" onSubmit={onSearchSubmit}>
+				<form className="work-logs-search" onSubmit={handleSubmit}>
 					<Search size={18} className="work-logs-search__icon" />
 					<input
 						type="text"
-						value={search}
-						onChange={(e) => onSearchChange(e.target.value)}
+						value={searchInput}
+						onChange={(e) => setSearchInput(e.target.value)}
 						placeholder="Search..."
 					/>
 
-					{search ? (
+					{searchInput ? (
 						<button
 							type="button"
 							className="work-logs-search__clear"
-							onClick={onClearSearch}
+							onClick={handleClearSearch}
 							aria-label="Clear search"
 						>
 							<X size={16} />

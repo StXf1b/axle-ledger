@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { canUseStarterAndAboveFeature } from "@/lib/billing/export-permissions";
+import { getResolvedWorkspaceEntitlements } from "@/lib/billing/workspace-subscription";
 
 async function getCurrentWorkspaceId() {
 	const { userId } = await auth();
@@ -138,6 +140,17 @@ function serializeWorkLogs(workLogs) {
 		nextServiceDueAt: workLog.nextServiceDueAt?.toISOString() || null,
 		createdAt: workLog.createdAt?.toISOString() || null,
 		updatedAt: workLog.updatedAt?.toISOString() || null,
+		labourCharge: workLog.labourCharge?.toString() || "0",
+		partsCharge: workLog.partsCharge?.toString() || "0",
+		totalCharge: workLog.totalCharge?.toString() || "0",
+	}));
+}
+
+function serializeSendableWorkLogs(workLogs) {
+	return workLogs.map((workLog) => ({
+		...workLog,
+		completedAt: workLog.completedAt?.toISOString() || null,
+		nextServiceDueAt: workLog.nextServiceDueAt?.toISOString() || null,
 		labourCharge: workLog.labourCharge?.toString() || "0",
 		partsCharge: workLog.partsCharge?.toString() || "0",
 		totalCharge: workLog.totalCharge?.toString() || "0",
@@ -303,5 +316,106 @@ export async function getWorkLogsListPage({
 			billedTotal: Number(totals._sum.totalCharge || 0),
 		},
 		staffOptions,
+	};
+}
+
+export async function getSendWorkLogsToCustomerPageData({ customerId = "" } = {}) {
+	const workspaceId = await getCurrentWorkspaceId();
+
+	if (!workspaceId) {
+		return {
+			canSendWorkLogs: false,
+			resendConfigured: false,
+			customers: [],
+			selectedCustomerId: "",
+			workLogs: [],
+		};
+	}
+
+	const [entitlements, customers] = await Promise.all([
+		getResolvedWorkspaceEntitlements(workspaceId),
+		db.customer.findMany({
+			where: {
+				workspaceId,
+				email: {
+					not: null,
+				},
+				workLogs: {
+					some: {},
+				},
+			},
+			orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+			select: {
+				id: true,
+				firstName: true,
+				lastName: true,
+				companyName: true,
+				email: true,
+				_count: {
+					select: {
+						workLogs: true,
+					},
+				},
+			},
+		}),
+	]);
+
+	const canSendWorkLogs = canUseStarterAndAboveFeature(entitlements);
+	const selectedCustomerId = customers.some((customer) => customer.id === customerId)
+		? customerId
+		: customers[0]?.id || "";
+
+	const workLogs = selectedCustomerId
+		? await db.workLog.findMany({
+				where: {
+					workspaceId,
+					customerId: selectedCustomerId,
+				},
+				orderBy: [{ completedAt: "desc" }, { createdAt: "desc" }],
+				select: {
+					id: true,
+					title: true,
+					description: true,
+					completedAt: true,
+					odometerValue: true,
+					odometerUnit: true,
+					labourCharge: true,
+					partsCharge: true,
+					totalCharge: true,
+					nextServiceDueAt: true,
+					nextServiceOdometer: true,
+					nextServiceOdometerUnit: true,
+					vehicle: {
+						select: {
+							id: true,
+							registration: true,
+							make: true,
+							model: true,
+						},
+					},
+					performedByUser: {
+						select: {
+							id: true,
+							fullName: true,
+							email: true,
+						},
+					},
+				},
+			})
+		: [];
+
+	return {
+		canSendWorkLogs,
+		resendConfigured: !!process.env.RESEND_API_KEY && !!process.env.RESEND_FROM_EMAIL,
+		customers: customers.map((customer) => ({
+			id: customer.id,
+			firstName: customer.firstName,
+			lastName: customer.lastName,
+			companyName: customer.companyName,
+			email: customer.email,
+			workLogCount: customer._count.workLogs,
+		})),
+		selectedCustomerId,
+		workLogs: serializeSendableWorkLogs(workLogs),
 	};
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Send } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import TablePagination from "@/components/ui/TablePagination";
@@ -28,12 +28,6 @@ export default function WorkLogsPageClient({
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const [isPending, startTransition] = useTransition();
-
-	const [searchInput, setSearchInput] = useState(currentSearch);
-
-	useEffect(() => {
-		setSearchInput(currentSearch);
-	}, [currentSearch]);
 
 	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
@@ -73,10 +67,8 @@ export default function WorkLogsPageClient({
 		[currentCustomerId, currentVehicleId, pathname, router, searchParams],
 	);
 
-	function handleSearchSubmit(event) {
-		event.preventDefault();
-
-		const trimmedValue = searchInput.trim();
+	function handleSearchSubmit(nextSearch) {
+		const trimmedValue = nextSearch.trim();
 
 		if (trimmedValue === currentSearch) return;
 
@@ -87,8 +79,6 @@ export default function WorkLogsPageClient({
 	}
 
 	function handleClearSearch() {
-		setSearchInput("");
-
 		if (!currentSearch) return;
 
 		updateUrlParams({
@@ -118,6 +108,11 @@ export default function WorkLogsPageClient({
 				}).toString()}`
 			: ""
 	}`;
+	const sendToCustomerHref = `/work-logs/send-to-customer${
+		currentCustomerId
+			? `?${new URLSearchParams({ customerId: currentCustomerId }).toString()}`
+			: ""
+	}`;
 
 	return (
 		<section className="work-logs-page">
@@ -131,8 +126,12 @@ export default function WorkLogsPageClient({
 					</p>
 				</div>
 
-				<div className="customers-page__actions">
-					<Button variant="secondary">Export</Button>
+				<div className="work-logs-page__actions">
+					<Link href={sendToCustomerHref}>
+						<Button variant="secondary" leftIcon={<Send size={18} />}>
+							Send to customer
+						</Button>
+					</Link>
 
 					<Link href={newWorkLogHref}>
 						<Button variant="primary" leftIcon={<Plus size={18} />}>
@@ -146,8 +145,8 @@ export default function WorkLogsPageClient({
 
 			<div className="work-logs-table-shell card">
 				<WorkLogsTableToolbar
-					search={searchInput}
-					onSearchChange={setSearchInput}
+					key={currentSearch}
+					initialSearch={currentSearch}
 					onSearchSubmit={handleSearchSubmit}
 					onClearSearch={handleClearSearch}
 					performedBy={currentPerformedBy}

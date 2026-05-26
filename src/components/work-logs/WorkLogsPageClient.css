@@ -276,7 +276,7 @@
 		min-width: 0;
 	}
 }
-.customers-page__actions {
+.work-logs-page__actions {
 	display: flex;
 	align-items: center;
 	gap: 12px;
