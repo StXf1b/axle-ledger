@@ -12,6 +12,7 @@ export default async function RecentActivityPage({ searchParams }) {
 		page: params?.page,
 		search: params?.search,
 		group: params?.group,
+		period: params?.period,
 	});
 
 	return <RecentActivityPageClient pageData={pageData} />;

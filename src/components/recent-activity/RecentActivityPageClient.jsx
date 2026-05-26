@@ -1,10 +1,10 @@
 "use client";
-import { useMemo, useState } from "react";
+
+import { useCallback, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
 	Activity,
-	ArrowLeft,
 	Search,
 	SlidersHorizontal,
 	Users,
@@ -14,10 +14,13 @@ import {
 	FileText,
 	CheckCircle2,
 	Clock3,
-	ChevronLeft,
-	ChevronRight,
+	X,
 } from "lucide-react";
+
+import TablePagination from "@/components/ui/TablePagination";
 import "./RecentActivityPageClient.css";
+
+const DEFAULT_PERIOD = "7D";
 
 const GROUP_ICONS = {
 	CUSTOMER: Users,
@@ -26,22 +29,6 @@ const GROUP_ICONS = {
 	REMINDER: Bell,
 	DOCUMENT: FileText,
 };
-
-function buildUrl(pathname, searchParams, updates) {
-	const params = new URLSearchParams(searchParams.toString());
-
-	Object.entries(updates).forEach(([key, value]) => {
-		if (value == null || value === "" || value === "ALL") {
-			params.delete(key);
-			return;
-		}
-
-		params.set(key, String(value));
-	});
-
-	const queryString = params.toString();
-	return queryString ? `${pathname}?${queryString}` : pathname;
-}
 
 function StatCard({ label, value, icon: Icon }) {
 	return (
@@ -58,65 +45,53 @@ function StatCard({ label, value, icon: Icon }) {
 	);
 }
 
-function Pagination({ pagination, pathname, searchParams }) {
-	if (!pagination || pagination.totalPages <= 1) return null;
+function ActivitySearchForm({
+	initialSearch,
+	isPending,
+	onSearchSubmit,
+	onClearSearch,
+}) {
+	const [searchInput, setSearchInput] = useState(initialSearch);
 
-	const pageNumbers = [];
-	const start = Math.max(1, pagination.currentPage - 1);
-	const end = Math.min(pagination.totalPages, pagination.currentPage + 1);
+	function handleSubmit(event) {
+		event.preventDefault();
+		onSearchSubmit(searchInput.trim());
+	}
 
-	for (let i = start; i <= end; i += 1) {
-		pageNumbers.push(i);
+	function handleClear() {
+		setSearchInput("");
+		onClearSearch();
 	}
 
 	return (
-		<div className="recent-activity-pagination">
-			<Link
-				href={buildUrl(pathname, searchParams, {
-					page: Math.max(1, pagination.currentPage - 1),
-				})}
-				aria-disabled={pagination.currentPage === 1}
-				className={`recent-activity-pagination__btn ${
-					pagination.currentPage === 1
-						? "recent-activity-pagination__btn--disabled"
-						: ""
-				}`}
-			>
-				<ChevronLeft size={16} />
-				Previous
-			</Link>
+		<form className="recent-activity-search" onSubmit={handleSubmit}>
+			<Search size={18} className="recent-activity-search__icon" />
+			<input
+				type="text"
+				value={searchInput}
+				onChange={(event) => setSearchInput(event.target.value)}
+				placeholder="Search..."
+			/>
 
-			<div className="recent-activity-pagination__pages">
-				{pageNumbers.map((page) => (
-					<Link
-						key={page}
-						href={buildUrl(pathname, searchParams, { page })}
-						className={`recent-activity-pagination__page ${
-							page === pagination.currentPage
-								? "recent-activity-pagination__page--active"
-								: ""
-						}`}
-					>
-						{page}
-					</Link>
-				))}
-			</div>
+			{searchInput ? (
+				<button
+					type="button"
+					className="recent-activity-search__clear"
+					onClick={handleClear}
+					aria-label="Clear search"
+				>
+					<X size={16} />
+				</button>
+			) : null}
 
-			<Link
-				href={buildUrl(pathname, searchParams, {
-					page: Math.min(pagination.totalPages, pagination.currentPage + 1),
-				})}
-				aria-disabled={pagination.currentPage === pagination.totalPages}
-				className={`recent-activity-pagination__btn ${
-					pagination.currentPage === pagination.totalPages
-						? "recent-activity-pagination__btn--disabled"
-						: ""
-				}`}
+			<button
+				type="submit"
+				className="recent-activity-search__submit"
+				disabled={isPending}
 			>
-				Next
-				<ChevronRight size={16} />
-			</Link>
-		</div>
+				Search
+			</button>
+		</form>
 	);
 }
 
@@ -124,17 +99,46 @@ export default function RecentActivityPageClient({ pageData }) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
-
-	const [searchInput, setSearchInput] = useState(
-		pageData?.filters?.search || "",
-	);
+	const [isPending, startTransition] = useTransition();
 
 	const resultCountLabel = useMemo(() => {
-		if (!pageData?.pagination) return "0 results";
-		return `${pageData.pagination.totalItems} result${
+		if (!pageData?.pagination) return "0 activity logs";
+		return `${pageData.pagination.totalItems} activity log${
 			pageData.pagination.totalItems === 1 ? "" : "s"
 		}`;
 	}, [pageData]);
+
+	const updateUrlParams = useCallback(
+		(updates) => {
+			const params = new URLSearchParams(searchParams.toString());
+
+			Object.entries(updates).forEach(([key, value]) => {
+				const shouldDelete =
+					value === null ||
+					value === undefined ||
+					value === "" ||
+					(key === "group" && value === "ALL") ||
+					(key === "period" && value === DEFAULT_PERIOD) ||
+					(key === "page" && Number(value) <= 1);
+
+				if (shouldDelete) {
+					params.delete(key);
+					return;
+				}
+
+				params.set(key, String(value));
+			});
+
+			const queryString = params.toString();
+
+			startTransition(() => {
+				router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+					scroll: false,
+				});
+			});
+		},
+		[pathname, router, searchParams],
+	);
 
 	if (!pageData) {
 		return (
@@ -146,35 +150,61 @@ export default function RecentActivityPageClient({ pageData }) {
 		);
 	}
 
-	function handleSubmit(event) {
-		event.preventDefault();
+	const currentGroup = pageData.filters.group;
+	const currentPeriod = pageData.filters.period || DEFAULT_PERIOD;
+	const currentSearch = pageData.filters.search || "";
 
-		router.push(
-			buildUrl(pathname, searchParams, {
-				search: searchInput.trim(),
-				page: 1,
-			}),
-		);
+	function handleSearchSubmit(trimmedValue) {
+		if (trimmedValue === currentSearch) return;
+
+		updateUrlParams({
+			search: trimmedValue || null,
+			page: 1,
+		});
 	}
 
-	function handleGroupChange(event) {
-		router.push(
-			buildUrl(pathname, searchParams, {
-				group: event.target.value,
-				page: 1,
-			}),
-		);
+	function handleClearSearch() {
+		if (!currentSearch) return;
+
+		updateUrlParams({
+			search: null,
+			page: 1,
+		});
 	}
 
-	function handleClear() {
-		setSearchInput("");
-		router.push(pathname);
+	function handleGroupChange(nextGroup) {
+		updateUrlParams({
+			group: nextGroup,
+			page: 1,
+		});
+	}
+
+	function handlePeriodChange(nextPeriod) {
+		updateUrlParams({
+			period: nextPeriod,
+			page: 1,
+		});
+	}
+
+	function handlePageChange(nextPage) {
+		updateUrlParams({
+			page: nextPage <= 1 ? null : nextPage,
+		});
 	}
 
 	return (
 		<section className="recent-activity-page">
 			<div className="recent-activity-page__header">
-				<div className="recent-activity-page__header-right">
+				<div className="recent-activity-page__header-text">
+					<p className="recent-activity-page__eyebrow">Activity log</p>
+					<h2 className="recent-activity-page__title">Recent Activity</h2>
+					<p className="recent-activity-page__subtitle">
+						Review customer, vehicle, work log, reminder, and document changes
+						across your workspace.
+					</p>
+				</div>
+
+				<div className="recent-activity-page__actions">
 					<div className="recent-activity-chip">
 						<Clock3 size={16} />
 						<span>{pageData.timeframeLabel}</span>
@@ -206,119 +236,134 @@ export default function RecentActivityPageClient({ pageData }) {
 				/>
 			</div>
 
-			<div className="recent-activity-toolbar card">
-				<form onSubmit={handleSubmit} className="recent-activity-toolbar__form">
-					<div className="recent-activity-search">
-						<Search size={18} className="recent-activity-search__icon" />
-						<input
-							type="text"
-							value={searchInput}
-							onChange={(event) => setSearchInput(event.target.value)}
-							placeholder="Search activity title, linked customer, vehicle, file, or staff..."
+			<div className="recent-activity-table-shell card">
+				<div className="recent-activity-toolbar">
+					<div className="recent-activity-toolbar__left">
+						<ActivitySearchForm
+							key={currentSearch}
+							initialSearch={currentSearch}
+							isPending={isPending}
+							onSearchSubmit={handleSearchSubmit}
+							onClearSearch={handleClearSearch}
 						/>
+
+						<div className="recent-activity-filter">
+							<SlidersHorizontal size={16} />
+							<select
+								value={currentGroup}
+								onChange={(event) => handleGroupChange(event.target.value)}
+								aria-label="Filter by activity type"
+							>
+								{pageData.filterOptions.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</select>
+						</div>
+
+						<div className="recent-activity-filter">
+							<Clock3 size={16} />
+							<select
+								value={currentPeriod}
+								onChange={(event) => handlePeriodChange(event.target.value)}
+								aria-label="Filter by activity period"
+							>
+								{pageData.periodOptions.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</select>
+						</div>
 					</div>
 
-					<div className="recent-activity-filter">
-						<SlidersHorizontal size={16} />
-						<select value={pageData.filters.group} onChange={handleGroupChange}>
-							{pageData.filterOptions.map((option) => (
-								<option key={option.value} value={option.value}>
-									{option.label}
-								</option>
-							))}
-						</select>
-					</div>
-
-					<button type="submit" className="btn btn-primary btn-sm">
-						Apply
-					</button>
-
-					<button
-						type="button"
-						className="btn btn-secondary btn-sm"
-						onClick={handleClear}
-					>
-						Clear
-					</button>
-				</form>
-
-				<div className="recent-activity-toolbar__meta">
-					<p>{resultCountLabel}</p>
-				</div>
-			</div>
-
-			<div className="recent-activity-feed card">
-				<div className="recent-activity-feed__header">
-					<div>
-						<h3 className="recent-activity-feed__title">Activity feed</h3>
-						<p className="recent-activity-feed__subtitle">
-							Chronological activity across your workspace for the last 7 days.
-						</p>
+					<div className="recent-activity-toolbar__right">
+						<p>{resultCountLabel}</p>
 					</div>
 				</div>
 
-				{pageData.items.length === 0 ? (
-					<div className="recent-activity-empty">
-						<p className="recent-activity-empty__title">No matching activity</p>
-						<p className="recent-activity-empty__text">
-							Try a different filter or search term.
-						</p>
+				<div className="recent-activity-feed">
+					<div className="recent-activity-feed__header">
+						<div>
+							<h3 className="recent-activity-feed__title">Activity feed</h3>
+							<p className="recent-activity-feed__subtitle">
+								Chronological activity across your workspace for{" "}
+								{pageData.timeframeLabel.toLowerCase()}.
+							</p>
+						</div>
 					</div>
-				) : (
-					<div className="recent-activity-list">
-						{pageData.items.map((item) => {
-							const Icon =
-								item.event === "COMPLETED"
-									? CheckCircle2
-									: GROUP_ICONS[item.group] || Activity;
 
-							return (
-								<Link
-									key={item.id}
-									href={item.href}
-									className="recent-activity-item"
-								>
-									<div className="recent-activity-item__left">
-										<span className="recent-activity-item__icon">
-											<Icon size={18} />
-										</span>
+					{pageData.items.length === 0 ? (
+						<div className="recent-activity-empty">
+							<p className="recent-activity-empty__title">
+								No matching activity
+							</p>
+							<p className="recent-activity-empty__text">
+								Try a different search, activity type, or time period.
+							</p>
+						</div>
+					) : (
+						<div className="recent-activity-list">
+							{pageData.items.map((item) => {
+								const Icon =
+									item.event === "COMPLETED"
+										? CheckCircle2
+										: GROUP_ICONS[item.group] || Activity;
 
-										<div className="recent-activity-item__content">
-											<div className="recent-activity-item__row">
-												<p className="recent-activity-item__title">
-													{item.title}
+								return (
+									<Link
+										key={item.id}
+										href={item.href}
+										className="recent-activity-item"
+									>
+										<div className="recent-activity-item__left">
+											<span className="recent-activity-item__icon">
+												<Icon size={18} />
+											</span>
+
+											<div className="recent-activity-item__content">
+												<div className="recent-activity-item__row">
+													<p className="recent-activity-item__title">
+														{item.title}
+													</p>
+													<span className="recent-activity-item__badge">
+														{item.badge}
+													</span>
+												</div>
+
+												<p className="recent-activity-item__subtitle">
+													{item.subtitle}
 												</p>
-												<span className="recent-activity-item__badge">
-													{item.badge}
-												</span>
+
+												<p className="recent-activity-item__meta">
+													{item.meta}
+												</p>
 											</div>
-
-											<p className="recent-activity-item__subtitle">
-												{item.subtitle}
-											</p>
-
-											<p className="recent-activity-item__meta">{item.meta}</p>
 										</div>
-									</div>
 
-									<div className="recent-activity-item__right">
-										<p className="recent-activity-item__time">
-											{item.timeLabel}
-										</p>
-										<p className="recent-activity-item__time-full">
-											{item.timeFull}
-										</p>
-									</div>
-								</Link>
-							);
-						})}
-					</div>
-				)}
+										<div className="recent-activity-item__right">
+											<p className="recent-activity-item__time">
+												{item.timeLabel}
+											</p>
+											<p className="recent-activity-item__time-full">
+												{item.timeFull}
+											</p>
+										</div>
+									</Link>
+								);
+							})}
+						</div>
+					)}
+				</div>
 
-				<Pagination
-					pagination={pageData.pagination}
-					pathname={pathname}
-					searchParams={searchParams}
+				<TablePagination
+					currentPage={pageData.pagination.currentPage}
+					totalPages={pageData.pagination.totalPages}
+					totalItems={pageData.pagination.totalItems}
+					itemsPerPage={pageData.pagination.pageSize}
+					onPageChange={handlePageChange}
+					label="activity logs"
 				/>
 			</div>
 		</section>

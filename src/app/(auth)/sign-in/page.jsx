@@ -579,12 +579,6 @@ export default function SignInPage() {
 						Forgot password?
 					</Link>
 
-					{localErrors.form ? (
-						<p className="text-danger" style={{ fontSize: "0.9rem" }}>
-							{localErrors.form}
-						</p>
-					) : null}
-
 					<Button
 						type="submit"
 						variant="primary"

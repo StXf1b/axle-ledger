@@ -5,6 +5,11 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { db } from "@/lib/db";
 import { getR2BucketName, getR2Client } from "@/lib/r2";
 import { buildDocumentObjectKey } from "@/lib/document-upload";
+import {
+	buildRateLimitKey,
+	checkRateLimit,
+	createRateLimitResponse,
+} from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -39,7 +44,20 @@ async function getWorkspaceContextOrThrow() {
 
 export async function POST(req) {
 	try {
-		const { workspace } = await getWorkspaceContextOrThrow();
+		const { appUser, workspace } = await getWorkspaceContextOrThrow();
+		const rateLimit = checkRateLimit({
+			key: buildRateLimitKey(["documents:upload-url", appUser.id]),
+			limit: 20,
+			windowMs: 60 * 1000,
+		});
+
+		if (!rateLimit.allowed) {
+			return createRateLimitResponse(
+				rateLimit,
+				"Too many upload requests. Please wait a minute and try again.",
+			);
+		}
+
 		const body = await req.json();
 
 		const fileName = String(body.fileName || "").trim();

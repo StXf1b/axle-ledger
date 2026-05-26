@@ -14,6 +14,18 @@ const ACTIVITY_GROUPS = {
 	DOCUMENT: "DOCUMENT",
 };
 
+const DEFAULT_PERIOD = "7D";
+const PERIOD_OPTIONS = [
+	{ value: "TODAY", label: "Today", daysBack: 0 },
+	{ value: "7D", label: "Past 7 days", daysBack: 6 },
+	{ value: "30D", label: "Past 30 days", daysBack: 29 },
+	{ value: "90D", label: "Past 90 days", daysBack: 89 },
+	{ value: "ALL", label: "All time", daysBack: null },
+];
+const PERIOD_BY_VALUE = Object.fromEntries(
+	PERIOD_OPTIONS.map((option) => [option.value, option]),
+);
+
 function startOfDay(date = new Date()) {
 	return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -95,6 +107,35 @@ function normalizeGroup(value) {
 	return ACTIVITY_GROUPS[normalized] || ACTIVITY_GROUPS.ALL;
 }
 
+function normalizePeriod(value) {
+	const normalized = String(value || DEFAULT_PERIOD).toUpperCase();
+	return PERIOD_BY_VALUE[normalized]?.value || DEFAULT_PERIOD;
+}
+
+function getPeriodConfig(period, now) {
+	const definition = PERIOD_BY_VALUE[period] || PERIOD_BY_VALUE[DEFAULT_PERIOD];
+	const startAt =
+		definition.daysBack === null
+			? null
+			: startOfDay(addDays(now, -definition.daysBack));
+
+	return {
+		...definition,
+		startAt,
+	};
+}
+
+function withCreatedAtPeriod(where, periodStart) {
+	if (!periodStart) return where;
+
+	return {
+		...where,
+		createdAt: {
+			gte: periodStart,
+		},
+	};
+}
+
 async function getCurrentWorkspaceId() {
 	const { userId } = await auth();
 
@@ -128,6 +169,7 @@ export async function getRecentActivityPageData({
 	page = 1,
 	search = "",
 	group = "ALL",
+	period = DEFAULT_PERIOD,
 } = {}) {
 	const workspaceId = await getCurrentWorkspaceId();
 
@@ -138,10 +180,42 @@ export async function getRecentActivityPageData({
 	const currentPageInput = parsePage(page);
 	const normalizedSearch = normalizeSearch(search);
 	const normalizedGroup = normalizeGroup(group);
+	const normalizedPeriod = normalizePeriod(period);
 
 	const now = new Date();
 	const todayStart = startOfDay(now);
-	const weekStart = startOfDay(addDays(now, -6));
+	const periodConfig = getPeriodConfig(normalizedPeriod, now);
+	const periodStart = periodConfig.startAt;
+	const workLogWhere = {
+		workspaceId,
+		...(periodStart
+			? {
+					OR: [
+						{
+							completedAt: {
+								gte: periodStart,
+							},
+						},
+						{
+							createdAt: {
+								gte: periodStart,
+							},
+						},
+					],
+				}
+			: {}),
+	};
+	const completedReminderWhere = {
+		workspaceId,
+		status: "COMPLETED",
+		...(periodStart
+			? {
+					completedAt: {
+						gte: periodStart,
+					},
+				}
+			: {}),
+	};
 
 	const [
 		customers,
@@ -152,12 +226,7 @@ export async function getRecentActivityPageData({
 		documents,
 	] = await Promise.all([
 		db.customer.findMany({
-			where: {
-				workspaceId,
-				createdAt: {
-					gte: weekStart,
-				},
-			},
+			where: withCreatedAtPeriod({ workspaceId }, periodStart),
 			orderBy: {
 				createdAt: "desc",
 			},
@@ -173,15 +242,12 @@ export async function getRecentActivityPageData({
 		}),
 
 		db.vehicle.findMany({
-			where: {
+			where: withCreatedAtPeriod({
 				workspaceId,
 				status: {
 					not: "DELETED",
 				},
-				createdAt: {
-					gte: weekStart,
-				},
-			},
+			}, periodStart),
 			orderBy: {
 				createdAt: "desc",
 			},
@@ -203,21 +269,7 @@ export async function getRecentActivityPageData({
 		}),
 
 		db.workLog.findMany({
-			where: {
-				workspaceId,
-				OR: [
-					{
-						completedAt: {
-							gte: weekStart,
-						},
-					},
-					{
-						createdAt: {
-							gte: weekStart,
-						},
-					},
-				],
-			},
+			where: workLogWhere,
 			orderBy: [{ completedAt: "desc" }, { createdAt: "desc" }],
 			select: {
 				id: true,
@@ -256,12 +308,7 @@ export async function getRecentActivityPageData({
 		}),
 
 		db.reminder.findMany({
-			where: {
-				workspaceId,
-				createdAt: {
-					gte: weekStart,
-				},
-			},
+			where: withCreatedAtPeriod({ workspaceId }, periodStart),
 			orderBy: {
 				createdAt: "desc",
 			},
@@ -296,13 +343,7 @@ export async function getRecentActivityPageData({
 		}),
 
 		db.reminder.findMany({
-			where: {
-				workspaceId,
-				status: "COMPLETED",
-				completedAt: {
-					gte: weekStart,
-				},
-			},
+			where: completedReminderWhere,
 			orderBy: {
 				completedAt: "desc",
 			},
@@ -337,12 +378,7 @@ export async function getRecentActivityPageData({
 		}),
 
 		db.document.findMany({
-			where: {
-				workspaceId,
-				createdAt: {
-					gte: weekStart,
-				},
-			},
+			where: withCreatedAtPeriod({ workspaceId }, periodStart),
 			orderBy: {
 				createdAt: "desc",
 			},
@@ -433,7 +469,9 @@ export async function getRecentActivityPageData({
 
 		...workLogs
 			.filter(
-				(item) => item.completedAt && new Date(item.completedAt) >= weekStart,
+				(item) =>
+					item.completedAt &&
+					(!periodStart || new Date(item.completedAt) >= periodStart),
 			)
 			.map((item) => {
 				const vehicleLabel = formatVehicleLabel(item.vehicle);
@@ -586,7 +624,7 @@ export async function getRecentActivityPageData({
 		}),
 	].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
 
-	const fullWeekStats = {
+	const periodStats = {
 		total: activityItems.length,
 		today: activityItems.filter((item) => new Date(item.time) >= todayStart)
 			.length,
@@ -624,11 +662,12 @@ export async function getRecentActivityPageData({
 	);
 
 	return {
-		timeframeLabel: "Past 7 days",
-		stats: fullWeekStats,
+		timeframeLabel: periodConfig.label,
+		stats: periodStats,
 		filters: {
 			search: normalizedSearch,
 			group: normalizedGroup,
+			period: normalizedPeriod,
 		},
 		pagination: {
 			currentPage,
@@ -645,5 +684,9 @@ export async function getRecentActivityPageData({
 			{ value: "REMINDER", label: "Reminders" },
 			{ value: "DOCUMENT", label: "Documents" },
 		],
+		periodOptions: PERIOD_OPTIONS.map(({ value, label }) => ({
+			value,
+			label,
+		})),
 	};
 }
