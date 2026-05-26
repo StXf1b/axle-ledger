@@ -24,6 +24,18 @@
 	color: var(--text);
 }
 
+.customer-detail-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.customer-detail-actions > span {
+	display: inline-flex;
+}
+
 .customer-hero {
 	padding: 22px;
 	display: flex;
@@ -263,6 +275,16 @@
 @media (max-width: 640px) {
 	.customer-hero {
 		padding: 18px;
+	}
+
+	.customer-detail-actions {
+		width: 100%;
+	}
+
+	.customer-detail-actions > span,
+	.customer-detail-actions > a,
+	.customer-detail-actions .ax-button {
+		flex: 1;
 	}
 
 	.customer-hero__left {

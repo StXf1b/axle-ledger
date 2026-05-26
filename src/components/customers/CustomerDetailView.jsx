@@ -1,9 +1,10 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
 	ArrowLeft,
+	Download,
 	Pencil,
 	Mail,
 	Phone,
@@ -16,10 +17,14 @@ import {
 	Copy,
 } from "lucide-react";
 
+import { exportCustomerData } from "@/actions/customers";
+import { downloadCustomerExportFile } from "@/lib/customer-export-download";
 import Button from "@/components/ui/Button";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import LinkedRemindersCard from "@/components/reminders/LinkedRemindersCard";
 import LinkedDocumentsCard from "@/components/documents/LinkedDocumentsCard";
 import CustomersNav from "@/components/customers/CustomersNav";
+import CustomerExportModal from "@/components/customers/CustomerExportModal";
 
 function getInitials(firstName, lastName, companyName) {
 	if (firstName || lastName) {
@@ -29,8 +34,17 @@ function getInitials(firstName, lastName, companyName) {
 	return (companyName?.slice(0, 2) || "CU").toUpperCase();
 }
 
-export default function CustomerDetailView({ customer }) {
+export default function CustomerDetailView({
+	customer,
+	canExportCustomers = false,
+}) {
+	const router = useRouter();
 	const searchParams = useSearchParams();
+	const [exportModalOpen, setExportModalOpen] = useState(false);
+	const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+	const [exportFormat, setExportFormat] = useState("pdf");
+	const [isExporting, setIsExporting] = useState(false);
+	const [exportError, setExportError] = useState("");
 
 	const createHref = useMemo(() => {
 		const params = new URLSearchParams();
@@ -50,6 +64,46 @@ export default function CustomerDetailView({ customer }) {
 		return customer.vehicles ? customer.vehicles.length : 0;
 	};
 
+	function handleOpenExportModal() {
+		if (!canExportCustomers) {
+			setUpgradeModalOpen(true);
+			return;
+		}
+
+		setExportModalOpen(true);
+		setExportFormat("pdf");
+		setExportError("");
+	}
+
+	function handleCloseExportModal() {
+		if (isExporting) return;
+
+		setExportModalOpen(false);
+		setExportError("");
+	}
+
+	async function handleConfirmExport() {
+		setIsExporting(true);
+		setExportError("");
+
+		try {
+			const result = await exportCustomerData(customer.id, exportFormat);
+			downloadCustomerExportFile(result);
+			setExportModalOpen(false);
+		} catch (error) {
+			setExportError(
+				error?.message || "Could not export this customer. Please try again.",
+			);
+		} finally {
+			setIsExporting(false);
+		}
+	}
+
+	function handleViewPlans() {
+		setUpgradeModalOpen(false);
+		router.push("/settings?tab=billing");
+	}
+
 	return (
 		<section className="customer-detail-page">
 			<div className="customer-detail-page__topbar">
@@ -58,12 +112,53 @@ export default function CustomerDetailView({ customer }) {
 					Back to customers
 				</Link>
 
-				<Link href={`/customers/${customer.id}/edit`}>
-					<Button variant="secondary" leftIcon={<Pencil size={16} />}>
-						Edit customer
-					</Button>
-				</Link>
+				<div className="customer-detail-actions">
+					<span
+						title={
+							canExportCustomers
+								? "Export customer"
+								: "Starter plan required to export customer data"
+						}
+					>
+						<Button
+							variant="secondary"
+							leftIcon={<Download size={16} />}
+							onClick={handleOpenExportModal}
+							loading={isExporting}
+						>
+							Export
+						</Button>
+					</span>
+
+					<Link href={`/customers/${customer.id}/edit`}>
+						<Button variant="secondary" leftIcon={<Pencil size={16} />}>
+							Edit customer
+						</Button>
+					</Link>
+				</div>
 			</div>
+
+			<CustomerExportModal
+				open={exportModalOpen}
+				customer={customer}
+				format={exportFormat}
+				onFormatChange={setExportFormat}
+				onClose={handleCloseExportModal}
+				onConfirm={handleConfirmExport}
+				loading={isExporting}
+				error={exportError}
+			/>
+
+			<ConfirmModal
+				open={upgradeModalOpen}
+				onClose={() => setUpgradeModalOpen(false)}
+				onConfirm={handleViewPlans}
+				title="Upgrade required"
+				description="Your plan does not include this functionality. Upgrade to Starter or higher to export customer records as PDF or JSON."
+				confirmText="View plans"
+				cancelText="Not now"
+				note="Customer exports are included on Starter, Pro, Business, and Custom plans."
+			/>
 
 			<div className="customer-hero card">
 				<div className="customer-hero__left">

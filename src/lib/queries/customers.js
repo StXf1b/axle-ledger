@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { canExportCustomerData } from "@/lib/billing/export-permissions";
+import { getResolvedWorkspaceEntitlements } from "@/lib/billing/workspace-subscription";
 
 async function getCurrentWorkspaceId() {
 	const { userId } = await auth();
@@ -194,6 +196,15 @@ export async function getCustomersListPage({
 			linkedVehicles,
 		},
 	};
+}
+
+export async function getCanExportCustomersForCurrentWorkspace() {
+	const workspaceId = await getCurrentWorkspaceId();
+
+	if (!workspaceId) return false;
+
+	const entitlements = await getResolvedWorkspaceEntitlements(workspaceId);
+	return canExportCustomerData(entitlements);
 }
 
 export async function getCustomersList() {

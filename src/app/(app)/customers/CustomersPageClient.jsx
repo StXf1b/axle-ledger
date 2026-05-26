@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Plus, Search, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 
 import Button from "@/components/ui/Button";
@@ -24,12 +24,6 @@ export default function CustomersPageClient({
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const [isPending, startTransition] = useTransition();
-
-	const [searchInput, setSearchInput] = useState(currentSearch);
-
-	useEffect(() => {
-		setSearchInput(currentSearch);
-	}, [currentSearch]);
 
 	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
@@ -61,11 +55,7 @@ export default function CustomersPageClient({
 		[pathname, router, searchParams],
 	);
 
-	function handleSearchSubmit(event) {
-		event.preventDefault();
-
-		const trimmedValue = searchInput.trim();
-
+	function handleSearchSubmit(trimmedValue) {
 		if (trimmedValue === currentSearch) return;
 
 		updateUrlParams({
@@ -75,8 +65,6 @@ export default function CustomersPageClient({
 	}
 
 	function handleClearSearch() {
-		setSearchInput("");
-
 		if (!currentSearch) return;
 
 		updateUrlParams({
@@ -111,8 +99,6 @@ export default function CustomersPageClient({
 				</div>
 
 				<div className="customers-page__actions">
-					<Button variant="secondary">Export</Button>
-
 					<Link href="/customers/new">
 						<Button variant="primary" leftIcon={<Plus size={18} />}>
 							New customer
@@ -125,8 +111,8 @@ export default function CustomersPageClient({
 
 			<div className="customers-table-shell card">
 				<CustomersTableToolbar
-					search={searchInput}
-					onSearchChange={setSearchInput}
+					key={currentSearch}
+					initialSearch={currentSearch}
 					onSearchSubmit={handleSearchSubmit}
 					onClearSearch={handleClearSearch}
 					status={currentStatus}

@@ -6,7 +6,10 @@ function getInitials(firstName, lastName, companyName) {
 	return (companyName?.slice(0, 2) || "CU").toUpperCase();
 }
 
-export default function CustomersTable({ customers, onRowClick }) {
+export default function CustomersTable({
+	customers,
+	onRowClick,
+}) {
 	return (
 		<div className="customers-table-wrap">
 			<table className="customers-table">
@@ -42,8 +45,8 @@ export default function CustomersTable({ customers, onRowClick }) {
 								onClick={() => onRowClick(customer.id)}
 								tabIndex={0}
 								role="button"
-								onKeyDown={(e) => {
-									if (e.key === "Enter" || e.key === " ") {
+								onKeyDown={(event) => {
+									if (event.key === "Enter" || event.key === " ") {
 										e.preventDefault();
 										onRowClick(customer.id);
 									}
@@ -64,17 +67,17 @@ export default function CustomersTable({ customers, onRowClick }) {
 												{customer.firstName} {customer.lastName}
 											</p>
 											<p className="customer-table-person__sub">
-												{customer.tags.slice(0, 2).join(" • ") || "No tags"}
+												{customer.tags.slice(0, 2).join(" - ") || "No tags"}
 											</p>
 										</div>
 									</div>
 								</td>
 
-								<td>{customer.companyName || "—"}</td>
-								<td>{customer.phone || "—"}</td>
-								<td>{customer.email || "—"}</td>
+								<td>{customer.companyName || "-"}</td>
+								<td>{customer.phone || "-"}</td>
+								<td>{customer.email || "-"}</td>
 								<td>{customer.vehicles.length}</td>
-								<td>{customer.preferredContact || "—"}</td>
+								<td>{customer.preferredContact || "-"}</td>
 								<td>
 									<span
 										className={`badge ${

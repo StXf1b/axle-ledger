@@ -1,33 +1,45 @@
 "use client";
 
+import { useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 export default function CustomersTableToolbar({
-	search,
-	onSearchChange,
+	initialSearch,
 	onSearchSubmit,
 	onClearSearch,
 	status,
 	onStatusChange,
 	isPending = false,
 }) {
+	const [searchInput, setSearchInput] = useState(initialSearch);
+
+	function handleSearchSubmit(event) {
+		event.preventDefault();
+		onSearchSubmit(searchInput.trim());
+	}
+
+	function handleClearSearch() {
+		setSearchInput("");
+		onClearSearch();
+	}
+
 	return (
 		<div className="customers-toolbar">
 			<div className="customers-toolbar__left">
-				<form className="customers-search" onSubmit={onSearchSubmit}>
+				<form className="customers-search" onSubmit={handleSearchSubmit}>
 					<Search size={18} className="customers-search__icon" />
 					<input
 						type="text"
-						value={search}
-						onChange={(e) => onSearchChange(e.target.value)}
+						value={searchInput}
+						onChange={(e) => setSearchInput(e.target.value)}
 						placeholder="Search..."
 					/>
 
-					{search ? (
+					{searchInput ? (
 						<button
 							type="button"
 							className="customers-search__clear"
-							onClick={onClearSearch}
+							onClick={handleClearSearch}
 							aria-label="Clear search"
 						>
 							<X size={16} />
