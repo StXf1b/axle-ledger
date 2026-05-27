@@ -29,8 +29,10 @@
 
 .staff-avatar {
 	border-radius: 999px;
-	box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
-	aspect-ratio: calc(42px / 40px);
+	box-shadow: 0 0px 20px rgba(37, 99, 235, 0.18);
+	width: 42px;
+	height: 42px;
+	object-fit: cover;
 }
 
 .staff-row__info {

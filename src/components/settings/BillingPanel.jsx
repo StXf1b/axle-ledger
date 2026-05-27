@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
 	BadgeCheck,
 	Bell,
 	CalendarClock,
-	CreditCard,
 	ExternalLink,
 	FileText,
 	FolderUp,
@@ -43,7 +43,7 @@ function formatBytes(bytes) {
 }
 
 function formatDate(value) {
-	if (!value) return "—";
+	if (!value) return "-";
 
 	return new Date(value).toLocaleDateString("en-IE", {
 		day: "2-digit",
@@ -69,45 +69,111 @@ function getUsageTone(percent) {
 	return "safe";
 }
 
-function UsageCard({ label, current, max, percent, helper, icon: Icon }) {
+function getPlanStatusTone(currentPlan) {
+	if (currentPlan?.cancelAtPeriodEnd) return "warning";
+	if (currentPlan?.status === "ACTIVE") return "success";
+	if (currentPlan?.status === "TRIALING") return "info";
+	if (currentPlan?.status === "PAST_DUE") return "warning";
+	if (["CANCELED", "EXPIRED"].includes(currentPlan?.status)) return "danger";
+	return "neutral";
+}
+
+function getCancellationState(currentPlan) {
+	if (currentPlan?.cancelAtPeriodEnd) {
+		return {
+			tone: "warning",
+			label: "Canceling at period end",
+			detail: `Access remains active until ${formatDate(currentPlan.currentPeriodEnd)}.`,
+		};
+	}
+
+	if (currentPlan?.tier === "TRIAL") {
+		return {
+			tone: "info",
+			label: "Not canceling",
+			detail: currentPlan.trialEndsAt
+				? `Trial access runs until ${formatDate(currentPlan.trialEndsAt)}.`
+				: "This workspace is on the free trial plan.",
+		};
+	}
+
+	if (currentPlan?.status === "PAST_DUE") {
+		return {
+			tone: "warning",
+			label: "Not canceling",
+			detail: "Payment needs attention, but the plan is not set to cancel.",
+		};
+	}
+
+	return {
+		tone: "success",
+		label: "Not canceling",
+		detail: currentPlan?.currentPeriodEnd
+			? `The plan continues through ${formatDate(currentPlan.currentPeriodEnd)}.`
+			: "This plan is active and not set to cancel.",
+	};
+}
+
+function getPeriodMeta(currentPlan) {
+	if (currentPlan?.cancelAtPeriodEnd) {
+		return {
+			label: "Access until",
+			value: formatDate(currentPlan.currentPeriodEnd),
+		};
+	}
+
+	if (currentPlan?.tier === "TRIAL") {
+		return {
+			label: "Trial ends",
+			value: formatDate(currentPlan.trialEndsAt),
+		};
+	}
+
+	return {
+		label: "Renews on",
+		value: formatDate(currentPlan?.currentPeriodEnd),
+	};
+}
+
+function UsageLimitRow({ label, current, max, percent, helper, icon: Icon }) {
 	const tone = getUsageTone(percent);
+	const usageValue = max == null ? current : `${current} / ${max}`;
+	const meterWidth = percent == null ? 100 : Math.min(percent, 100);
 
 	return (
-		<div className="billing-usage-card">
-			<div className="billing-usage-card__top">
-				<span className="billing-usage-card__icon">
+		<div className={`billing-usage-row billing-usage-row--${tone}`}>
+			<div className="billing-usage-row__identity">
+				<span className="billing-usage-row__icon">
 					<Icon size={16} />
 				</span>
-				<p className="billing-usage-card__label">{label}</p>
+				<div>
+					<p className="billing-usage-row__label">{label}</p>
+					<p className="billing-usage-row__helper">{helper}</p>
+				</div>
 			</div>
 
-			<div className="billing-usage-card__value-row">
-				<h4 className="billing-usage-card__value">
-					{current}
-					{max == null ? "" : ` / ${max}`}
-				</h4>
+			<div className="billing-usage-row__meter-wrap">
+				<div className="billing-usage-row__meta">
+					<strong>{usageValue}</strong>
+					<span
+						className={`billing-usage-row__percent billing-usage-row__percent--${tone}`}
+					>
+						{percent == null ? "Unlimited" : `${percent}% used`}
+					</span>
+				</div>
 
-				<span
-					className={`billing-usage-card__percent billing-usage-card__percent--${tone}`}
-				>
-					{percent == null ? "Unlimited" : `${percent}%`}
-				</span>
+				<div className="billing-usage-row__bar">
+					<div
+						className={`billing-usage-row__bar-fill billing-usage-row__bar-fill--${tone}`}
+						style={{ width: `${meterWidth}%` }}
+					/>
+				</div>
 			</div>
-
-			<div className="billing-usage-card__bar">
-				<div
-					className={`billing-usage-card__bar-fill billing-usage-card__bar-fill--${tone}`}
-					style={{ width: `${percent == null ? 0 : Math.min(percent, 100)}%` }}
-				/>
-			</div>
-
-			<p className="billing-usage-card__helper">{helper}</p>
 		</div>
 	);
 }
 
 export default function BillingPanel({ billingInfo, currentRole }) {
-	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [billingCycle, setBillingCycle] = useState("monthly");
 	const [error, setError] = useState("");
@@ -116,7 +182,10 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 
 	const isOwner = currentRole === "OWNER";
 	const currentPlan = billingInfo?.currentPlan;
-	const usageSummary = billingInfo?.usageSummary || {};
+	const usageSummary = useMemo(
+		() => billingInfo?.usageSummary || {},
+		[billingInfo?.usageSummary],
+	);
 	const paidPlans =
 		billingInfo?.plans?.filter(
 			(plan) => !["TRIAL", "CUSTOM"].includes(plan.tier),
@@ -128,6 +197,9 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 		!!currentPlan?.stripeSubscriptionId;
 
 	const bannerState = searchParams.get("billing");
+	const statusTone = getPlanStatusTone(currentPlan);
+	const cancellationState = getCancellationState(currentPlan);
+	const periodMeta = getPeriodMeta(currentPlan);
 
 	const usageCards = useMemo(
 		() => [
@@ -274,9 +346,6 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 	return (
 		<div className="billing-panel stack-lg">
 			<div className="billing-hero">
-				<div className="billing-hero__glow billing-hero__glow--one" />
-				<div className="billing-hero__glow billing-hero__glow--two" />
-
 				<div className="billing-hero__left">
 					<div className="billing-hero__badge-wrap">
 						<span className="billing-hero__icon">
@@ -287,18 +356,10 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 
 					<div className="billing-hero__heading">
 						<h3>{currentPlan.label}</h3>
-						<span
-							className={`badge ${
-								currentPlan.status === "ACTIVE"
-									? "badge-success"
-									: currentPlan.status === "TRIALING"
-										? "badge-info"
-										: currentPlan.status === "PAST_DUE"
-											? "badge-warning"
-											: "badge-neutral"
-							}`}
-						>
-							{formatStatus(currentPlan.status)}
+						<span className={`badge badge-${statusTone}`}>
+							{currentPlan.cancelAtPeriodEnd
+								? "Canceling"
+								: formatStatus(currentPlan.status)}
 						</span>
 					</div>
 
@@ -309,10 +370,18 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 					</p>
 
 					<div className="billing-hero__actions">
+						<Link
+							href="https://axleledger.ie/plans"
+							className="billing-btn billing-btn--primary billing-btn--auto"
+						>
+							See all plans
+							<ExternalLink size={16} />
+						</Link>
+
 						{portalAvailable ? (
 							<button
 								type="button"
-								className="billing-btn billing-btn--secondary"
+								className="billing-btn billing-btn--secondary billing-btn--auto"
 								onClick={handlePortal}
 								disabled={!isOwner || isPending}
 							>
@@ -334,22 +403,40 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 					</div>
 				</div>
 
-				<div className="billing-hero__meta">
-					<div className="billing-meta-card">
-						<p>Billing source</p>
-						<h4>{currentPlan.billingProvider}</h4>
+				<div
+					className={`billing-status-card billing-status-card--${cancellationState.tone}`}
+				>
+					<div className="billing-status-card__top">
+						<div>
+							<p className="billing-status-card__eyebrow">Plan status</p>
+							<h4>{cancellationState.label}</h4>
+						</div>
+						<span
+							className={`billing-status-dot billing-status-dot--${cancellationState.tone}`}
+						/>
 					</div>
 
-					<div className="billing-meta-card">
-						<p>Current period end</p>
-						<h4>{formatDate(currentPlan.currentPeriodEnd)}</h4>
-					</div>
+					<p className="billing-status-card__detail">
+						{cancellationState.detail}
+					</p>
 
-					<div className="billing-meta-card">
-						<p>Cancellation</p>
-						<h4>
-							{currentPlan.cancelAtPeriodEnd ? "At period end" : "Active"}
-						</h4>
+					<div className="billing-hero__meta">
+						<div className="billing-meta-card">
+							<p>Billing source</p>
+							<h4>{currentPlan.billingProvider}</h4>
+						</div>
+
+						<div className="billing-meta-card">
+							<p>{periodMeta.label}</p>
+							<h4>{periodMeta.value}</h4>
+						</div>
+
+						<div className="billing-meta-card">
+							<p>Cancellation</p>
+							<h4>
+								{currentPlan.cancelAtPeriodEnd ? "Scheduled" : "Not scheduled"}
+							</h4>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -378,47 +465,65 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 					</div>
 				</div>
 
-				<div className="billing-usage-grid">
-					{usageCards.map((item) => {
-						if (!item.data) return null;
+				<div className="billing-usage-board">
+					<div className="billing-usage-board__summary">
+						<div>
+							<p className="billing-usage-board__eyebrow">Current allowance</p>
+							<h4>{currentPlan.label} plan limits</h4>
+							<p>
+								Track the resources that can block new records before they
+								interrupt the workshop.
+							</p>
+						</div>
 
-						const current = item.isBytes
-							? formatBytes(item.data.current)
-							: item.data.current;
+						<div className="billing-upload-pill">
+							<span className="billing-upload-pill__icon">
+								<FolderUp size={20} />
+							</span>
+							<div>
+								<span>Max file upload</span>
+								<strong>
+									{formatBytes(currentPlan.limits.maxUploadBytes)} per file
+								</strong>
+							</div>
+						</div>
+					</div>
 
-						const max =
-							item.data.max == null
-								? null
-								: item.isBytes
-									? formatBytes(item.data.max)
-									: item.data.max;
+					<div className="billing-usage-list">
+						{usageCards.map((item) => {
+							if (!item.data) return null;
 
-						const helper =
-							item.data.max == null
-								? "Unlimited on this plan"
-								: item.data.remaining === 0
-									? "Limit reached"
-									: `${item.isBytes ? formatBytes(item.data.remaining) : item.data.remaining} remaining`;
+							const current = item.isBytes
+								? formatBytes(item.data.current)
+								: item.data.current;
 
-						return (
-							<UsageCard
-								key={item.key}
-								label={item.label}
-								current={current}
-								max={max}
-								percent={item.data.percent}
-								helper={helper}
-								icon={item.icon}
-							/>
-						);
-					})}
-				</div>
+							const max =
+								item.data.max == null
+									? null
+									: item.isBytes
+										? formatBytes(item.data.max)
+										: item.data.max;
 
-				<div className="billing-upload-note">
-					<p>
-						<strong>Max file upload:</strong>{" "}
-						{formatBytes(currentPlan.limits.maxUploadBytes)} per file
-					</p>
+							const helper =
+								item.data.max == null
+									? "Unlimited on this plan"
+									: item.data.remaining === 0
+										? "Limit reached"
+										: `${item.isBytes ? formatBytes(item.data.remaining) : item.data.remaining} remaining`;
+
+							return (
+								<UsageLimitRow
+									key={item.key}
+									label={item.label}
+									current={current}
+									max={max}
+									percent={item.data.percent}
+									helper={helper}
+									icon={item.icon}
+								/>
+							);
+						})}
+					</div>
 				</div>
 			</div>
 
