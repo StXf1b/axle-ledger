@@ -1,5 +1,6 @@
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -48,6 +49,7 @@ export default function RootLayout({ children }) {
 			<html lang="en" suppressHydrationWarning scroll-behavior="smooth">
 				<body className={`${inter.variable} ${jakarta.variable} antialiased`}>
 					{children}
+					<Analytics />
 				</body>
 			</html>
 		</ClerkProvider>
