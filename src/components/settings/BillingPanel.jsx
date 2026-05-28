@@ -6,10 +6,13 @@ import { useSearchParams } from "next/navigation";
 import {
 	BadgeCheck,
 	Bell,
+	Building2,
 	CalendarClock,
+	CheckCircle2,
 	ExternalLink,
 	FileText,
 	FolderUp,
+	Gauge,
 	ShieldCheck,
 	Users,
 	CarFront,
@@ -22,12 +25,117 @@ import {
 } from "@/actions/billing";
 import "./BillingPanel.css";
 
-function formatMoney(cents) {
+const PLAN_CARD_ORDER = ["TRIAL", "STARTER", "PRO", "BUSINESS"];
+const PLAN_RANK = {
+	TRIAL: 0,
+	STARTER: 1,
+	PRO: 2,
+	BUSINESS: 3,
+};
+const PLAN_CARD_CONTENT = {
+	TRIAL: {
+		name: "Free",
+		icon: BadgeCheck,
+		description: "For testing AxleLedger with a very small workspace.",
+		limits: [
+			"3 members",
+			"10 customers",
+			"30 vehicles",
+			"10 documents",
+			"0.2GB document storage",
+			"20 reminders",
+			"40 work logs",
+			"2 pending invites",
+			"5MB max upload size",
+		],
+		features: [
+			"Basic customer records",
+			"Basic vehicle records",
+			"Basic reminders",
+			"Basic work logs",
+			"Limited document storage",
+		],
+	},
+	STARTER: {
+		name: "Starter",
+		icon: Wrench,
+		description: "For solo mechanics and small garages getting organised.",
+		limits: [
+			"5 members",
+			"500 customers",
+			"750 vehicles",
+			"2,000 documents",
+			"10GB document storage",
+			"2,500 reminders",
+			"20,000 work logs",
+			"10 pending invites",
+			"25MB max upload size",
+		],
+		features: [
+			"Everything in Free",
+			"Send work logs to customers, limited",
+			"Export customer data, limited",
+			"Standard support",
+			"Good for small garages",
+		],
+	},
+	PRO: {
+		name: "Pro",
+		icon: Gauge,
+		description:
+			"For growing garages that need higher limits and better workflow tools.",
+		limits: [
+			"15 members",
+			"2,500 customers",
+			"5,000 vehicles",
+			"10,000 documents",
+			"50GB document storage",
+			"10,000 reminders",
+			"100,000 work logs",
+			"20 pending invites",
+			"50MB max upload size",
+		],
+		features: [
+			"Everything in Starter",
+			"Unlimited work-log emails",
+			"Unlimited customer data exports",
+			"Priority support",
+			"Better suited for teams with multiple staff",
+		],
+	},
+	BUSINESS: {
+		name: "Business",
+		icon: Building2,
+		description:
+			"For larger garages and teams that need high limits and full access.",
+		limits: [
+			"50 members",
+			"10,000 customers",
+			"15,000 vehicles",
+			"50,000 documents",
+			"250GB document storage",
+			"50,000 reminders",
+			"500,000 work logs",
+			"100 pending invites",
+			"100MB max upload size",
+		],
+		features: [
+			"Everything in Pro",
+			"Highest workspace limits",
+			"Best for larger teams",
+			"Business-level support",
+			"Full access to current plan features",
+		],
+	},
+};
+
+function formatPlanAmount(cents) {
 	if (cents == null) return "Custom";
 
 	return new Intl.NumberFormat("en-IE", {
 		style: "currency",
 		currency: "EUR",
+		minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
 		maximumFractionDigits: 2,
 	}).format(cents / 100);
 }
@@ -67,6 +175,10 @@ function getUsageTone(percent) {
 	if (percent >= 90) return "danger";
 	if (percent >= 75) return "warning";
 	return "safe";
+}
+
+function getPlanDisplayName(tier) {
+	return PLAN_CARD_CONTENT[tier]?.name || tier;
 }
 
 function getPlanStatusTone(currentPlan) {
@@ -186,10 +298,13 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 		() => billingInfo?.usageSummary || {},
 		[billingInfo?.usageSummary],
 	);
-	const paidPlans =
-		billingInfo?.plans?.filter(
-			(plan) => !["TRIAL", "CUSTOM"].includes(plan.tier),
-		) || [];
+	const planCards = useMemo(() => {
+		const plansByTier = new Map(
+			(billingInfo?.plans || []).map((plan) => [plan.tier, plan]),
+		);
+
+		return PLAN_CARD_ORDER.map((tier) => plansByTier.get(tier)).filter(Boolean);
+	}, [billingInfo?.plans]);
 
 	const portalAvailable = !!currentPlan?.stripeCustomerId;
 	const isStripeManaged =
@@ -286,8 +401,45 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 	function getActionLabel(plan) {
 		if (!isOwner) return "Owner only";
 		if (plan.tier === currentPlan?.tier) return "Current plan";
-		if (isStripeManaged) return "Change in portal";
-		return billingCycle === "monthly" ? "Start monthly" : "Start yearly";
+
+		if (plan.tier === "TRIAL") return "Switch to Free";
+
+		const planName = getPlanDisplayName(plan.tier);
+		const currentRank = PLAN_RANK[currentPlan?.tier] ?? 0;
+		const nextRank = PLAN_RANK[plan.tier] ?? currentRank;
+
+		return nextRank > currentRank
+			? `Upgrade to ${planName}`
+			: `Change to ${planName}`;
+	}
+
+	function getPlanButtonState(plan, cardBusy) {
+		const isCurrent = plan.tier === currentPlan?.tier;
+
+		if (!isOwner || isCurrent) return { disabled: true };
+
+		if (plan.tier === "TRIAL") {
+			// TODO: Add a dedicated server action if Free downgrades should happen
+			// inside AxleLedger instead of Stripe Portal cancellation.
+			return {
+				disabled:
+					!isStripeManaged ||
+					!portalAvailable ||
+					isPending ||
+					busyKey === "portal",
+				onClick: handlePortal,
+			};
+		}
+
+		return {
+			disabled:
+				isPending ||
+				cardBusy ||
+				busyKey === "portal" ||
+				(isStripeManaged && !portalAvailable),
+			onClick: () =>
+				isStripeManaged ? handlePortal() : handleCheckout(plan.tier),
+		};
 	}
 
 	async function handleCheckout(planTier) {
@@ -528,82 +680,120 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 			</div>
 
 			<div className="billing-section card stack-md">
-				<div className="billing-section__header billing-section__header--split">
+				<div className="billing-section__header billing-section__header--split billing-section__header--plans">
 					<div>
 						<h3 className="billing-section__title">Plans</h3>
 						<p className="billing-section__subtitle">
-							Prices shown ex VAT. New purchases go through Stripe Checkout.
-							Existing paid subscriptions are changed from Stripe Portal.
+							Choose the plan that fits your garage. You can upgrade or change
+							plans as your workspace grows.
 						</p>
 					</div>
 
-					<div className="billing-cycle-toggle">
-						<button
-							type="button"
-							className={`billing-cycle-toggle__btn ${
-								billingCycle === "monthly"
-									? "billing-cycle-toggle__btn--active"
-									: ""
-							}`}
-							onClick={() => setBillingCycle("monthly")}
+					<div className="billing-plan-controls">
+						<Link
+							href="https://docs.axleledger.ie"
+							target="_blank"
+							rel="noreferrer"
+							className="billing-details-link"
 						>
-							Monthly
-						</button>
+							View full plan details
+							<ExternalLink size={15} />
+						</Link>
 
-						<button
-							type="button"
-							className={`billing-cycle-toggle__btn ${
-								billingCycle === "yearly"
-									? "billing-cycle-toggle__btn--active"
-									: ""
-							}`}
-							onClick={() => setBillingCycle("yearly")}
-						>
-							Yearly
-						</button>
+						<div className="billing-cycle-toggle" aria-label="Billing cycle">
+							<button
+								type="button"
+								className={`billing-cycle-toggle__btn ${
+									billingCycle === "monthly"
+										? "billing-cycle-toggle__btn--active"
+										: ""
+								}`}
+								onClick={() => setBillingCycle("monthly")}
+								aria-pressed={billingCycle === "monthly"}
+							>
+								Monthly
+							</button>
+
+							<button
+								type="button"
+								className={`billing-cycle-toggle__btn ${
+									billingCycle === "yearly"
+										? "billing-cycle-toggle__btn--active"
+										: ""
+								}`}
+								onClick={() => setBillingCycle("yearly")}
+								aria-pressed={billingCycle === "yearly"}
+							>
+								Yearly
+							</button>
+						</div>
 					</div>
 				</div>
 
 				<div className="billing-plans-grid">
-					{paidPlans.map((plan) => {
-						const priceCents = getPlanPrice(plan);
+					{planCards.map((plan) => {
+						const content = PLAN_CARD_CONTENT[plan.tier];
+						const priceCents = plan.tier === "TRIAL" ? 0 : getPlanPrice(plan);
 						const isCurrent = plan.tier === currentPlan.tier;
+						const isPopular = plan.tier === "PRO";
 						const cardBusy = busyKey === `${plan.tier}-${billingCycle}`;
+						const portalBusy = busyKey === "portal";
+						const buttonState = getPlanButtonState(plan, cardBusy);
+						const buttonLabel =
+							cardBusy || (portalBusy && !isCurrent)
+								? "Redirecting..."
+								: getActionLabel(plan);
+						const planName = content?.name || plan.label;
+						const PlanIcon = content?.icon || BadgeCheck;
 
 						return (
-							<div
+							<article
 								key={plan.tier}
 								className={`billing-plan-card ${
 									isCurrent ? "billing-plan-card--current" : ""
-								}`}
+								} ${isPopular ? "billing-plan-card--popular" : ""}`}
+								aria-label={`${planName} plan`}
 							>
 								<div className="billing-plan-card__top">
-									<div>
-										<p className="billing-plan-card__eyebrow">{plan.label}</p>
-										<h4 className="billing-plan-card__price">
-											{priceCents == null
-												? "Contact us"
-												: `${formatMoney(priceCents)}/${billingCycle === "monthly" ? "mo" : "yr"}`}
-										</h4>
-										<p className="billing-plan-card__vat">ex VAT</p>
+									<div className="billing-plan-card__title-row">
+										<span
+											className={`billing-plan-card__icon billing-plan-card__icon--${plan.tier.toLowerCase()}`}
+											aria-hidden="true"
+										>
+											<PlanIcon size={21} strokeWidth={2.1} />
+										</span>
+
+										<div className="billing-plan-card__title-copy">
+											<p className="billing-plan-card__eyebrow">{planName}</p>
+											<h4 className="billing-plan-card__price">
+												{formatPlanAmount(priceCents)}
+												<span>
+													/
+													{plan.tier === "TRIAL"
+														? "month"
+														: billingCycle === "monthly"
+															? "month"
+															: "year"}
+												</span>
+											</h4>
+											<p className="billing-plan-card__description">
+												{content?.description}
+											</p>
+										</div>
 									</div>
 
-									{isCurrent ? (
-										<span className="badge badge-info">Current</span>
-									) : null}
-								</div>
-
-								<div className="billing-plan-card__limits">
-									<p>Staff: {plan.limits.members ?? "Unlimited"}</p>
-									<p>Customers: {plan.limits.customers ?? "Unlimited"}</p>
-									<p>Vehicles: {plan.limits.vehicles ?? "Unlimited"}</p>
-									<p>Documents: {plan.limits.documents ?? "Unlimited"}</p>
-									<p>
-										Storage: {formatBytes(plan.limits.documentStorageBytes)}
-									</p>
-									<p>Reminders: {plan.limits.reminders ?? "Unlimited"}</p>
-									<p>Work logs: {plan.limits.workLogs ?? "Unlimited"}</p>
-									<p>Upload limit: {formatBytes(plan.limits.maxUploadBytes)}</p>
+									<div className="billing-plan-card__badges">
+										{isPopular ? (
+											<span className="billing-plan-badge billing-plan-badge--popular">
+												Most popular
+											</span>
+										) : null}
+										{isCurrent ? (
+											<span className="billing-plan-badge billing-plan-badge--current">
+												Current
+											</span>
+										) : null}
+									</div>
 								</div>
 
 								<div className="billing-plan-card__actions">
@@ -612,28 +802,61 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 										className={`billing-btn ${
 											isCurrent
 												? "billing-btn--secondary"
-												: "billing-btn--primary"
+												: isPopular
+													? "billing-btn--primary"
+													: "billing-btn--secondary"
 										}`}
-										disabled={
-											!isOwner ||
-											isPending ||
-											cardBusy ||
-											busyKey === "portal" ||
-											isCurrent
-										}
-										onClick={() =>
-											isStripeManaged
-												? handlePortal()
-												: handleCheckout(plan.tier)
-										}
+										disabled={buttonState.disabled}
+										onClick={buttonState.onClick}
+										aria-label={buttonLabel}
 									>
-										{cardBusy ? "Redirecting..." : getActionLabel(plan)}
+										{buttonLabel}
 									</button>
 								</div>
-							</div>
+
+								<div className="billing-plan-card__section">
+									<p className="billing-plan-card__section-title">
+										Key features
+									</p>
+									<ul className="billing-plan-card__features">
+										{content?.features.map((feature) => (
+											<li key={feature}>
+												<CheckCircle2
+													size={15}
+													strokeWidth={2.2}
+													aria-hidden="true"
+												/>
+												<span>{feature}</span>
+											</li>
+										))}
+									</ul>
+								</div>
+
+								<div className="billing-plan-card__section">
+									<p className="billing-plan-card__section-title">
+										Main limits
+									</p>
+									<ul className="billing-plan-card__limits">
+										{content?.limits.map((limit) => (
+											<li key={limit}>
+												<span
+													className="billing-plan-card__limit-dot"
+													aria-hidden="true"
+												/>
+												<span>{limit}</span>
+											</li>
+										))}
+									</ul>
+								</div>
+							</article>
 						);
 					})}
 				</div>
+
+				<p className="billing-plan-note">
+					Fair use limits apply to email sending and exports to protect platform
+					reliability.
+				</p>
 
 				{!isOwner ? (
 					<p className="text-muted">
