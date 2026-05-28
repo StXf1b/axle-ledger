@@ -128,8 +128,6 @@ export default function RemindersPageClient({
 				</div>
 
 				<div className="reminders-page__actions">
-					<Button variant="secondary">Export</Button>
-
 					<Link href="/reminders/new">
 						<Button variant="primary" leftIcon={<Plus size={18} />}>
 							New reminder

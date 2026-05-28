@@ -100,7 +100,7 @@ const PLAN_CARD_CONTENT = {
 			"Unlimited work-log emails",
 			"Unlimited customer data exports",
 			"Priority support",
-			"Better suited for teams with multiple staff",
+			"Better suited large teams",
 		],
 	},
 	BUSINESS: {
@@ -763,13 +763,6 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 							>
 								<div className="billing-plan-card__top">
 									<div className="billing-plan-card__title-row">
-										<span
-											className={`billing-plan-card__icon billing-plan-card__icon--${plan.tier.toLowerCase()}`}
-											aria-hidden="true"
-										>
-											<PlanIcon size={21} strokeWidth={2.1} />
-										</span>
-
 										<div className="billing-plan-card__title-copy">
 											<p className="billing-plan-card__eyebrow">{planName}</p>
 											<h4 className="billing-plan-card__price">

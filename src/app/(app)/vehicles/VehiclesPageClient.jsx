@@ -118,8 +118,6 @@ export default function VehiclesPageClient({
 				</div>
 
 				<div className="vehicles-page__actions">
-					<Button variant="secondary">Export</Button>
-
 					<Link href="/vehicles/new">
 						<Button variant="primary" leftIcon={<Plus size={18} />}>
 							New vehicle

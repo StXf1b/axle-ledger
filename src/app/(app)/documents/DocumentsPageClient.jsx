@@ -132,8 +132,6 @@ export default function DocumentsPageClient({
 
 				{/* Change the class to DocumentsPage__actions */}
 				<div className="vehicles-page__actions">
-					<Button variant="secondary">Export</Button>
-
 					<Link
 						href={`/documents/new${
 							currentCustomerId || currentVehicleId
