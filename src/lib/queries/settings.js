@@ -5,12 +5,13 @@ import {
 	ensureWorkspaceSubscription,
 	resolveWorkspaceEntitlements,
 } from "@/lib/billing/workspace-subscription";
+import { syncWorkspaceSubscriptionFromStripeSubscriptionId } from "@/lib/billing/stripe-sync";
 import {
 	getWorkspaceUsage,
 	buildWorkspaceUsageSummary,
 } from "@/lib/billing/workspace-usage";
 
-export async function getSettingsPageData() {
+export async function getSettingsPageData({ syncStripeSubscription = false } = {}) {
 	const { userId } = await auth();
 
 	if (!userId) {
@@ -57,10 +58,24 @@ export async function getSettingsPageData() {
 	const membership = appUser.memberships[0];
 	const workspace = membership.workspace;
 
-	const [subscription, usage] = await Promise.all([
-		ensureWorkspaceSubscription(workspace.id),
-		getWorkspaceUsage(workspace.id),
-	]);
+	let subscription = await ensureWorkspaceSubscription(workspace.id);
+
+	if (
+		syncStripeSubscription &&
+		subscription.billingProvider === "STRIPE" &&
+		subscription.stripeSubscriptionId
+	) {
+		try {
+			await syncWorkspaceSubscriptionFromStripeSubscriptionId(
+				subscription.stripeSubscriptionId,
+			);
+			subscription = await ensureWorkspaceSubscription(workspace.id);
+		} catch (error) {
+			console.error("Could not refresh Stripe subscription state:", error);
+		}
+	}
+
+	const usage = await getWorkspaceUsage(workspace.id);
 
 	const entitlements = resolveWorkspaceEntitlements(subscription);
 	const usageSummary = buildWorkspaceUsageSummary(entitlements.limits, usage);

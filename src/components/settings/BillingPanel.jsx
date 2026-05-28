@@ -380,6 +380,13 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 			};
 		}
 
+		if (bannerState === "portal_return") {
+			return {
+				type: "success",
+				text: "Billing portal changes were checked against Stripe and your workspace billing state has been refreshed.",
+			};
+		}
+
 		if (currentPlan?.cancelAtPeriodEnd) {
 			return {
 				type: "warning",

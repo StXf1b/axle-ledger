@@ -93,6 +93,24 @@ function resolveTierIntervalFromLookupKey(lookupKey) {
 	return null;
 }
 
+function resolveTierIntervalFromMetadata(metadata) {
+	const tier =
+		typeof metadata?.tier === "string" ? metadata.tier.toUpperCase() : null;
+	const interval =
+		typeof metadata?.interval === "string"
+			? metadata.interval.toLowerCase()
+			: null;
+
+	if (!isPaidTier(tier)) {
+		return null;
+	}
+
+	return {
+		tier,
+		interval: isBillingInterval(interval) ? interval : null,
+	};
+}
+
 async function resolveLookupKeyFromPrice(price) {
 	if (!price) {
 		return {
@@ -150,13 +168,50 @@ function getSubscriptionItemForPeriods(subscription) {
 	return null;
 }
 
+function getSubscriptionPrice(subscription) {
+	return getSubscriptionItemForPeriods(subscription)?.price || null;
+}
+
 function getSubscriptionPeriodDates(subscription) {
 	const item = getSubscriptionItemForPeriods(subscription);
 
 	return {
-		currentPeriodStart: fromUnixTimestamp(item?.current_period_start || null),
-		currentPeriodEnd: fromUnixTimestamp(item?.current_period_end || null),
+		currentPeriodStart: fromUnixTimestamp(
+			item?.current_period_start || subscription?.current_period_start || null,
+		),
+		currentPeriodEnd: fromUnixTimestamp(
+			subscription?.cancel_at ||
+				item?.current_period_end ||
+				subscription?.current_period_end ||
+				null,
+		),
 	};
+}
+
+function isStripeSubscriptionCanceling(subscription) {
+	return Boolean(
+		subscription?.cancel_at_period_end ||
+			(subscription?.cancel_at && subscription?.status !== "canceled"),
+	);
+}
+
+function getInvoiceSubscriptionId(invoice) {
+	if (typeof invoice.subscription === "string") {
+		return invoice.subscription;
+	}
+
+	if (invoice.subscription?.id) {
+		return invoice.subscription.id;
+	}
+
+	const parentSubscription =
+		invoice.parent?.subscription_details?.subscription || null;
+
+	if (typeof parentSubscription === "string") {
+		return parentSubscription;
+	}
+
+	return parentSubscription?.id || null;
 }
 
 async function resolveWorkspaceIdFromStripeRefs({
@@ -280,17 +335,6 @@ export async function syncWorkspaceSubscriptionFromStripeSubscription(
 			? subscription.customer
 			: subscription.customer?.id || null;
 
-	const activePrice = subscription.items?.data?.[0]?.price || null;
-	const { lookupKey, priceId, productId } =
-		await resolveLookupKeyFromPrice(activePrice);
-	const tierInfo = resolveTierIntervalFromLookupKey(lookupKey);
-
-	if (!tierInfo) {
-		throw new Error(
-			`Unsupported Stripe price for subscription ${subscription.id}. Missing or unknown lookup key.`,
-		);
-	}
-
 	const workspaceId = await resolveWorkspaceIdFromStripeRefs({
 		stripeCustomerId,
 		stripeSubscriptionId: subscription.id,
@@ -303,7 +347,25 @@ export async function syncWorkspaceSubscriptionFromStripeSubscription(
 		);
 	}
 
-	await ensureWorkspaceSubscription(workspaceId);
+	const existingSubscription = await ensureWorkspaceSubscription(workspaceId);
+	const activePrice = getSubscriptionPrice(subscription);
+	const { lookupKey, priceId, productId } =
+		await resolveLookupKeyFromPrice(activePrice);
+	const tierInfo =
+		resolveTierIntervalFromLookupKey(lookupKey) ||
+		resolveTierIntervalFromMetadata(subscription.metadata);
+
+	if (!tierInfo && !isPaidTier(existingSubscription.tier)) {
+		throw new Error(
+			`Unsupported Stripe price for subscription ${subscription.id}. Missing or unknown lookup key.`,
+		);
+	}
+
+	if (!tierInfo) {
+		console.warn(
+			`Stripe subscription ${subscription.id} did not include a known price lookup key. Preserving existing workspace tier ${existingSubscription.tier}.`,
+		);
+	}
 
 	const { currentPeriodStart, currentPeriodEnd } =
 		getSubscriptionPeriodDates(subscription);
@@ -314,7 +376,7 @@ export async function syncWorkspaceSubscriptionFromStripeSubscription(
 		},
 		data: {
 			billingProvider: "STRIPE",
-			tier: tierInfo.tier,
+			tier: tierInfo?.tier || existingSubscription.tier,
 			status: mapStripeStatusToWorkspaceStatus(subscription.status),
 			stripeCustomerId: stripeCustomerId || undefined,
 			stripeSubscriptionId: subscription.id,
@@ -322,10 +384,32 @@ export async function syncWorkspaceSubscriptionFromStripeSubscription(
 			stripePriceId: priceId || undefined,
 			currentPeriodStart,
 			currentPeriodEnd,
-			cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+			cancelAtPeriodEnd: isStripeSubscriptionCanceling(subscription),
 			trialEndsAt: null,
 		},
 	});
+}
+
+export async function syncWorkspaceSubscriptionFromStripeSubscriptionId(
+	stripeSubscriptionId,
+) {
+	if (!stripeSubscriptionId) {
+		return null;
+	}
+
+	const stripe = getStripeClient();
+	const subscription =
+		await stripe.subscriptions.retrieve(stripeSubscriptionId);
+
+	if (subscription.status === "canceled") {
+		await fallbackWorkspaceSubscriptionToTrialFromStripeSubscription(
+			subscription,
+		);
+	} else {
+		await syncWorkspaceSubscriptionFromStripeSubscription(subscription);
+	}
+
+	return subscription;
 }
 
 export async function fallbackWorkspaceSubscriptionToTrialFromStripeSubscription(
@@ -373,11 +457,7 @@ export async function markWorkspaceSubscriptionPastDueFromInvoice(invoice) {
 		typeof invoice.customer === "string"
 			? invoice.customer
 			: invoice.customer?.id || null;
-
-	const stripeSubscriptionId =
-		typeof invoice.subscription === "string"
-			? invoice.subscription
-			: invoice.subscription?.id || null;
+	const stripeSubscriptionId = getInvoiceSubscriptionId(invoice);
 
 	const workspaceSubscription = await db.workspaceSubscription.findFirst({
 		where: {
