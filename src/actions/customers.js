@@ -9,6 +9,7 @@ import { getResolvedWorkspaceEntitlements } from "@/lib/billing/workspace-subscr
 import { assertWorkspaceLimit } from "@/lib/billing/workspace-quotas";
 
 const CUSTOMER_EXPORT_FORMATS = new Set(["pdf", "json"]);
+const CUSTOMER_EDIT_ROLES = new Set(["OWNER", "ADMIN"]);
 
 async function getWorkspaceContextOrThrow() {
 	const { userId } = await auth();
@@ -67,6 +68,12 @@ function normalizeCustomerPayload(data) {
 		notes: data.notes?.trim() || null,
 		tags: normalizeTags(data.tags),
 	};
+}
+
+function assertCanEditCustomers(membership) {
+	if (!CUSTOMER_EDIT_ROLES.has(membership?.role)) {
+		throw new Error("Only workspace admins and owners can edit customer records.");
+	}
 }
 
 function normalizeExportFormat(format) {
@@ -913,7 +920,9 @@ export async function exportCustomerData(customerId, format) {
 }
 
 export async function updateCustomer(customerId, data) {
-	const { workspaceId } = await getWorkspaceContextOrThrow();
+	const { membership, workspaceId } = await getWorkspaceContextOrThrow();
+
+	assertCanEditCustomers(membership);
 
 	const existingCustomer = await db.customer.findFirst({
 		where: {

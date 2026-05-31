@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-	PencilLine,
 	Download,
 	UserRound,
 	CarFront,
@@ -14,6 +13,7 @@ import {
 import { db } from "@/lib/db";
 import { getCurrentWorkspaceContext } from "@/lib/auth";
 import { formatDocumentCategory, formatFileSize } from "@/lib/document-utils";
+import DocumentEditButton from "@/components/documents/DocumentEditButton";
 import "./DocumentDetailPage.css";
 
 function formatDateTime(dateValue) {
@@ -58,6 +58,13 @@ export default async function DocumentDetailPage({ params }) {
 	const context = await getCurrentWorkspaceContext();
 	const workspaceId =
 		context?.workspace?.id || context?.membership?.workspaceId;
+	const canEditDocuments = ["OWNER", "ADMIN"].includes(
+		context?.membership?.role,
+	);
+
+	if (!workspaceId) {
+		notFound();
+	}
 
 	const document = await db.document.findFirst({
 		where: {
@@ -107,13 +114,10 @@ export default async function DocumentDetailPage({ params }) {
 				</Link>
 
 				<div className="document-detail-page__actions">
-					<Link
-						href={`/documents/${document.id}/edit`}
-						className="btn btn-secondary"
-					>
-						<PencilLine size={18} />
-						Edit document
-					</Link>
+					<DocumentEditButton
+						documentId={document.id}
+						canEditDocuments={canEditDocuments}
+					/>
 
 					<a
 						href={`/api/documents/${document.id}/download`}

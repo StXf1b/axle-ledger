@@ -17,6 +17,7 @@ import {
 const VALID_CATEGORIES = new Set(
 	DOCUMENT_CATEGORY_OPTIONS.map((item) => item.value),
 );
+const DOCUMENT_EDIT_ROLES = new Set(["OWNER", "ADMIN"]);
 
 function emptyToNull(value) {
 	if (value === null || value === undefined) return null;
@@ -63,6 +64,12 @@ async function getWorkspaceContextOrThrow() {
 		membership: appUser.memberships[0],
 		workspace: appUser.memberships[0].workspace,
 	};
+}
+
+function assertCanEditDocuments(membership) {
+	if (!DOCUMENT_EDIT_ROLES.has(membership?.role)) {
+		throw new Error("Only workspace admins and owners can edit documents.");
+	}
 }
 
 async function resolveLinkedEntities({ workspaceId, customerId, vehicleId }) {
@@ -218,7 +225,8 @@ export async function createDocument(payload) {
 }
 
 export async function updateDocument(documentId, payload) {
-	const { workspace } = await getWorkspaceContextOrThrow();
+	const { membership, workspace } = await getWorkspaceContextOrThrow();
+	assertCanEditDocuments(membership);
 	await assertWorkspaceFeatureEnabled(workspace.id, "documentsEnabled");
 	await assertWorkspaceLimit(workspace.id, "documents");
 	await assertWorkspaceStorageAvailable(
@@ -274,7 +282,8 @@ export async function updateDocument(documentId, payload) {
 }
 
 export async function deleteDocument(documentId) {
-	const { workspace } = await getWorkspaceContextOrThrow();
+	const { membership, workspace } = await getWorkspaceContextOrThrow();
+	assertCanEditDocuments(membership);
 
 	const existingDocument = await db.document.findFirst({
 		where: {

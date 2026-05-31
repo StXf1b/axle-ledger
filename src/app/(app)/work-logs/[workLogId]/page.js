@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PencilLine, CarFront, UserRound, Wrench, Send } from "lucide-react";
+import {
+	PencilLine,
+	CarFront,
+	UserRound,
+	Wrench,
+	Send,
+	ArrowLeft,
+} from "lucide-react";
 
 import { db } from "@/lib/db";
 import { getCurrentWorkspaceContext } from "@/lib/auth";
@@ -85,6 +92,10 @@ export default async function WorkLogDetailPage({ params }) {
 
 	return (
 		<section className="page-section">
+			<Link href="/work-logs" className="back-to-link">
+				<ArrowLeft size={16} />
+				<span>Back to work logs</span>
+			</Link>
 			<div className="page-header">
 				<div className="page-header-left">
 					<p className="text-muted">Work Logs</p>

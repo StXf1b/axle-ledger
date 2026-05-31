@@ -37,11 +37,13 @@ function getInitials(firstName, lastName, companyName) {
 export default function CustomerDetailView({
 	customer,
 	canExportCustomers = false,
+	canEditCustomers = false,
 }) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [exportModalOpen, setExportModalOpen] = useState(false);
 	const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+	const [editAccessModalOpen, setEditAccessModalOpen] = useState(false);
 	const [exportFormat, setExportFormat] = useState("pdf");
 	const [isExporting, setIsExporting] = useState(false);
 	const [exportError, setExportError] = useState("");
@@ -104,6 +106,15 @@ export default function CustomerDetailView({
 		router.push("/settings?tab=billing");
 	}
 
+	function handleEditCustomer() {
+		if (!canEditCustomers) {
+			setEditAccessModalOpen(true);
+			return;
+		}
+
+		router.push(`/customers/${customer.id}/edit`);
+	}
+
 	return (
 		<section className="customer-detail-page">
 			<div className="customer-detail-page__topbar">
@@ -130,11 +141,13 @@ export default function CustomerDetailView({
 						</Button>
 					</span>
 
-					<Link href={`/customers/${customer.id}/edit`}>
-						<Button variant="secondary" leftIcon={<Pencil size={16} />}>
-							Edit customer
-						</Button>
-					</Link>
+					<Button
+						variant="secondary"
+						leftIcon={<Pencil size={16} />}
+						onClick={handleEditCustomer}
+					>
+						Edit customer
+					</Button>
 				</div>
 			</div>
 
@@ -158,6 +171,17 @@ export default function CustomerDetailView({
 				confirmText="View plans"
 				cancelText="Not now"
 				note="Customer exports are included on Starter, Pro, Business, and Custom plans."
+			/>
+
+			<ConfirmModal
+				open={editAccessModalOpen}
+				onClose={() => setEditAccessModalOpen(false)}
+				onConfirm={() => setEditAccessModalOpen(false)}
+				title="Admin access required"
+				description="Only workspace admins and owners can edit customer records."
+				confirmText="Got it"
+				showCancelButton={false}
+				note="Ask the workspace owner to make you an admin if you need to update customer details."
 			/>
 
 			<div className="customer-hero card">

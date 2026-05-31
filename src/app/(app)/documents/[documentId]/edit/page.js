@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentWorkspaceContext } from "@/lib/auth";
+import DocumentEditAccessModal from "@/components/documents/DocumentEditAccessModal";
 import DocumentForm from "@/components/documents/DocumentForm";
 
 export default async function EditDocumentPage({ params }) {
@@ -9,6 +10,13 @@ export default async function EditDocumentPage({ params }) {
 	const context = await getCurrentWorkspaceContext();
 	const workspaceId =
 		context?.workspace?.id || context?.membership?.workspaceId;
+	const canEditDocuments = ["OWNER", "ADMIN"].includes(
+		context?.membership?.role,
+	);
+
+	if (!workspaceId) {
+		notFound();
+	}
 
 	const [document, customers, vehicles] = await Promise.all([
 		db.document.findFirst({
@@ -59,17 +67,26 @@ export default async function EditDocumentPage({ params }) {
 			</div>
 
 			<div className="card">
-				<DocumentForm
-					mode="edit"
-					documentId={document.id}
-					initialData={{
-						...document,
-						createdAt: document.createdAt.toISOString(),
-						updatedAt: document.updatedAt.toISOString(),
-					}}
-					customers={customers}
-					vehicles={vehicles}
-				/>
+				{canEditDocuments ? (
+					<DocumentForm
+						mode="edit"
+						documentId={document.id}
+						initialData={{
+							...document,
+							createdAt: document.createdAt.toISOString(),
+							updatedAt: document.updatedAt.toISOString(),
+						}}
+						customers={customers}
+						vehicles={vehicles}
+					/>
+				) : (
+					<div className="stack-md">
+						<p className="text-muted">
+							Admin access is required to edit document records.
+						</p>
+						<DocumentEditAccessModal documentId={document.id} />
+					</div>
+				)}
 			</div>
 		</section>
 	);

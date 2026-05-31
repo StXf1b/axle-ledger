@@ -70,6 +70,9 @@
 }
 
 .recent-activity-stat-card {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 	padding: 18px;
 	border-radius: 20px;
 	border: 1px solid var(--border);
@@ -103,7 +106,6 @@
 }
 
 .recent-activity-stat-card__value {
-	margin: 12px 0 0;
 	font-size: 1.8rem;
 	font-weight: 700;
 	letter-spacing: -0.04em;
@@ -272,9 +274,8 @@
 	gap: 16px;
 	padding: 16px 0;
 	border-bottom: 1px solid var(--border);
-	transition:
-		background var(--transition-fast),
-		opacity var(--transition-fast);
+	transition: opacity var(--transition-fast);
+	opacity: 0.8;
 }
 
 .recent-activity-item:last-child {
@@ -282,7 +283,7 @@
 }
 
 .recent-activity-item:hover {
-	opacity: 0.98;
+	opacity: 1;
 }
 
 .recent-activity-item__left {

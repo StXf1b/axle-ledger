@@ -387,8 +387,8 @@ export default function DashboardPageClient({ dashboardData }) {
 				<RecentActivityCard items={dashboardData.recentActivity} />
 
 				<div className="dashboard-footer-link">
-					<Link href="/reminders" className="dashboard-inline-link">
-						Open reminders workspace
+					<Link href="/recent-activity" className="dashboard-inline-link">
+						View all recent activity
 						<ArrowRight size={16} />
 					</Link>
 				</div>

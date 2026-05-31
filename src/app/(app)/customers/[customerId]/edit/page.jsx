@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import CustomerEditAccessModal from "@/components/customers/CustomerEditAccessModal";
 import CustomerForm from "@/components/customers/CustomerForm";
 import "@/components/customers/CustomerForm.css";
 import { getCustomerById } from "@/lib/queries/customers";
+import { getCurrentUserRoleContext } from "@/lib/queries/current-user-role";
 
 export const metadata = {
 	title: "Edit Customer",
@@ -9,11 +11,16 @@ export const metadata = {
 
 export default async function EditCustomerPage({ params }) {
 	const { customerId } = await params;
-	const customer = await getCustomerById(customerId);
+	const [customer, roleContext] = await Promise.all([
+		getCustomerById(customerId),
+		getCurrentUserRoleContext(),
+	]);
 
 	if (!customer) {
 		notFound();
 	}
+
+	const canEditCustomers = ["OWNER", "ADMIN"].includes(roleContext.role);
 
 	return (
 		<section className="customer-detail-page">
@@ -28,11 +35,20 @@ export default async function EditCustomerPage({ params }) {
 			</div>
 
 			<div className="card" style={{ padding: "20px" }}>
-				<CustomerForm
-					mode="edit"
-					customerId={customer.id}
-					initialData={customer}
-				/>
+				{canEditCustomers ? (
+					<CustomerForm
+						mode="edit"
+						customerId={customer.id}
+						initialData={customer}
+					/>
+				) : (
+					<div className="stack-md">
+						<p className="text-muted">
+							Admin access is required to edit customer records.
+						</p>
+						<CustomerEditAccessModal customerId={customer.id} />
+					</div>
+				)}
 			</div>
 		</section>
 	);

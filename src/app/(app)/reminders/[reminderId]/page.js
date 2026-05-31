@@ -109,7 +109,7 @@ export default async function ReminderDetailPage({ params }) {
 		<section className="page-section">
 			<div className="page-header">
 				<div className="page-header-left">
-					<Link href="/reminders" className="vehicle-detail-back">
+					<Link href="/reminders" className="back-to-link">
 						<ArrowLeft size={16} />
 						Back to reminders
 					</Link>

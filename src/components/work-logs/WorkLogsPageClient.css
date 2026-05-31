@@ -283,6 +283,19 @@
 	flex-wrap: wrap;
 }
 
+.back-to-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--text-muted);
+	font-size: 0.9rem;
+	transition: color var(--transition-fast);
+	font-weight: 600;
+}
+.back-to-link:hover {
+	color: var(--text);
+}
+
 @media (max-width: 640px) {
 	.work-logs-stats-grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
