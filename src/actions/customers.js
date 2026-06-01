@@ -7,6 +7,10 @@ import { db } from "@/lib/db";
 import { canExportCustomerData } from "@/lib/billing/export-permissions";
 import { getResolvedWorkspaceEntitlements } from "@/lib/billing/workspace-subscription";
 import { assertWorkspaceLimit } from "@/lib/billing/workspace-quotas";
+import {
+	ABUSE_LIMITS,
+	assertWorkspaceTierAbuseLimit,
+} from "@/lib/abuse-limits";
 
 const CUSTOMER_EXPORT_FORMATS = new Set(["pdf", "json"]);
 const CUSTOMER_EDIT_ROLES = new Set(["OWNER", "ADMIN"]);
@@ -675,6 +679,8 @@ async function assertCustomerExportAccess(workspaceId) {
 	if (!canExportCustomerData(entitlements)) {
 		throw new Error("Customer exports require the Starter plan or higher.");
 	}
+
+	return entitlements;
 }
 
 export async function createCustomer(data) {
@@ -715,7 +721,7 @@ export async function exportCustomerData(customerId, format) {
 		throw new Error("Customer not found");
 	}
 
-	await assertCustomerExportAccess(workspaceId);
+	const entitlements = await assertCustomerExportAccess(workspaceId);
 
 	const customer = await db.customer.findFirst({
 		where: {
@@ -896,6 +902,12 @@ export async function exportCustomerData(customerId, format) {
 	if (!customer) {
 		throw new Error("Customer not found");
 	}
+
+	await assertWorkspaceTierAbuseLimit({
+		workspaceId,
+		entitlements,
+		...ABUSE_LIMITS.customerExport,
+	});
 
 	const payload = serializeCustomerExport(customer, appUser);
 	const fileBase = safeFilePart(`${payload.customer.displayName}-${customer.id}`);

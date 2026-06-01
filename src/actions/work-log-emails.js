@@ -7,6 +7,10 @@ import { db } from "@/lib/db";
 import { canUseStarterAndAboveFeature } from "@/lib/billing/export-permissions";
 import { getResolvedWorkspaceEntitlements } from "@/lib/billing/workspace-subscription";
 import { buildWorkLogCustomerEmailPayload } from "@/lib/work-log-customer-email";
+import {
+	ABUSE_LIMITS,
+	assertWorkspaceTierAbuseLimit,
+} from "@/lib/abuse-limits";
 
 async function getWorkspaceContextOrThrow() {
 	const { userId } = await auth();
@@ -55,6 +59,8 @@ async function assertWorkLogEmailAccess(workspaceId) {
 	if (!canUseStarterAndAboveFeature(entitlements)) {
 		throw new Error("Sending work logs to customers requires Starter or higher.");
 	}
+
+	return entitlements;
 }
 
 function getResendConfig() {
@@ -85,7 +91,7 @@ export async function sendWorkLogsToCustomer({ customerId, workLogIds }) {
 		throw new Error("Select at least one work log.");
 	}
 
-	await assertWorkLogEmailAccess(workspace.id);
+	const entitlements = await assertWorkLogEmailAccess(workspace.id);
 
 	const customer = await db.customer.findFirst({
 		where: {
@@ -153,6 +159,12 @@ export async function sendWorkLogsToCustomer({ customerId, workLogIds }) {
 	if (workLogs.length !== selectedWorkLogIds.length) {
 		throw new Error("One or more selected work logs could not be found.");
 	}
+
+	await assertWorkspaceTierAbuseLimit({
+		workspaceId: workspace.id,
+		entitlements,
+		...ABUSE_LIMITS.workLogCustomerEmail,
+	});
 
 	const { apiKey, from } = getResendConfig();
 	const resend = new Resend(apiKey);

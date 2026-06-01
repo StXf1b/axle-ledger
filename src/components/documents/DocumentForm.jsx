@@ -102,6 +102,7 @@ export default function DocumentForm({
 			body: JSON.stringify({
 				fileName: file.name,
 				fileType: file.type || "application/octet-stream",
+				sizeBytes: file.size,
 				title: form.title,
 			}),
 		});

@@ -2,12 +2,16 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 
 import { db } from "@/lib/db";
 import { getR2BucketName, getR2Client } from "@/lib/r2";
 import { DOCUMENT_CATEGORY_OPTIONS } from "@/lib/document-utils";
-import { getFileExtension } from "@/lib/document-upload";
+import {
+	getFileExtension,
+	isDocumentObjectKeyForWorkspace,
+	normalizeDocumentUploadFile,
+} from "@/lib/document-upload";
 import {
 	assertWorkspaceLimit,
 	assertWorkspaceFeatureEnabled,
@@ -119,7 +123,7 @@ async function resolveLinkedEntities({ workspaceId, customerId, vehicleId }) {
 	};
 }
 
-function buildDocumentPayload(payload) {
+function buildDocumentPayload(payload, workspaceId) {
 	const title = emptyToNull(payload.title);
 	const fileName = emptyToNull(payload.fileName);
 	const fileKey = emptyToNull(payload.fileKey);
@@ -140,19 +144,29 @@ function buildDocumentPayload(payload) {
 		throw new Error("File key is required.");
 	}
 
+	if (!isDocumentObjectKeyForWorkspace(fileKey, workspaceId)) {
+		throw new Error("Invalid document upload key.");
+	}
+
 	if (!VALID_CATEGORIES.has(category)) {
 		throw new Error("Invalid document category.");
 	}
 
+	const file = normalizeDocumentUploadFile({
+		fileName,
+		fileType: mimeType,
+		sizeBytes: sizeBytes && sizeBytes > 0 ? sizeBytes : 1,
+	});
+
 	return {
 		title,
-		fileName,
+		fileName: file.fileName,
 		fileKey,
-		mimeType,
+		mimeType: file.mimeType,
 		notes,
 		category,
-		sizeBytes,
-		fileExtension: getFileExtension(fileName),
+		sizeBytes: file.sizeBytes,
+		fileExtension: file.fileExtension,
 	};
 }
 
@@ -188,29 +202,68 @@ async function deleteObjectIfExists(fileKey) {
 	}
 }
 
+async function getUploadedObjectMetadata(fileKey) {
+	try {
+		return await getR2Client().send(
+			new HeadObjectCommand({
+				Bucket: getR2BucketName(),
+				Key: fileKey,
+			}),
+		);
+	} catch (error) {
+		console.error("Failed to verify R2 object:", error);
+		throw new Error("Uploaded file could not be verified. Please upload it again.");
+	}
+}
+
+async function verifyUploadedDocumentObject(baseData) {
+	const object = await getUploadedObjectMetadata(baseData.fileKey);
+	const file = normalizeDocumentUploadFile({
+		fileName: baseData.fileName,
+		fileType: object.ContentType || baseData.mimeType,
+		sizeBytes: object.ContentLength ?? baseData.sizeBytes,
+	});
+
+	return {
+		...baseData,
+		fileName: file.fileName,
+		mimeType: file.mimeType,
+		sizeBytes: file.sizeBytes,
+		fileExtension: file.fileExtension || getFileExtension(file.fileName),
+	};
+}
+
 export async function createDocument(payload) {
 	const { appUser, workspace } = await getWorkspaceContextOrThrow();
 	await assertWorkspaceFeatureEnabled(workspace.id, "documentsEnabled");
 	await assertWorkspaceLimit(workspace.id, "documents");
-	await assertWorkspaceStorageAvailable(
-		workspace.id,
-		Number(payload.sizeBytes),
-	);
-	const baseData = buildDocumentPayload(payload);
-	const linkedData = await resolveLinkedEntities({
-		workspaceId: workspace.id,
-		customerId: payload.customerId,
-		vehicleId: payload.vehicleId,
-	});
 
-	const document = await db.document.create({
-		data: {
+	const baseData = buildDocumentPayload(payload, workspace.id);
+	let verifiedData;
+	let linkedData;
+	let document;
+
+	try {
+		verifiedData = await verifyUploadedDocumentObject(baseData);
+		await assertWorkspaceStorageAvailable(workspace.id, verifiedData.sizeBytes);
+		linkedData = await resolveLinkedEntities({
 			workspaceId: workspace.id,
-			uploadedByUserId: appUser.id,
-			...baseData,
-			...linkedData,
-		},
-	});
+			customerId: payload.customerId,
+			vehicleId: payload.vehicleId,
+		});
+
+		document = await db.document.create({
+			data: {
+				workspaceId: workspace.id,
+				uploadedByUserId: appUser.id,
+				...verifiedData,
+				...linkedData,
+			},
+		});
+	} catch (error) {
+		await deleteObjectIfExists(baseData.fileKey);
+		throw error;
+	}
 
 	revalidateDocumentPaths({
 		documentId: document.id,
@@ -228,11 +281,6 @@ export async function updateDocument(documentId, payload) {
 	const { membership, workspace } = await getWorkspaceContextOrThrow();
 	assertCanEditDocuments(membership);
 	await assertWorkspaceFeatureEnabled(workspace.id, "documentsEnabled");
-	await assertWorkspaceLimit(workspace.id, "documents");
-	await assertWorkspaceStorageAvailable(
-		workspace.id,
-		Number(payload.sizeBytes),
-	);
 
 	const existingDocument = await db.document.findFirst({
 		where: {
@@ -245,22 +293,46 @@ export async function updateDocument(documentId, payload) {
 		throw new Error("Document not found.");
 	}
 
-	const baseData = buildDocumentPayload(payload);
-	const linkedData = await resolveLinkedEntities({
-		workspaceId: workspace.id,
-		customerId: payload.customerId,
-		vehicleId: payload.vehicleId,
-	});
+	const baseData = buildDocumentPayload(payload, workspace.id);
+	let verifiedData;
+	let linkedData;
+	let document;
+	const shouldDeleteIncomingObject =
+		baseData.fileKey &&
+		baseData.fileKey !== existingDocument.fileKey &&
+		isDocumentObjectKeyForWorkspace(baseData.fileKey, workspace.id);
 
-	const document = await db.document.update({
-		where: {
-			id: documentId,
-		},
-		data: {
-			...baseData,
-			...linkedData,
-		},
-	});
+	try {
+		verifiedData = await verifyUploadedDocumentObject(baseData);
+		await assertWorkspaceStorageAvailable(
+			workspace.id,
+			Math.max(
+				0,
+				verifiedData.sizeBytes - Number(existingDocument.sizeBytes || 0),
+			),
+		);
+		linkedData = await resolveLinkedEntities({
+			workspaceId: workspace.id,
+			customerId: payload.customerId,
+			vehicleId: payload.vehicleId,
+		});
+
+		document = await db.document.update({
+			where: {
+				id: documentId,
+			},
+			data: {
+				...verifiedData,
+				...linkedData,
+			},
+		});
+	} catch (error) {
+		if (shouldDeleteIncomingObject) {
+			await deleteObjectIfExists(baseData.fileKey);
+		}
+
+		throw error;
+	}
 
 	if (
 		existingDocument.fileKey &&

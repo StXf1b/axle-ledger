@@ -4,6 +4,7 @@ import { Readable } from "node:stream";
 
 import { db } from "@/lib/db";
 import { getR2BucketName, getR2Client } from "@/lib/r2";
+import { buildAttachmentContentDisposition } from "@/lib/content-disposition";
 
 export const runtime = "nodejs";
 
@@ -73,7 +74,11 @@ export async function GET(_req, { params }) {
 		return new Response(stream, {
 			headers: {
 				"Content-Type": object.ContentType || "application/octet-stream",
-				"Content-Disposition": `attachment; filename="${document.fileName}"`,
+				"Content-Disposition": buildAttachmentContentDisposition(
+					document.fileName,
+					"document",
+				),
+				"X-Content-Type-Options": "nosniff",
 				...(object.ContentLength
 					? { "Content-Length": String(object.ContentLength) }
 					: {}),
