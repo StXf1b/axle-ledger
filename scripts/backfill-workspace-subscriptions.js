@@ -18,7 +18,7 @@ async function main() {
 				billingProvider: "MANUAL",
 				tier: "TRIAL",
 				status: "TRIALING",
-				trialEndsAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+				trialEndsAt: null,
 			},
 		});
 	}

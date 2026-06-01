@@ -4,7 +4,7 @@ import { PrismaNeon } from "@prisma/adapter-neon";
 const globalForPrisma = globalThis;
 
 const adapter = new PrismaNeon({
-	connectionString: process.env.DATABASE_URL,
+	connectionString: process.env.DIRECT_URL,
 });
 
 export const db =

@@ -26,7 +26,7 @@ export async function ensureWorkspaceSubscription(workspaceId) {
 			billingProvider: "MANUAL",
 			tier: "TRIAL",
 			status: "TRIALING",
-			trialEndsAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+			trialEndsAt: null,
 		},
 	});
 }
@@ -45,15 +45,8 @@ export function resolveWorkspaceEntitlements(subscription) {
 		subscription?.featureOverrides,
 	);
 
-	const now = new Date();
-	const isTrialExpired =
-		subscription?.status === "TRIALING" &&
-		subscription?.trialEndsAt &&
-		new Date(subscription.trialEndsAt) < now;
-
 	const canCreateRecords =
-		!["CANCELED", "EXPIRED"].includes(subscription?.status || "TRIALING") &&
-		!isTrialExpired;
+		!["CANCELED", "EXPIRED"].includes(subscription?.status || "TRIALING");
 
 	return {
 		tier,
@@ -63,12 +56,12 @@ export function resolveWorkspaceEntitlements(subscription) {
 		limits,
 		features,
 		billing: basePlan.billing,
-		trialEndsAt: subscription?.trialEndsAt || null,
+		trialEndsAt: tier === "TRIAL" ? null : subscription?.trialEndsAt || null,
 		currentPeriodStart: subscription?.currentPeriodStart || null,
 		currentPeriodEnd: subscription?.currentPeriodEnd || null,
 		cancelAtPeriodEnd: !!subscription?.cancelAtPeriodEnd,
 		access: {
-			isTrialExpired,
+			isTrialExpired: false,
 			canCreateRecords,
 		},
 	};

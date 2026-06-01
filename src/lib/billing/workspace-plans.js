@@ -3,7 +3,7 @@ const GB = 1024 * MB;
 
 export const WORKSPACE_PLAN_DEFINITIONS = {
 	TRIAL: {
-		label: "Trial",
+		label: "Free",
 		billing: {
 			monthlyPriceCents: 0,
 			yearlyPriceCents: null,

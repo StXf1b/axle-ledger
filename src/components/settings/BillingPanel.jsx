@@ -183,11 +183,19 @@ function getPlanDisplayName(tier) {
 
 function getPlanStatusTone(currentPlan) {
 	if (currentPlan?.cancelAtPeriodEnd) return "warning";
+	if (currentPlan?.tier === "TRIAL") return "success";
 	if (currentPlan?.status === "ACTIVE") return "success";
-	if (currentPlan?.status === "TRIALING") return "info";
+	if (currentPlan?.status === "TRIALING") return "success";
 	if (currentPlan?.status === "PAST_DUE") return "warning";
 	if (["CANCELED", "EXPIRED"].includes(currentPlan?.status)) return "danger";
 	return "neutral";
+}
+
+function getPlanStatusLabel(currentPlan) {
+	if (currentPlan?.cancelAtPeriodEnd) return "Canceling";
+	if (currentPlan?.tier === "TRIAL") return "Free plan";
+
+	return formatStatus(currentPlan?.status);
 }
 
 function getCancellationState(currentPlan) {
@@ -201,11 +209,10 @@ function getCancellationState(currentPlan) {
 
 	if (currentPlan?.tier === "TRIAL") {
 		return {
-			tone: "info",
-			label: "Not canceling",
-			detail: currentPlan.trialEndsAt
-				? `Trial access runs until ${formatDate(currentPlan.trialEndsAt)}.`
-				: "This workspace is on the free trial plan.",
+			tone: "success",
+			label: "Free plan",
+			detail:
+				"The free plan stays active indefinitely and is limited only by workspace limits.",
 		};
 	}
 
@@ -236,8 +243,8 @@ function getPeriodMeta(currentPlan) {
 
 	if (currentPlan?.tier === "TRIAL") {
 		return {
-			label: "Trial ends",
-			value: formatDate(currentPlan.trialEndsAt),
+			label: "Plan access",
+			value: "Free forever",
 		};
 	}
 
@@ -390,7 +397,7 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 		if (currentPlan?.cancelAtPeriodEnd) {
 			return {
 				type: "warning",
-				text: `Your current paid subscription is set to cancel at period end on ${formatDate(currentPlan.currentPeriodEnd)}. After that, the workspace falls back to the free Trial limits.`,
+				text: `Your current paid subscription is set to cancel at period end on ${formatDate(currentPlan.currentPeriodEnd)}. After that, the workspace falls back to the free plan limits.`,
 			};
 		}
 
@@ -516,15 +523,13 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 					<div className="billing-hero__heading">
 						<h3>{currentPlan.label}</h3>
 						<span className={`badge badge-${statusTone}`}>
-							{currentPlan.cancelAtPeriodEnd
-								? "Canceling"
-								: formatStatus(currentPlan.status)}
+							{getPlanStatusLabel(currentPlan)}
 						</span>
 					</div>
 
 					<p className="billing-hero__description">
 						Your workspace plan controls staff seats, customers, vehicles,
-						documents, reminders, uploads, and work logs. Trial stays free
+						documents, reminders, uploads, and work logs. The free plan stays
 						forever, but paid plans are managed by Stripe.
 					</p>
 
