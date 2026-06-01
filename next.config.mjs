@@ -1,19 +1,83 @@
 /** @type {import('next').NextConfig} */
 const isProduction = process.env.NODE_ENV === "production";
 
+const clerkCustomDomains = [
+	"https://clerk.axleledger.ie",
+	"https://accounts.axleledger.ie",
+];
+
+const clerkDefaultDomains = [
+	"https://*.clerk.accounts.dev",
+	"https://*.clerk.dev",
+	"https://*.clerk.com",
+	"https://api.clerk.com",
+];
+
+const scriptSrc = [
+	"'self'",
+	"'unsafe-inline'",
+	!isProduction ? "'unsafe-eval'" : "",
+	...clerkCustomDomains,
+	"https://*.clerk.accounts.dev",
+	"https://*.clerk.dev",
+	"https://*.clerk.com",
+	"https://js.stripe.com",
+	"https://challenges.cloudflare.com",
+]
+	.filter(Boolean)
+	.join(" ");
+
 const contentSecurityPolicy = [
 	"default-src 'self'",
 	"base-uri 'self'",
 	"object-src 'none'",
 	"frame-ancestors 'none'",
-	"form-action 'self' https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com",
-	"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://js.stripe.com https://challenges.cloudflare.com",
+
+	[
+		"form-action 'self'",
+		...clerkCustomDomains,
+		"https://*.clerk.accounts.dev",
+		"https://*.clerk.dev",
+		"https://*.clerk.com",
+	].join(" "),
+
+	`script-src ${scriptSrc}`,
+
 	"style-src 'self' 'unsafe-inline'",
-	"img-src 'self' data: blob: https://img.clerk.com https://*.clerk.com",
+
+	[
+		"img-src 'self' data: blob:",
+		"https://img.clerk.com",
+		"https://*.clerk.com",
+	].join(" "),
+
 	"font-src 'self' data:",
-	"connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://api.clerk.com https://*.stripe.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://vitals.vercel-insights.com https://*.vercel-insights.com",
-	"frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com",
+
+	[
+		"connect-src 'self'",
+		...clerkCustomDomains,
+		...clerkDefaultDomains,
+		"https://api.axleledger.ie",
+		"https://*.stripe.com",
+		"https://*.r2.cloudflarestorage.com",
+		"https://*.r2.dev",
+		"https://vitals.vercel-insights.com",
+		"https://*.vercel-insights.com",
+	].join(" "),
+
+	[
+		"frame-src 'self'",
+		...clerkCustomDomains,
+		"https://*.clerk.accounts.dev",
+		"https://*.clerk.dev",
+		"https://*.clerk.com",
+		"https://js.stripe.com",
+		"https://hooks.stripe.com",
+		"https://challenges.cloudflare.com",
+	].join(" "),
+
 	"worker-src 'self' blob:",
+
 	...(isProduction ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
@@ -54,7 +118,6 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
-	/* config options here */
 	poweredByHeader: false,
 	reactCompiler: true,
 
