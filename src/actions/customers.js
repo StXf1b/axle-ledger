@@ -424,11 +424,50 @@ function buildCustomerPdfLines(payload) {
 	return lines;
 }
 
-function paginatePdfLines(lines, maxLinesPerPage = 38) {
-	const pages = [];
+function getPdfLineHeight(line, nextLine) {
+	if (!line.trim()) return 8;
+	if (nextLine && /^-+$/.test(nextLine.trim())) return 30;
+	if (/^-{3,}$/.test(line.trim())) return 0;
+	if (/^\d+\.\s/.test(line)) return 22;
 
-	for (let index = 0; index < lines.length; index += maxLinesPerPage) {
-		pages.push(lines.slice(index, index + maxLinesPerPage));
+	if (line.includes(":")) {
+		const { value } = splitPdfField(line);
+		const wrapLength = line.startsWith("   ") ? 58 : 62;
+		return Math.max(1, wrapPdfLine(value, wrapLength).length) * 12 + 5;
+	}
+
+	return Math.max(1, wrapPdfLine(line, 86).length) * 13;
+}
+
+function paginateMeasuredPdfLines(lines, maxPageHeight = 620) {
+	const pages = [];
+	let currentPage = [];
+	let usedHeight = 0;
+
+	for (let index = 0; index < lines.length; index += 1) {
+		const line = lines[index];
+		const nextLine = lines[index + 1];
+		const isSectionHeader = nextLine && /^-+$/.test(nextLine.trim());
+		const height = getPdfLineHeight(line, nextLine);
+
+		if (currentPage.length && usedHeight + height > maxPageHeight) {
+			pages.push(currentPage);
+			currentPage = [];
+			usedHeight = 0;
+		}
+
+		currentPage.push(line);
+
+		if (isSectionHeader) {
+			currentPage.push(nextLine);
+			index += 1;
+		}
+
+		usedHeight += height;
+	}
+
+	if (currentPage.length) {
+		pages.push(currentPage);
 	}
 
 	return pages.length ? pages : [["No export data found."]];
@@ -503,10 +542,23 @@ function addPdfField(commands, line, y, { x = 56, labelWidth = 116 } = {}) {
 }
 
 function buildPdfPageContent(lines, { pageNumber, pageCount, payload }) {
-	const contentLines = pageNumber === 1 ? lines.slice(4) : lines;
+	const customerNameLines = wrapPdfLine(payload.customer.displayName, 34).slice(
+		0,
+		2,
+	);
+	const workspaceLabel =
+		payload.export.workspace?.name || "Workspace not recorded";
+	const workspaceLine = wrapPdfLine(
+		`Workspace: ${workspaceLabel} | Generated: ${formatPdfDate(
+			payload.export.exportedAt,
+		)}`,
+		42,
+	)[0];
 	const commands = [
-		pdfRect(0, 730, 612, 62, "0.92 0.96 1"),
+		pdfRect(0, 724, 612, 68, "0.92 0.96 1"),
 		pdfRect(0, 728, 612, 2, "0.20 0.45 0.84"),
+		pdfRect(318, 736, 250, 42, "1 1 1"),
+		pdfRect(318, 736, 4, 42, "0.20 0.45 0.84"),
 		pdfText("AxleLedger", {
 			x: 48,
 			y: 762,
@@ -521,31 +573,36 @@ function buildPdfPageContent(lines, { pageNumber, pageCount, payload }) {
 			size: 18,
 			color: "0.05 0.09 0.16",
 		}),
-		pdfText(payload.customer.displayName, {
-			x: 322,
-			y: 758,
+		pdfText(customerNameLines[0] || "Customer", {
+			x: 332,
+			y: customerNameLines[1] ? 760 : 756,
 			font: "F2",
-			size: 12,
+			size: 11,
 			color: "0.05 0.09 0.16",
 		}),
-		pdfText(
-			`Workspace: ${payload.export.workspace?.name || "-"} | Generated: ${formatPdfDate(
-				payload.export.exportedAt,
-			)}`,
-			{
-				x: 322,
-				y: 742,
+		...(customerNameLines[1]
+			? [
+					pdfText(customerNameLines[1], {
+						x: 332,
+						y: 746,
+						size: 9,
+						color: "0.20 0.27 0.39",
+					}),
+				]
+			: []),
+		pdfText(workspaceLine, {
+			x: 332,
+			y: 740,
 				size: 8,
 				color: "0.35 0.42 0.54",
-			},
-		),
+		}),
 	];
 
 	let y = 704;
 
-	for (let index = 0; index < contentLines.length; index += 1) {
-		const line = contentLines[index];
-		const nextLine = contentLines[index + 1];
+	for (let index = 0; index < lines.length; index += 1) {
+		const line = lines[index];
+		const nextLine = lines[index + 1];
 
 		if (!line.trim()) {
 			y -= 8;
@@ -557,8 +614,8 @@ function buildPdfPageContent(lines, { pageNumber, pageCount, payload }) {
 		}
 
 		if (nextLine && /^-+$/.test(nextLine.trim())) {
-			commands.push(pdfRect(44, y - 8, 524, 22, "0.95 0.97 1"));
-			commands.push(pdfRect(44, y - 8, 4, 22, "0.20 0.45 0.84"));
+			commands.push(pdfRect(44, y - 9, 524, 24, "0.94 0.97 1"));
+			commands.push(pdfRect(44, y - 9, 4, 24, "0.20 0.45 0.84"));
 			commands.push(
 				pdfText(line, {
 					x: 56,
@@ -574,17 +631,18 @@ function buildPdfPageContent(lines, { pageNumber, pageCount, payload }) {
 		}
 
 		if (/^\d+\.\s/.test(line)) {
-			commands.push(pdfRect(52, y - 7, 508, 1, "0.86 0.90 0.96"));
+			commands.push(pdfRect(52, y - 11, 508, 23, "0.98 0.99 1"));
+			commands.push(pdfRect(52, y - 11, 3, 23, "0.56 0.67 0.84"));
 			commands.push(
 				pdfText(line, {
 					x: 56,
-					y: y + 3,
+					y: y + 1,
 					font: "F2",
 					size: 10,
 					color: "0.10 0.15 0.23",
 				}),
 			);
-			y -= 18;
+			y -= 22;
 			continue;
 		}
 
@@ -621,7 +679,7 @@ function buildPdfPageContent(lines, { pageNumber, pageCount, payload }) {
 }
 
 function buildPdfBase64(payload) {
-	const pages = paginatePdfLines(buildCustomerPdfLines(payload));
+	const pages = paginateMeasuredPdfLines(buildCustomerPdfLines(payload).slice(4));
 	const objects = [];
 
 	objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";

@@ -113,10 +113,6 @@ export default async function WorkLogDetailPage({ params }) {
 							Edit work log
 						</button>
 					</Link>
-					<button className="btn btn-primary">
-						<Send size={18} />
-						Send to customer
-					</button>
 				</div>
 			</div>
 
