@@ -339,7 +339,9 @@ export default function DashboardPageClient({ dashboardData }) {
 				<div className="dashboard-hero">
 					<div className="dashboard-hero__content">
 						<div className="dashboard-hero__eyebrow">Workshop Overview</div>
-						<h1 className="dashboard-hero__title">AxleLedger Dashboard</h1>
+						<h1 className="dashboard-hero__title">
+							{dashboardData.dashboardTitle || "AxleLedger Dashboard"}
+						</h1>
 						<p className="dashboard-hero__subtitle">
 							A cleaner operations view for customers, vehicles, reminders, work
 							logs, and recent activity.

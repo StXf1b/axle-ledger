@@ -24,6 +24,7 @@ function getPageTitle(pathname) {
 	if (pathname === "/documents") return "Documents";
 	if (pathname === "/settings") return "Settings";
 	if (pathname.startsWith("/settings/")) return "Settings";
+	if (pathname === "/recent-activity") return "Recent Activity";
 
 	return "AxleLedger";
 }

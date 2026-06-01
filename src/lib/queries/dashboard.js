@@ -289,7 +289,7 @@ function buildRecentActivity({
 		}));
 }
 
-async function getCurrentWorkspaceId() {
+async function getCurrentWorkspace() {
 	const { userId } = await auth();
 
 	if (!userId) return null;
@@ -298,23 +298,32 @@ async function getCurrentWorkspaceId() {
 		where: { clerkUserId: userId },
 		include: {
 			memberships: {
-				select: { workspaceId: true },
+				select: {
+					workspace: {
+						select: {
+							id: true,
+							name: true,
+						},
+					},
+				},
 				orderBy: { createdAt: "asc" },
 				take: 1,
 			},
 		},
 	});
 
-	return appUser?.memberships?.[0]?.workspaceId || null;
+	return appUser?.memberships?.[0]?.workspace || null;
 }
 
 export async function getDashboardPageData() {
-	const workspaceId = await getCurrentWorkspaceId();
+	const workspace = await getCurrentWorkspace();
 
-	if (!workspaceId) {
+	if (!workspace) {
 		return null;
 	}
 
+	const workspaceId = workspace.id;
+	const workspaceName = workspace.name?.trim();
 	const now = new Date();
 	const monthStart = startOfMonth(now);
 	const previousMonthStart = startOfMonth(addMonths(now, -1));
@@ -673,6 +682,9 @@ export async function getDashboardPageData() {
 		: now;
 
 	return {
+		dashboardTitle: workspaceName
+			? `${workspaceName} Dashboard`
+			: "AxleLedger Dashboard",
 		updatedAtLabel: formatUpdatedLabel(latestUpdate),
 
 		kpis: [
