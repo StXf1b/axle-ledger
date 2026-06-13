@@ -509,13 +509,16 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 		);
 	}
 
+	const CurrentPlanIcon =
+		PLAN_CARD_CONTENT[currentPlan.tier]?.icon || BadgeCheck;
+
 	return (
 		<div className="billing-panel stack-lg">
 			<div className="billing-hero">
 				<div className="billing-hero__left">
 					<div className="billing-hero__badge-wrap">
-						<span className="billing-hero__icon">
-							<BadgeCheck size={18} />
+						<span className="billing-hero__icon" aria-hidden="true">
+							<CurrentPlanIcon size={19} />
 						</span>
 						<p className="billing-hero__eyebrow">Workspace billing</p>
 					</div>
@@ -768,6 +771,12 @@ export default function BillingPanel({ billingInfo, currentRole }) {
 							>
 								<div className="billing-plan-card__top">
 									<div className="billing-plan-card__title-row">
+										<span
+											className="billing-plan-card__icon"
+											aria-hidden="true"
+										>
+											<PlanIcon size={19} />
+										</span>
 										<div className="billing-plan-card__title-copy">
 											<p className="billing-plan-card__eyebrow">{planName}</p>
 											<h4 className="billing-plan-card__price">

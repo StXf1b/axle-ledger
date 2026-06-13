@@ -20,7 +20,7 @@
 	/* Brand */
 	--primary: #3b82f6;
 	--primary-hover: #2563eb;
-	--primary-soft: rgba(59, 130, 246, 0.14);
+	--primary-soft: #3b82f624;
 
 	/* Text */
 	--text: #f3f6fb;

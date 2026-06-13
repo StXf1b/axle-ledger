@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { Settings, Users, UserPlus, CreditCard } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import "./SettingsPageClient.css";
@@ -46,20 +45,10 @@ export default function SettingsPageClient({ initialData }) {
 		return tabs.some((tab) => tab.id === tabFromUrl) ? tabFromUrl : "general";
 	}
 
-	const [activeTab, setActiveTab] = useState(getValidTabFromUrl());
-	const activeTabMeta = useMemo(
-		() => tabs.find((tab) => tab.id === activeTab),
-		[activeTab],
-	);
-	useEffect(() => {
-		const nextTab = getValidTabFromUrl();
-
-		setActiveTab((current) => (current === nextTab ? current : nextTab));
-	}, [searchParams]);
+	const activeTab = getValidTabFromUrl();
+	const activeTabMeta = tabs.find((tab) => tab.id === activeTab);
 
 	function handleTabChange(tabId) {
-		setActiveTab(tabId);
-
 		const params = new URLSearchParams(searchParams.toString());
 		params.set("tab", tabId);
 
@@ -92,58 +81,50 @@ export default function SettingsPageClient({ initialData }) {
 			</div>
 
 			<div className="settings-layout">
-				<aside className="settings-sidebar">
-					<div className="settings-sidebar__card">
-						<div className="settings-sidebar__top">
-							<h3 className="settings-sidebar__title">Configuration</h3>
-							<p className="settings-sidebar__subtitle">
-								Switch between settings areas.
-							</p>
-						</div>
+				<nav className="settings-navigation" aria-label="Settings sections">
+					<div
+						className="settings-tabs"
+						role="tablist"
+						aria-label="Settings tabs"
+						aria-orientation="horizontal"
+					>
+						{tabs.map((tab) => {
+							const Icon = tab.icon;
+							const isActive = activeTab === tab.id;
 
-						<div
-							className="settings-tabs"
-							role="tablist"
-							aria-label="Settings tabs"
-						>
-							{tabs.map((tab) => {
-								const Icon = tab.icon;
-								const isActive = activeTab === tab.id;
+							return (
+								<button
+									key={tab.id}
+									type="button"
+									role="tab"
+									aria-selected={isActive}
+									aria-controls={`settings-panel-${tab.id}`}
+									id={`settings-tab-${tab.id}`}
+									className={`settings-tab ${isActive ? "settings-tab--active" : ""}`}
+									onClick={() => handleTabChange(tab.id)}
+								>
+									<span className="settings-tab__icon" aria-hidden="true">
+										<Icon size={18} />
+									</span>
 
-								return (
-									<button
-										key={tab.id}
-										type="button"
-										role="tab"
-										aria-selected={isActive}
-										aria-controls={`settings-panel-${tab.id}`}
-										id={`settings-tab-${tab.id}`}
-										className={`settings-tab ${isActive ? "settings-tab--active" : ""}`}
-										onClick={() => handleTabChange(tab.id)}
-									>
-										<span className="settings-tab__icon">
-											<Icon size={18} />
+									<span className="settings-tab__content">
+										<span className="settings-tab__label">{tab.label}</span>
+										<span className="settings-tab__desc">
+											{tab.description}
 										</span>
-
-										<span className="settings-tab__content">
-											<span className="settings-tab__label">{tab.label}</span>
-											<span className="settings-tab__desc">
-												{tab.description}
-											</span>
-										</span>
-									</button>
-								);
-							})}
-						</div>
+									</span>
+								</button>
+							);
+						})}
 					</div>
-				</aside>
+				</nav>
 
 				<div className="settings-content">
-					<div className="settings-content__intro card">
+					<header className="settings-content__intro">
 						<div className="settings-content__intro-top">
 							<div>
 								<p className="settings-content__eyebrow">
-									{activeTabMeta?.label || "Settings"}
+									Current section
 								</p>
 								<h3 className="settings-content__title">
 									{activeTabMeta?.label || "Settings"}
@@ -155,7 +136,7 @@ export default function SettingsPageClient({ initialData }) {
 							{activeTabMeta?.description ||
 								"Adjust your workspace settings and preferences."}
 						</p>
-					</div>
+					</header>
 
 					<div className="settings-content__panel-wrap">
 						{activeTab === "general" && (
